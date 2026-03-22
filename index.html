@@ -110,17 +110,13 @@
     }
     .btn-del:hover { background: var(--red-bg); }
     .lock-badge {
-      position: absolute; top: -6px; right: -6px; width: 22px; height: 22px;
+      position: absolute; top: 4px; right: 4px;
       display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; z-index: 2; pointer-events: none;
-      transition: all .2s;
+      pointer-events: none; transition: all .2s;
     }
-    .lock-badge svg { width: 14px; height: 14px; }
-    .lock-badge.unlocked { color: var(--text2); opacity: .35; }
-    .lock-badge.locked {
-      color: var(--yellow); opacity: 1;
-      background: rgba(255,200,50,.15); border: 1px solid var(--yellow);
-    }
+    .lock-badge svg { width: 13px; height: 13px; }
+    .lock-badge.unlocked { color: var(--text2); opacity: .25; }
+    .lock-badge.locked { color: var(--yellow); opacity: 1; }
     #delivery-list li.delivery-locked { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255,200,50,.15); }
 
     /* ── START DISPLAY ── */
