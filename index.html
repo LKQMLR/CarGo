@@ -773,29 +773,7 @@ function renderDeliveryList() {
     </li>`;
   }).join('');
   initDragAndDrop();
-  initSwipeToDelete();
-  initDoubleTapLock();
-}
-function initDoubleTapLock() {
-  const items = document.querySelectorAll('#delivery-list li');
-  items.forEach(li => {
-    let lastTap = 0;
-    li.addEventListener('touchend', e => {
-      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.delivery-note')) return;
-      const now = Date.now();
-      if (now - lastTap < 300) {
-        e.preventDefault();
-        const id = parseInt(li.dataset.id);
-        toggleLock(id);
-      }
-      lastTap = now;
-    });
-    li.addEventListener('dblclick', e => {
-      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.delivery-note')) return;
-      const id = parseInt(li.dataset.id);
-      toggleLock(id);
-    });
-  });
+  initTouchGestures();
 }
 function saveNote(id, note) {
   const d = state.deliveries.find(d => d.id === id);
@@ -1077,42 +1055,61 @@ function getInsertGap(ul, y, dragLi) {
   return { above: last, below: null, insertIdx: parseInt(last.dataset.idx) + 1 };
 }
 
-// ── SWIPE TO DELETE ──
-function initSwipeToDelete() {
+// ── TOUCH GESTURES (swipe + double-tap) ──
+let _lastTapTime = 0, _lastTapId = null;
+function initTouchGestures() {
   const items = document.querySelectorAll('#delivery-list li');
   items.forEach(li => {
-    let startX = 0, rawDx = 0, swiping = false;
+    let startX = 0, startY = 0, moved = false;
     li.addEventListener('touchstart', e => {
       if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input')) return;
-      startX = e.touches[0].clientX; rawDx = 0; swiping = false;
-      li.classList.remove('swiping');
-      li.style.willChange = 'transform, opacity';
-    });
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY; moved = false;
+    }, { passive: true });
     li.addEventListener('touchmove', e => {
       const dx = e.touches[0].clientX - startX;
-      if (!swiping && Math.abs(dx) < 10) return;
-      if (!swiping && Math.abs(dx) >= 10) swiping = true;
-      if (!swiping) return;
+      const dy = e.touches[0].clientY - startY;
+      // Only swipe if horizontal movement dominates
+      if (!moved && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) moved = true;
+      if (!moved) return;
       e.preventDefault();
-      rawDx = dx;
-      if (rawDx > 0) rawDx = 0;
-      const absDx = Math.abs(rawDx);
+      const raw = Math.min(0, dx);
+      const absDx = Math.abs(raw);
       const tx = Math.round(absDx < 10 ? absDx : 10 + Math.log(1 + (absDx - 10) * 0.08) * 40);
       li.style.transform = `translate3d(${-tx}px,0,0)`;
-      li.style.opacity = Math.max(0.3, 1 - absDx / 400);
+      li.style.opacity = String(Math.max(0.3, 1 - absDx / 400));
     }, { passive: false });
-    li.addEventListener('touchend', () => {
-      if (!swiping) return; swiping = false;
-      if (Math.abs(rawDx) > 140) {
-        li.classList.add('swiping', 'swipe-out');
-        const id = parseInt(li.dataset.id);
-        setTimeout(() => removeDelivery(id), 250);
+    li.addEventListener('touchend', e => {
+      if (moved) {
+        // Swipe end
+        const dx = Math.abs(Math.min(0, e.changedTouches[0].clientX - startX));
+        if (dx > 140) {
+          li.classList.add('swiping', 'swipe-out');
+          setTimeout(() => removeDelivery(parseInt(li.dataset.id)), 250);
+        } else {
+          li.classList.add('swiping');
+          li.style.transform = ''; li.style.opacity = '';
+          setTimeout(() => li.classList.remove('swiping'), 200);
+        }
+        moved = false;
+        return;
+      }
+      // Double-tap detection
+      if (e.target.closest('.delivery-note') || e.target.closest('.delivery-note-input')) return;
+      const now = Date.now(), id = parseInt(li.dataset.id);
+      if (now - _lastTapTime < 350 && _lastTapId === id) {
+        e.preventDefault();
+        toggleLock(id);
+        _lastTapTime = 0; _lastTapId = null;
       } else {
-        li.classList.add('swiping');
-        li.style.transform = ''; li.style.opacity = '';
-        setTimeout(() => { li.classList.remove('swiping'); li.style.willChange = ''; }, 200);
+        _lastTapTime = now; _lastTapId = id;
       }
     });
+  });
+  // Double-click for desktop
+  document.getElementById('delivery-list').addEventListener('dblclick', e => {
+    const li = e.target.closest('#delivery-list li');
+    if (!li || e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.delivery-note')) return;
+    toggleLock(parseInt(li.dataset.id));
   });
 }
 
