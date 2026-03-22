@@ -241,30 +241,39 @@
     }
     .summary-card span { display: block; font-size: .65rem; color: var(--text2); margin-bottom: 2px; }
     .summary-card strong { font-size: .9rem; color: var(--text); }
-    #route-steps { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    #route-steps { list-style: none; display: flex; flex-direction: column; gap: 6px; }
     #route-steps li {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; gap: 10px;
       background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 7px 10px; font-size: .78rem; color: var(--text2);
+      border-radius: 8px; padding: 10px 12px; font-size: .78rem; color: var(--text2);
     }
     .step-badge {
-      flex-shrink: 0; width: 26px; height: 26px; border-radius: 6px;
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 6px;
       background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
       font-weight: 700; font-size: .72rem;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 6px rgba(79,140,255,.3);
+      box-shadow: 0 2px 6px rgba(79,140,255,.3); margin-top: 2px;
     }
     .step-badge.depot { background: linear-gradient(135deg, var(--green), #1a9a4a); box-shadow: 0 2px 6px rgba(34,197,94,.3); }
-    .step-text { flex: 1; line-height: 1.35; word-break: break-word; color: var(--text); }
-    .step-dist { font-size: .7rem; color: var(--text2); white-space: nowrap; }
+    .step-content { flex: 1; min-width: 0; }
+    .step-place-name { font-size: .75rem; font-weight: 700; color: var(--accent); margin-bottom: 1px; }
+    .step-addr { line-height: 1.35; word-break: break-word; color: var(--text); font-size: .78rem; }
+    .step-meta { font-size: .65rem; color: var(--text2); margin-top: 3px; display: flex; gap: 6px; }
+    .step-note {
+      font-size: .68rem; color: var(--yellow); font-style: italic; margin-top: 3px;
+      text-align: right;
+    }
+    .step-note::before { content: '\00AB\00A0'; }
+    .step-note::after { content: '\00A0\00BB'; }
+    .step-status {
+      font-size: .62rem; font-weight: 700; color: var(--green);
+      text-align: right; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px;
+    }
     #route-steps li.step-delivered {
       opacity: .5; border-color: var(--green); background: var(--green-bg);
     }
     #route-steps li.step-delivered .step-badge {
       background: var(--green); box-shadow: none;
-    }
-    #route-steps li.step-delivered .step-text::after {
-      content: ' — Livré'; color: var(--green); font-size: .7rem; font-weight: 600;
     }
     #route-steps li.step-current {
       border-color: var(--accent); box-shadow: 0 0 8px rgba(79,140,255,.3);
@@ -1003,16 +1012,25 @@ function renderRouteSteps() {
   const navActive = document.getElementById('nav-panel').classList.contains('visible');
   const now = new Date();
   let cumSeconds = 0;
-  let html = `<li><div class="step-badge depot">D</div><span class="step-text"><b>Départ</b> — ${stops[0].formatted}</span>
-    <span class="step-dist">${now.getHours()}h${String(now.getMinutes()).padStart(2,'0')}</span></li>`;
+  let html = `<li><div class="step-badge depot">D</div><div class="step-content">
+    <div class="step-addr"><b>Départ</b></div>
+    <div class="step-meta"><span>${stops[0].formatted}</span></div>
+    <div class="step-meta"><span>${now.getHours()}h${String(now.getMinutes()).padStart(2,'0')}</span></div>
+  </div></li>`;
   for (let i = 0; i < legs.length; i++) {
     cumSeconds += legs[i].duration.value;
     const eta = new Date(now.getTime() + cumSeconds * 1000);
     const etaStr = eta.getHours() + 'h' + String(eta.getMinutes()).padStart(2, '0');
-    const pn = state.deliveries[i] && state.deliveries[i].placeName ? `<b>${state.deliveries[i].placeName}</b> — ` : '';
+    const d = state.deliveries[i];
+    const pn = d && d.placeName ? `<div class="step-place-name">${d.placeName}</div>` : '';
+    const note = d && d.note ? `<div class="step-note">${d.note}</div>` : '';
     const stepClass = navActive && i < state.navIndex ? 'step-delivered' : navActive && i === state.navIndex ? 'step-current' : '';
-    html += `<li class="${stepClass}"><div class="step-badge">${i+1}</div><span class="step-text">${pn}${stops[i+1].formatted}</span>
-      <span class="step-dist">${legs[i].distance.text} · ${legs[i].duration.text} · ~${etaStr}</span></li>`;
+    const delivered = navActive && i < state.navIndex ? '<div class="step-status">Livré ✓</div>' : '';
+    html += `<li class="${stepClass}"><div class="step-badge">${i+1}</div><div class="step-content">
+      ${pn}<div class="step-addr">${stops[i+1].formatted}</div>
+      <div class="step-meta"><span>${legs[i].distance.text}</span><span>·</span><span>${legs[i].duration.text}</span><span>·</span><span>~${etaStr}</span></div>
+      ${note}${delivered}
+    </div></li>`;
   }
   document.getElementById('route-steps').innerHTML = html;
 }
