@@ -518,9 +518,10 @@ function initApp() {
   });
   state.geocoder = new google.maps.Geocoder();
   state.directionsService = new google.maps.DirectionsService();
+  const arrowSymbol = { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5, strokeColor: '#fff', strokeWeight: 1, fillColor: '#fff', fillOpacity: 0.9 };
   state.directionsRenderer = new google.maps.DirectionsRenderer({
     map: state.map, suppressMarkers: true,
-    polylineOptions: { strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9 },
+    polylineOptions: { strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9, icons: [{ icon: arrowSymbol, offset: '0', repeat: '80px' }] },
   });
 
   // Mini map preview for mobile
