@@ -290,6 +290,16 @@
     }
     .nav-arrived { color: var(--green) !important; font-weight: 600; }
 
+    /* ── MAP PREVIEW ── */
+    #map-preview {
+      display: none; width: 100%; height: 180px;
+      border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    @media (max-width: 768px) {
+      #map-preview { display: block; }
+    }
+
     /* ── RESET ── */
     #btn-reset {
       background: transparent; color: var(--text2); border: 1px solid var(--border);
@@ -427,6 +437,7 @@
         <button id="btn-nav-exit" onclick="exitNavigation()">Quitter la navigation</button>
       </div>
 
+      <div id="map-preview"></div>
       <button id="btn-reset" onclick="resetAll()">Réinitialiser la carte</button>
     </div>
   </div>
@@ -489,6 +500,22 @@ function initApp() {
     map: state.map, suppressMarkers: true,
     polylineOptions: { strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9 },
   });
+
+  // Mini map preview for mobile
+  if (window.innerWidth <= 768) {
+    state.previewMap = new google.maps.Map(document.getElementById('map-preview'), {
+      center: state.map.getCenter(), zoom: state.map.getZoom(),
+      disableDefaultUI: true, gestureHandling: 'none', clickableIcons: false,
+    });
+    state.previewRenderer = new google.maps.DirectionsRenderer({
+      map: state.previewMap, suppressMarkers: true,
+      polylineOptions: { strokeColor: '#4f8cff', strokeWeight: 3, strokeOpacity: 0.9 },
+    });
+    state.map.addListener('bounds_changed', () => {
+      state.previewMap.setCenter(state.map.getCenter());
+      state.previewMap.setZoom(state.map.getZoom());
+    });
+  }
 
   setupAutocomplete('start-input'); setupAutocomplete('delivery-input');
   setupFreqDropdown('start-input', 'freq-start'); setupFreqDropdown('delivery-input', 'freq-delivery');
@@ -618,6 +645,7 @@ function removeDelivery(id) {
   if (state.deliveries[idx].marker) state.deliveries[idx].marker.setMap(null);
   state.deliveries.splice(idx, 1); renderDeliveryList();
   state.directionsRenderer.setDirections({ routes: [] });
+  if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
   document.getElementById('results-panel').classList.remove('visible');
 }
 
@@ -784,6 +812,7 @@ function displayRoute(stops) {
     if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); state.startPoint.marker = null; }
     state.deliveries.forEach(d => { if (d.marker) { d.marker.setMap(null); d.marker = null; } });
     state.directionsRenderer.setDirections(result);
+    if (state.previewRenderer) state.previewRenderer.setDirections(result);
     stops.forEach((s, r) => {
       const m = createClassicMarker({ lat: s.lat, lng: s.lng }, r === 0 ? 'D' : String(r), r === 0 ? '#22c55e' : '#4f8cff',
         r === 0 ? 'Départ' : `Livraison ${r}`); state.markers.push(m);
@@ -909,6 +938,7 @@ function exitNavigation() {
 function resetAll() {
   if (!confirm('Effacer le trajet, les marqueurs et la liste d\'adresses ?')) return;
   clearMarkers(); state.directionsRenderer.setDirections({ routes: [] });
+  if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
   if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); }
   state.startPoint = null;
   state.deliveries.forEach(d => { if (d.marker) d.marker.setMap(null); });
