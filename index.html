@@ -1101,9 +1101,7 @@ function openInGoogleMaps() {
   if (isAndroid) {
     window.location.href = `google.navigation:q=${coords}&mode=d`;
   } else if (isIOS) {
-    const t0 = Date.now();
     window.location.href = `comgooglemaps://?daddr=${coords}&directionsmode=driving`;
-    setTimeout(() => { if (Date.now() - t0 < 1800) window.location.href = `maps://maps.apple.com/?daddr=${coords}&dirflg=d`; }, 1000);
   } else {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`, '_blank');
   }
