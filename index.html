@@ -294,7 +294,7 @@
     #map-preview {
       display: none; width: 100%; height: 180px;
       border-radius: var(--radius); overflow: hidden;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border); cursor: pointer;
     }
     @media (max-width: 768px) {
       #map-preview { display: block; }
@@ -437,7 +437,7 @@
         <button id="btn-nav-exit" onclick="exitNavigation()">Quitter la navigation</button>
       </div>
 
-      <div id="map-preview"></div>
+      <div id="map-preview" onclick="toggleSidebar()"></div>
       <button id="btn-reset" onclick="resetAll()">Réinitialiser la carte</button>
     </div>
   </div>
