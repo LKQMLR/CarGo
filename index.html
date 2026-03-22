@@ -231,12 +231,6 @@
       text-transform: uppercase;
     }
     #btn-optimize:not(:disabled):hover { box-shadow: 0 6px 24px rgba(79,140,255,.5); }
-    #btn-trace {
-      background: var(--surface2); border: 1px solid #7c3aed;
-      color: #a78bfa; width: 100%; padding: 10px; font-size: .82rem;
-      border-radius: var(--radius); cursor: pointer; margin-top: -4px;
-    }
-    #btn-trace:hover { border-color: #a78bfa; color: #c4b5fd; }
 
     /* ── STATUS ── */
     #status-bar {
@@ -465,7 +459,6 @@
       </div>
 
       <button id="btn-optimize" onclick="optimizeRoute()">Optimiser l'itinéraire</button>
-      <button id="btn-trace" onclick="traceCustomRoute()">Tracer l'itinéraire personnalisé</button>
       <div id="status-bar"></div>
 
       <div id="results-panel" class="section">
@@ -969,12 +962,7 @@ async function optimizeRoute() {
   state.deliveries.forEach(d => { if (!d.locked) d.customOrder = false; });
   renderDeliveryList(); displayRoute([state.startPoint, ...state.deliveries]); saveSession();
 }
-function traceCustomRoute() {
-  if (!state.startPoint) return showStatus('error', 'Définissez un point de départ.');
-  if (!state.deliveries.length) return showStatus('error', 'Ajoutez au moins une adresse.');
-  setUIBusy(true); showStatus('loading', 'Tracé...'); document.getElementById('results-panel').classList.remove('visible');
-  displayRoute([state.startPoint, ...state.deliveries]);
-}
+
 
 // ── MOVE / DRAG ──
 function moveToPosition(from, to) {
@@ -1438,7 +1426,7 @@ function restoreMapPrefs() {
     }, () => {}, { enableHighAccuracy: false, timeout: 5000 });
   }
 }
-function setUIBusy(b) { ['btn-set-start','btn-add','btn-optimize','btn-trace','btn-reset','btn-nav-start'].forEach(id => { const e = document.getElementById(id); if (e) e.disabled = b; }); }
+function setUIBusy(b) { ['btn-set-start','btn-add','btn-optimize','btn-reset','btn-nav-start'].forEach(id => { const e = document.getElementById(id); if (e) e.disabled = b; }); }
 // ── MOBILE TOGGLE ──
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
