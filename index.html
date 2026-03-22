@@ -412,13 +412,11 @@
     <div id="app-sections">
       <div class="section">
         <div class="section-title">Point de départ</div>
-        <div class="input-row">
-          <div class="input-wrapper">
-            <input type="text" id="start-input" placeholder="Adresse de départ..." autocomplete="off" />
-            <div class="freq-dropdown" id="freq-start"></div>
-          </div>
-          <button class="btn-success" id="btn-set-start" onclick="handleSetStart()">OK</button>
+        <div class="input-wrapper">
+          <input type="text" id="start-input" placeholder="Adresse de départ..." autocomplete="off" />
+          <div class="freq-dropdown" id="freq-start"></div>
         </div>
+        <button class="btn-success" id="btn-set-start" onclick="handleSetStart()" style="width:100%;margin-top:6px;">OK</button>
         <div id="start-display"></div>
       </div>
 
