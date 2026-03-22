@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LivreurGPS" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <title>LivreurGPS - Optimiseur de Tournée</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --surface2: #1c2a4a;
+      --border: #2a3a5c;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --accent: #4f8cff;
+      --accent2: #3b6fcf;
+      --green: #22c55e;
+      --green-bg: #16332a;
+      --red: #ef4444;
+      --red-bg: #331a1a;
+      --yellow: #f59e0b;
+      --yellow-bg: #33291a;
+      --radius: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 400px; min-width: 340px;
+      display: flex; flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      z-index: 10;
+      overflow-y: auto; overflow-x: hidden;
+    }
+    .sidebar-header {
+      background: linear-gradient(135deg, #0f3460, #1a5276);
+      padding: 18px 20px 14px;
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+    .sidebar-header p { font-size: .75rem; color: rgba(255,255,255,.6); margin-top: 3px; }
+    .sidebar-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
+    /* ── SECTIONS ── */
+    .section {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .section-title {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--text2); margin-bottom: 8px;
+    }
+    #app-sections { display: none; flex-direction: column; gap: 12px; }
+    #app-sections.visible { display: flex; }
+
+    /* ── API KEY ── */
+    #api-key-section { background: var(--yellow-bg); border-color: #5c4a1a; padding: 12px; border-radius: var(--radius); }
+    .api-key-help { font-size: .75rem; color: var(--yellow); line-height: 1.4; margin-bottom: 8px; }
+    .api-key-help a { color: var(--accent); }
+    #api-key-connected { font-size: .78rem; color: var(--green); font-weight: 600; display: none; margin-bottom: 4px; }
+
+    /* ── INPUTS ── */
+    .input-row { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1;
+      background: var(--bg); color: var(--text);
+      border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-size: .85rem; outline: none;
+      transition: border-color .2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--text2); }
+
+    /* ── BUTTONS ── */
+    button {
+      border: none; border-radius: 8px; cursor: pointer;
+      font-size: .82rem; font-weight: 600; padding: 9px 14px;
+      transition: opacity .15s, transform .1s; white-space: nowrap;
+    }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-warning { background: var(--yellow); color: #1a1a2e; }
+    .btn-del {
+      background: transparent; color: var(--red); border: 1px solid #5c2a2a;
+      padding: 0; width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; flex-shrink: 0;
+    }
+    .btn-del:hover { background: var(--red-bg); }
+
+    /* ── START DISPLAY ── */
+    #start-display {
+      margin-top: 6px; font-size: .78rem; color: var(--green);
+      font-weight: 500; word-break: break-word; display: none;
+    }
+    #start-display.visible { display: block; }
+
+    /* ── DELIVERY LIST ── */
+    #delivery-list {
+      list-style: none; display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 8px; max-height: 300px; overflow-y: auto; padding: 4px 2px;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    #delivery-list li {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 11px 12px;
+      font-size: .8rem; color: var(--text);
+      transition: opacity .2s, box-shadow .2s, border-color .2s, transform .2s, margin .2s;
+    }
+    #delivery-list li.drag-neighbor-above {
+      border-color: rgba(100,180,255,.7);
+      box-shadow: 0 0 10px rgba(80,160,255,.4), inset 0 0 6px rgba(80,160,255,.1);
+      transform: translateY(-3px);
+    }
+    #delivery-list li.drag-neighbor-below {
+      border-color: rgba(100,180,255,.7);
+      box-shadow: 0 0 10px rgba(80,160,255,.4), inset 0 0 6px rgba(80,160,255,.1);
+      transform: translateY(3px);
+    }
+    #delivery-list li.dragging { opacity: .15; }
+    .delivery-num {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border-radius: 6px;
+      min-width: 26px; height: 26px; font-size: .75rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(79,140,255,.35);
+      letter-spacing: -.2px;
+    }
+    .delivery-addr { flex: 1; line-height: 1.3; word-break: break-word; }
+    .drag-handle {
+      cursor: grab; color: var(--text2); font-size: .9rem;
+      padding: 4px 2px; flex-shrink: 0; user-select: none;
+      touch-action: none; display: flex; align-items: center;
+      transition: color .15s;
+    }
+    .drag-handle:hover { color: var(--accent); }
+    .drag-handle:active { cursor: grabbing; }
+    #delivery-list:empty::after {
+      content: 'Aucune adresse ajoutée';
+      color: var(--text2); font-size: .8rem; font-style: italic;
+      text-align: center; padding: 10px 0; display: block;
+    }
+
+    /* ── GHOST (clone visible pendant le drag) ── */
+    .drag-ghost {
+      position: fixed; z-index: 99999; pointer-events: none;
+      background: var(--surface2); border: 1.5px solid var(--accent);
+      border-radius: 8px; padding: 8px 12px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: .8rem; color: var(--text);
+      opacity: .88; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+      transform: rotate(1.5deg);
+      max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .drag-ghost .delivery-num {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border-radius: 5px;
+      min-width: 22px; height: 22px; font-size: .65rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* ── OPTIMIZE BUTTON ── */
+    #btn-optimize {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; width: 100%; padding: 12px; font-size: .9rem;
+      border-radius: var(--radius); letter-spacing: .2px;
+    }
+
+    /* ── STATUS ── */
+    #status-bar {
+      border-radius: 8px; padding: 8px 12px; font-size: .78rem; font-weight: 500;
+      display: none; align-items: center; gap: 8px;
+    }
+    #status-bar.visible { display: flex; }
+    #status-bar.loading { background: #162040; color: var(--accent); border: 1px solid #2a3a5c; }
+    #status-bar.success { background: var(--green-bg); color: var(--green); border: 1px solid #1a4a2a; }
+    #status-bar.error { background: var(--red-bg); color: var(--red); border: 1px solid #5c2a2a; }
+    .spinner {
+      width: 12px; height: 12px; border: 2px solid currentColor;
+      border-top-color: transparent; border-radius: 50%;
+      animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULTS ── */
+    #results-panel { display: none; }
+    #results-panel.visible { display: block; }
+    .results-title { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text2); margin-bottom: 8px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .summary-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 6px; text-align: center;
+    }
+    .summary-card span { display: block; font-size: .65rem; color: var(--text2); margin-bottom: 2px; }
+    .summary-card strong { font-size: .9rem; color: var(--text); }
+    #route-steps { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    #route-steps li {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 10px; font-size: .78rem; color: var(--text2);
+    }
+    .step-badge {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+      font-weight: 700; font-size: .72rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(79,140,255,.3);
+    }
+    .step-badge.depot { background: linear-gradient(135deg, var(--green), #1a9a4a); box-shadow: 0 2px 6px rgba(34,197,94,.3); }
+    .step-text { flex: 1; line-height: 1.35; word-break: break-word; color: var(--text); }
+    .step-dist { font-size: .7rem; color: var(--text2); white-space: nowrap; }
+
+    /* ── NAVIGATION ── */
+    #btn-nav-start {
+      display: none; width: 100%; padding: 12px; font-size: .88rem;
+      background: linear-gradient(135deg, var(--green), #1a9a4a); color: #fff;
+      border-radius: var(--radius); letter-spacing: .2px;
+    }
+    #btn-nav-start.visible { display: block; }
+    #nav-panel { display: none; }
+    #nav-panel.visible {
+      display: flex; flex-direction: column; gap: 10px;
+      background: linear-gradient(135deg, #0d2847, #163a5c);
+      border: 1px solid var(--accent); border-radius: var(--radius); padding: 14px;
+    }
+    .nav-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-header-title { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--accent); }
+    .nav-progress-text { font-size: .72rem; color: rgba(255,255,255,.6); }
+    .nav-progress-bar {
+      height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden;
+    }
+    .nav-progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--green), #34d399);
+      border-radius: 2px; transition: width .4s ease;
+    }
+    .nav-current {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(0,0,0,.2); border-radius: 8px; padding: 10px 12px;
+    }
+    .nav-badge {
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+      min-width: 38px; height: 38px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.05rem; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(79,140,255,.4);
+    }
+    .nav-info { flex: 1; min-width: 0; }
+    .nav-dest { color: #fff; font-size: .82rem; font-weight: 600; line-height: 1.3; word-break: break-word; }
+    .nav-meta { color: rgba(255,255,255,.5); font-size: .72rem; margin-top: 3px; }
+    .nav-actions { display: flex; gap: 6px; }
+    #btn-nav-go {
+      flex: 1; background: var(--green); color: #fff; padding: 10px; font-size: .82rem;
+    }
+    #btn-nav-next {
+      flex: 1; background: var(--accent); color: #fff; padding: 10px; font-size: .82rem;
+    }
+    #btn-nav-center {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--surface2); color: var(--text2); border: 1px solid var(--border);
+      width: 32px; height: 32px; border-radius: 8px; padding: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    #btn-nav-center:hover { color: var(--accent); border-color: var(--accent); }
+    #btn-nav-exit {
+      background: transparent; color: var(--text2); border: 1px solid var(--border);
+      padding: 6px 10px; font-size: .72rem; width: 100%;
+    }
+    .nav-arrived { color: var(--green) !important; font-weight: 600; }
+
+    /* ── RESET ── */
+    #btn-reset {
+      background: transparent; color: var(--text2); border: 1px solid var(--border);
+      width: 100%; padding: 8px; font-size: .78rem; border-radius: 8px;
+    }
+    #btn-reset:not(:disabled):hover { background: var(--surface2); color: var(--text); }
+
+    /* ── MAP ── */
+    #map { flex: 1; height: 100%; }
+
+    /* ── AUTOCOMPLETE ── */
+    .pac-container { z-index: 10001 !important; }
+    .freq-dropdown {
+      display: none; position: absolute; left: 0; right: 0; top: 100%;
+      background: var(--surface2); border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 8px 8px; box-shadow: 0 6px 16px rgba(0,0,0,.4);
+      z-index: 10002; max-height: 170px; overflow-y: auto;
+    }
+    .freq-dropdown.visible { display: block; }
+    .freq-item {
+      padding: 8px 12px; font-size: .8rem; color: var(--text);
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .freq-item:last-child { border-bottom: none; }
+    .freq-item:hover { background: var(--bg); }
+    .freq-item .freq-icon { color: var(--yellow); font-size: .72rem; flex-shrink: 0; }
+    .freq-item .freq-count { color: var(--text2); font-size: .68rem; margin-left: auto; flex-shrink: 0; }
+    .input-wrapper { position: relative; flex: 1; display: flex; }
+    .input-wrapper input { width: 100%; }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="sidebar-header">
+    <h1>LivreurGPS</h1>
+    <p>Optimiseur de tournée</p>
+  </div>
+  <div class="sidebar-body">
+
+    <div id="api-key-section">
+      <div class="section-title">Clé API Google Maps</div>
+      <div class="api-key-help">
+        Entrez votre clé API Google Maps.<br>
+        Activez : <b>Maps JS</b>, <b>Geocoding</b>, <b>Directions</b>, <b>Places</b>.<br>
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Obtenir une clé</a>
+      </div>
+      <div id="api-key-connected">Clé API connectée</div>
+      <div class="input-row">
+        <input type="text" id="api-key-input" placeholder="Coller la clé API..." />
+        <button class="btn-warning" id="btn-api-key" onclick="handleApiKey()">OK</button>
+      </div>
+    </div>
+
+    <div id="app-sections">
+      <div class="section">
+        <div class="section-title">Point de départ</div>
+        <div class="input-row">
+          <div class="input-wrapper">
+            <input type="text" id="start-input" placeholder="Adresse de départ..." autocomplete="off" />
+            <div class="freq-dropdown" id="freq-start"></div>
+          </div>
+          <button class="btn-success" id="btn-set-start" onclick="handleSetStart()">OK</button>
+        </div>
+        <div id="start-display"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Adresses de livraison</div>
+        <ul id="delivery-list"></ul>
+        <div class="input-row">
+          <div class="input-wrapper">
+            <input type="text" id="delivery-input" placeholder="Ajouter une adresse..." autocomplete="off" />
+            <div class="freq-dropdown" id="freq-delivery"></div>
+          </div>
+          <button class="btn-primary" id="btn-add" onclick="handleAddDelivery()">+</button>
+        </div>
+      </div>
+
+      <button id="btn-optimize" onclick="optimizeRoute()">Optimiser l'itinéraire</button>
+      <div id="status-bar"></div>
+
+      <div id="results-panel" class="section">
+        <div class="results-title">Itinéraire optimisé</div>
+        <div class="summary-grid" id="route-summary"></div>
+        <ul id="route-steps"></ul>
+      </div>
+
+      <button id="btn-nav-start" onclick="startNavigation()">Commencer la tournée</button>
+
+      <div id="nav-panel">
+        <button id="btn-nav-center" onclick="centerOnMe()" title="Recentrer">&#8982;</button>
+        <div class="nav-header">
+          <span class="nav-header-title">Navigation</span>
+          <span class="nav-progress-text" id="nav-progress-text"></span>
+        </div>
+        <div class="nav-progress-bar"><div class="nav-progress-fill" id="nav-progress-fill"></div></div>
+        <div class="nav-current">
+          <div class="nav-badge" id="nav-badge"></div>
+          <div class="nav-info">
+            <div class="nav-dest" id="nav-dest"></div>
+            <div class="nav-meta" id="nav-meta"></div>
+          </div>
+        </div>
+        <div class="nav-actions">
+          <button id="btn-nav-go" onclick="openInGoogleMaps()">En route</button>
+          <button id="btn-nav-next" onclick="nextNavStop()">Suivant</button>
+        </div>
+        <button id="btn-nav-exit" onclick="exitNavigation()">Quitter la navigation</button>
+      </div>
+
+      <button id="btn-reset" onclick="resetAll()">Réinitialiser la carte</button>
+    </div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const state = {
+  map: null, geocoder: null, directionsService: null, directionsRenderer: null,
+  startPoint: null, deliveries: [], markers: [],
+  navStops: null, navLegs: null, navIndex: 0,
+  watchId: null, posMarker: null, posCircle: null, followMode: true,
+};
+let idCounter = 0;
+
+// ── GOOGLE MAPS LOADING ──
+function loadGoogleMaps(apiKey) {
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=fr&region=FR`;
+    s.async = true; s.defer = true; s.onload = resolve;
+    s.onerror = () => reject(new Error('Impossible de charger Google Maps.'));
+    document.head.appendChild(s);
+  });
+}
+
+async function handleApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  document.getElementById('btn-api-key').disabled = true;
+  try { await loadGoogleMaps(key); localStorage.setItem('livreurGPS_apiKey', key); initApp(); }
+  catch (e) { alert(e.message); document.getElementById('btn-api-key').disabled = false; }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const k = localStorage.getItem('livreurGPS_apiKey');
+  if (k) { document.getElementById('api-key-input').value = k;
+    try { await loadGoogleMaps(k); initApp(); } catch {} }
+});
+
+// ── INIT ──
+function initApp() {
+  const ks = document.getElementById('api-key-section');
+  document.getElementById('api-key-connected').style.display = 'block';
+  document.getElementById('api-key-input').style.display = 'none';
+  document.getElementById('btn-api-key').style.display = 'none';
+  ks.style.background = 'var(--green-bg)'; ks.style.borderColor = '#1a4a2a';
+  document.getElementById('app-sections').classList.add('visible');
+
+  state.map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 46.603354, lng: 1.888334 }, zoom: 6,
+    mapTypeControl: true, streetViewControl: true, fullscreenControl: true, zoomControl: true,
+  });
+  state.geocoder = new google.maps.Geocoder();
+  state.directionsService = new google.maps.DirectionsService();
+  state.directionsRenderer = new google.maps.DirectionsRenderer({
+    map: state.map, suppressMarkers: true,
+    polylineOptions: { strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9 },
+  });
+
+  setupAutocomplete('start-input'); setupAutocomplete('delivery-input');
+  setupFreqDropdown('start-input', 'freq-start'); setupFreqDropdown('delivery-input', 'freq-delivery');
+  document.getElementById('start-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleSetStart(); });
+  document.getElementById('delivery-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleAddDelivery(); });
+  restoreMapPrefs();
+  state.map.addListener('dragstart', () => {
+    if (state.watchId !== null) {
+      state.followMode = false;
+      clearTimeout(state._recenterTimer);
+      state._recenterTimer = setTimeout(() => { if (state.watchId !== null) centerOnMe(); }, 5000);
+    }
+  });
+  state.map.addListener('maptypeid_changed', saveMapPrefs);
+  state.map.addListener('idle', saveMapPrefs);
+  state.map.addListener('tilt_changed', saveMapPrefs);
+  state.map.addListener('heading_changed', saveMapPrefs);
+}
+
+// ── FREQUENT ADDRESSES ──
+function getFrequentAddresses() { try { return JSON.parse(localStorage.getItem('livreurGPS_freqAddr') || '[]'); } catch { return []; } }
+function saveFrequentAddress(addr) {
+  const list = getFrequentAddresses();
+  const ex = list.find(a => a.formatted === addr.formatted);
+  if (ex) { ex.count++; ex.lastUsed = Date.now(); } else { list.push({ ...addr, count: 1, lastUsed: Date.now() }); }
+  list.sort((a, b) => b.count - a.count);
+  localStorage.setItem('livreurGPS_freqAddr', JSON.stringify(list.slice(0, 50)));
+}
+function showFreqDropdown(inputId, dropdownId) {
+  const input = document.getElementById(inputId), dd = document.getElementById(dropdownId);
+  const q = input.value.trim().toLowerCase(), all = getFrequentAddresses();
+  if (!all.length) { dd.classList.remove('visible'); return; }
+  const matches = q.length === 0 ? all.slice(0, 8) : all.filter(a => a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) { dd.classList.remove('visible'); return; }
+  dd.innerHTML = matches.map(a => `
+    <div class="freq-item" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${a.formatted.replace(/"/g,'&quot;')}" data-address="${a.address.replace(/"/g,'&quot;')}">
+      <span class="freq-icon">&#9733;</span><span>${a.formatted.length > 50 ? a.formatted.substring(0,47)+'...' : a.formatted}</span><span class="freq-count">${a.count}x</span>
+    </div>`).join('');
+  dd.classList.add('visible');
+  dd.querySelectorAll('.freq-item').forEach(item => {
+    item.addEventListener('mousedown', e => {
+      e.preventDefault(); input.value = item.dataset.address;
+      input.dataset.lat = item.dataset.lat; input.dataset.lng = item.dataset.lng;
+      input.dataset.formatted = item.dataset.formatted; input.dataset.resolved = 'true';
+      dd.classList.remove('visible');
+    });
+  });
+}
+function setupFreqDropdown(inputId, dropdownId) {
+  const input = document.getElementById(inputId);
+  input.addEventListener('focus', () => showFreqDropdown(inputId, dropdownId));
+  input.addEventListener('input', () => showFreqDropdown(inputId, dropdownId));
+  input.addEventListener('blur', () => { setTimeout(() => document.getElementById(dropdownId).classList.remove('visible'), 150); });
+}
+
+// ── AUTOCOMPLETE ──
+function setupAutocomplete(inputId) {
+  const input = document.getElementById(inputId);
+  const ac = new google.maps.places.Autocomplete(input, { componentRestrictions: { country: 'fr' }, fields: ['formatted_address', 'geometry', 'name'] });
+  input._autocomplete = ac;
+  ac.addListener('place_changed', () => {
+    const p = ac.getPlace();
+    if (p.geometry) { input.dataset.lat = p.geometry.location.lat(); input.dataset.lng = p.geometry.location.lng();
+      input.dataset.formatted = p.name ? p.name + ', ' + p.formatted_address : p.formatted_address; input.dataset.resolved = 'true'; }
+  });
+  input.addEventListener('input', () => { input.dataset.resolved = ''; });
+}
+function updateAutocompleteBias() {
+  const pts = []; if (state.startPoint) pts.push(state.startPoint); pts.push(...state.deliveries);
+  if (!pts.length) return;
+  const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend({ lat: p.lat, lng: p.lng }));
+  ['start-input', 'delivery-input'].forEach(id => { const el = document.getElementById(id); if (el._autocomplete) el._autocomplete.setBounds(b); });
+}
+
+// ── GEOCODING ──
+function geocodeAddress(address) {
+  return new Promise((resolve, reject) => {
+    state.geocoder.geocode({ address, region: 'fr' }, (r, s) => {
+      if (s === 'OK' && r.length) resolve({ lat: r[0].geometry.location.lat(), lng: r[0].geometry.location.lng(), formatted: r[0].formatted_address });
+      else reject(new Error(`Adresse introuvable : "${address}"`));
+    });
+  });
+}
+async function resolveInput(el) {
+  if (el.dataset.resolved === 'true') return { lat: parseFloat(el.dataset.lat), lng: parseFloat(el.dataset.lng), formatted: el.dataset.formatted };
+  return geocodeAddress(el.value.trim());
+}
+
+// ── MARKERS ──
+function createClassicMarker(position, label, color, title) {
+  const isStart = label === 'D';
+  const size = isStart ? 42 : 38;
+  const h = isStart ? 52 : 48;
+  const cx = size / 2, cy = 17, r = 11;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${h}" viewBox="0 0 ${size} ${h}">
+    <path d="M${cx} ${h-2} C${cx} ${h-2} 2 ${h-20} 2 ${cy} A${cx-2} ${cx-2} 0 1 1 ${size-2} ${cy} C${size-2} ${h-20} ${cx} ${h-2} ${cx} ${h-2}Z"
+      fill="rgba(0,0,0,.25)" transform="translate(1,1)"/>
+    <path d="M${cx} ${h-2} C${cx} ${h-2} 2 ${h-20} 2 ${cy} A${cx-2} ${cx-2} 0 1 1 ${size-2} ${cy} C${size-2} ${h-20} ${cx} ${h-2} ${cx} ${h-2}Z"
+      fill="${color}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(255,255,255,.92)"/>
+    <text x="${cx}" y="${cy + 4.5}" text-anchor="middle" fill="${color}" font-family="Arial,sans-serif" font-weight="800"
+      font-size="${label.length > 1 ? '10' : '13'}">${label}</text></svg>`;
+  return new google.maps.Marker({ position, map: state.map, title,
+    icon: { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      scaledSize: new google.maps.Size(size, h), anchor: new google.maps.Point(cx, h) },
+    zIndex: isStart ? 1000 : 500 });
+}
+function clearMarkers() { state.markers.forEach(m => m.setMap(null)); state.markers = []; }
+
+// ── DELIVERY LIST ──
+function renderDeliveryList() {
+  const ul = document.getElementById('delivery-list');
+  if (!state.deliveries.length) { ul.innerHTML = ''; return; }
+  ul.innerHTML = state.deliveries.map((d, i) => {
+    const name = d.formatted.length > 50 ? d.formatted.substring(0, 47) + '...' : d.formatted;
+    return `<li data-idx="${i}">
+      <div class="drag-handle">&#8942;&#8942;</div>
+      <div class="delivery-num">${i + 1}</div>
+      <div class="delivery-addr">${name}</div>
+      <button class="btn-del" onclick="removeDelivery(${d.id})">&#10005;</button>
+    </li>`;
+  }).join('');
+  initDragAndDrop();
+}
+function removeDelivery(id) {
+  const idx = state.deliveries.findIndex(d => d.id === id); if (idx === -1) return;
+  if (state.deliveries[idx].marker) state.deliveries[idx].marker.setMap(null);
+  state.deliveries.splice(idx, 1); renderDeliveryList();
+  state.directionsRenderer.setDirections({ routes: [] });
+  document.getElementById('results-panel').classList.remove('visible');
+}
+
+// ── HANDLERS ──
+async function handleSetStart() {
+  const input = document.getElementById('start-input'), addr = input.value.trim(); if (!addr) return;
+  setUIBusy(true); showStatus('loading', 'Géocodage...');
+  try {
+    const geo = await resolveInput(input);
+    if (state.startPoint?.marker) state.startPoint.marker.setMap(null);
+    const marker = createClassicMarker({ lat: geo.lat, lng: geo.lng }, 'D', '#22c55e', 'Départ');
+    state.startPoint = { address: addr, ...geo, marker };
+    state.map.panTo({ lat: geo.lat, lng: geo.lng }); state.map.setZoom(14);
+    const d = document.getElementById('start-display'); d.textContent = geo.formatted; d.classList.add('visible');
+    saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted });
+    updateAutocompleteBias(); showStatus('success', 'Départ défini.');
+  } catch (e) { showStatus('error', e.message); } finally { setUIBusy(false); }
+}
+async function handleAddDelivery() {
+  const input = document.getElementById('delivery-input'), addr = input.value.trim(); if (!addr) return;
+  setUIBusy(true); showStatus('loading', 'Géocodage...');
+  try {
+    const geo = await resolveInput(input);
+    const marker = createClassicMarker({ lat: geo.lat, lng: geo.lng }, String(state.deliveries.length + 1), '#ef4444', geo.formatted);
+    state.deliveries.push({ id: idCounter++, address: addr, ...geo, marker });
+    state.map.panTo({ lat: geo.lat, lng: geo.lng }); state.map.setZoom(14);
+    renderDeliveryList(); saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted });
+    updateAutocompleteBias(); input.value = ''; input.dataset.resolved = '';
+    showStatus('success', `${state.deliveries.length} adresse(s) ajoutée(s).`);
+  } catch (e) { showStatus('error', e.message); } finally { setUIBusy(false); }
+}
+
+// ── HAVERSINE + TSP ──
+function haversine(a, b) {
+  const R = 6371000, toR = x => x * Math.PI / 180;
+  const dLat = toR(b.lat - a.lat), dLon = toR(b.lng - a.lng);
+  const s = Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
+}
+function buildDistanceMatrix(pts) {
+  return pts.map((a, i) => pts.map((b, j) => i === j ? 0 : haversine(a, b)));
+}
+function nearestNeighborTSP(mx, start = 0) {
+  const n = mx.length, vis = new Array(n).fill(false), tour = [start]; vis[start] = true;
+  for (let s = 1; s < n; s++) {
+    const c = tour[tour.length-1]; let nn = -1, nd = Infinity;
+    for (let j = 0; j < n; j++) { if (!vis[j] && mx[c][j] < nd) { nn = j; nd = mx[c][j]; } }
+    if (nn === -1) break; vis[nn] = true; tour.push(nn);
+  }
+  return tour;
+}
+
+// ── OPTIMIZE ──
+async function optimizeRoute() {
+  if (!state.startPoint) return showStatus('error', 'Définissez un point de départ.');
+  if (!state.deliveries.length) return showStatus('error', 'Ajoutez au moins une adresse.');
+  setUIBusy(true); showStatus('loading', 'Optimisation...'); document.getElementById('results-panel').classList.remove('visible');
+  if (state.deliveries.length === 1) { displayRoute([state.startPoint, state.deliveries[0]]); return; }
+  const all = [state.startPoint, ...state.deliveries];
+  const tour = nearestNeighborTSP(buildDistanceMatrix(all), 0);
+  state.deliveries = tour.slice(1).map(i => all[i]);
+  renderDeliveryList(); displayRoute([state.startPoint, ...state.deliveries]);
+}
+
+// ── MOVE / DRAG ──
+function moveToPosition(from, to) {
+  if (from === to) return;
+  state.deliveries.splice(to, 0, state.deliveries.splice(from, 1)[0]);
+  renderDeliveryList();
+  if (state.startPoint && state.deliveries.length) displayRoute([state.startPoint, ...state.deliveries]);
+}
+
+function initDragAndDrop() {
+  const ul = document.getElementById('delivery-list');
+  const items = ul.querySelectorAll('li');
+  items.forEach(li => {
+    const handle = li.querySelector('.drag-handle');
+    let ghost = null;
+
+    function createGhost(li, x, y) {
+      ghost = document.createElement('div'); ghost.className = 'drag-ghost';
+      const num = li.querySelector('.delivery-num').textContent;
+      const addr = li.querySelector('.delivery-addr').textContent;
+      ghost.innerHTML = `<div class="delivery-num">${num}</div><span>${addr}</span>`;
+      document.body.appendChild(ghost); moveGhost(x, y);
+    }
+    function moveGhost(x, y) { if (ghost) { ghost.style.left = (x + 12) + 'px'; ghost.style.top = (y - 16) + 'px'; } }
+    function removeGhost() { if (ghost) { ghost.remove(); ghost = null; } }
+
+    function clearHighlights() { items.forEach(el => el.classList.remove('drag-neighbor-above','drag-neighbor-below')); }
+    function highlightGap(y) {
+      clearHighlights();
+      const gap = getInsertGap(ul, y, li);
+      if (gap.above) gap.above.classList.add('drag-neighbor-above');
+      if (gap.below) gap.below.classList.add('drag-neighbor-below');
+    }
+
+    // MOUSE
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const dragIdx = parseInt(li.dataset.idx);
+      li.classList.add('dragging'); createGhost(li, e.clientX, e.clientY);
+      const onMove = e2 => { moveGhost(e2.clientX, e2.clientY); highlightGap(e2.clientY); };
+      const onUp = e2 => {
+        document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp);
+        li.classList.remove('dragging'); clearHighlights(); removeGhost();
+        const gap = getInsertGap(ul, e2.clientY, li);
+        if (gap.insertIdx !== dragIdx && gap.insertIdx !== dragIdx + 1) {
+          const to = gap.insertIdx > dragIdx ? gap.insertIdx - 1 : gap.insertIdx;
+          moveToPosition(dragIdx, to);
+        }
+      };
+      document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+    });
+
+    // TOUCH
+    handle.addEventListener('touchstart', e => {
+      e.preventDefault();
+      li._dragIdx = parseInt(li.dataset.idx); li.classList.add('dragging');
+      const touch = e.touches[0]; createGhost(li, touch.clientX, touch.clientY);
+    }, { passive: false });
+    handle.addEventListener('touchmove', e => {
+      e.preventDefault(); const touch = e.touches[0]; moveGhost(touch.clientX, touch.clientY);
+      highlightGap(touch.clientY);
+    }, { passive: false });
+    handle.addEventListener('touchend', e => {
+      const dragIdx = li._dragIdx;
+      li.classList.remove('dragging'); clearHighlights(); removeGhost();
+      const touch = e.changedTouches[0];
+      const gap = getInsertGap(ul, touch.clientY, li);
+      if (gap.insertIdx !== dragIdx && gap.insertIdx !== dragIdx + 1) {
+        const to = gap.insertIdx > dragIdx ? gap.insertIdx - 1 : gap.insertIdx;
+        moveToPosition(dragIdx, to);
+      }
+    });
+  });
+}
+function getInsertGap(ul, y, dragLi) {
+  const items = [...ul.querySelectorAll('li')].filter(el => el !== dragLi);
+  if (!items.length) return { above: null, below: null, insertIdx: 0 };
+  // Find which gap the cursor falls into
+  for (let i = 0; i < items.length; i++) {
+    const r = items[i].getBoundingClientRect();
+    if (y < r.top + r.height / 2) {
+      return { above: i > 0 ? items[i - 1] : null, below: items[i], insertIdx: parseInt(items[i].dataset.idx) };
+    }
+  }
+  const last = items[items.length - 1];
+  return { above: last, below: null, insertIdx: parseInt(last.dataset.idx) + 1 };
+}
+
+// ── DISPLAY ROUTE ──
+function displayRoute(stops) {
+  setUIBusy(true); showStatus('loading', 'Tracé...');
+  const origin = { lat: stops[0].lat, lng: stops[0].lng };
+  const dest = { lat: stops[stops.length-1].lat, lng: stops[stops.length-1].lng };
+  const wps = stops.slice(1, -1).map(s => ({ location: { lat: s.lat, lng: s.lng }, stopover: true }));
+  state.directionsService.route({
+    origin, destination: dest, waypoints: wps, optimizeWaypoints: false,
+    travelMode: google.maps.TravelMode.DRIVING, unitSystem: google.maps.UnitSystem.METRIC, language: 'fr',
+  }, (result, status) => {
+    if (status !== 'OK') { showStatus('error', 'Erreur itinéraire : ' + status); setUIBusy(false); return; }
+    clearMarkers();
+    if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); state.startPoint.marker = null; }
+    state.deliveries.forEach(d => { if (d.marker) { d.marker.setMap(null); d.marker = null; } });
+    state.directionsRenderer.setDirections(result);
+    stops.forEach((s, r) => {
+      const m = createClassicMarker({ lat: s.lat, lng: s.lng }, r === 0 ? 'D' : String(r), r === 0 ? '#22c55e' : '#4f8cff',
+        r === 0 ? 'Départ' : `Livraison ${r}`); state.markers.push(m);
+    });
+    const legs = result.routes[0].legs; let td = 0, tt = 0;
+    legs.forEach(l => { td += l.distance.value; tt += l.duration.value; });
+    state.navStops = stops; state.navLegs = legs;
+    showResults(stops, legs, td, tt); showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s).`);
+    document.getElementById('btn-nav-start').classList.add('visible');
+    document.getElementById('nav-panel').classList.remove('visible');
+    setUIBusy(false);
+  });
+}
+
+// ── RESULTS ──
+function showResults(stops, legs, distM, durS) {
+  const km = (distM/1000).toFixed(1), h = Math.floor(durS/3600), m = Math.floor((durS%3600)/60);
+  document.getElementById('route-summary').innerHTML = `
+    <div class="summary-card"><span>Distance</span><strong>${km} km</strong></div>
+    <div class="summary-card"><span>Durée</span><strong>${h > 0 ? h+'h '+m+'min' : m+' min'}</strong></div>
+    <div class="summary-card"><span>Arrêts</span><strong>${state.deliveries.length}</strong></div>`;
+  let html = `<li><div class="step-badge depot">D</div><span class="step-text"><b>Départ</b> — ${stops[0].formatted}</span></li>`;
+  for (let i = 0; i < legs.length; i++) {
+    html += `<li><div class="step-badge">${i+1}</div><span class="step-text">${stops[i+1].formatted}</span>
+      <span class="step-dist">${legs[i].distance.text} · ${legs[i].duration.text}</span></li>`;
+  }
+  document.getElementById('route-steps').innerHTML = html;
+  document.getElementById('results-panel').classList.add('visible');
+}
+
+// ── STATUS / RESET / PREFS ──
+function showStatus(type, msg) {
+  const b = document.getElementById('status-bar'); b.className = `visible ${type}`;
+  b.innerHTML = `${type==='loading'?'<div class="spinner"></div>':type==='success'?'&#10003;':'!'} ${msg}`;
+}
+// ── NAVIGATION GPS ──
+function startNavigation() {
+  if (!state.navStops || !state.navLegs) return;
+  if (!navigator.geolocation) { showStatus('error', 'G\u00e9olocalisation non disponible sur ce navigateur.'); return; }
+  state.navIndex = 0; state.followMode = true;
+  document.getElementById('btn-nav-start').classList.remove('visible');
+  document.getElementById('nav-panel').classList.add('visible');
+  updateNavPanel();
+  state.watchId = navigator.geolocation.watchPosition(
+    pos => updateGPSPosition(pos.coords),
+    err => {
+      const msgs = { 1: 'G\u00e9olocalisation refus\u00e9e.', 2: 'Position indisponible.', 3: 'D\u00e9lai d\u00e9pass\u00e9.' };
+      showStatus('error', msgs[err.code] || 'Erreur GPS.');
+    },
+    { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+  );
+}
+function updateGPSPosition(coords) {
+  const pos = { lat: coords.latitude, lng: coords.longitude };
+  const dotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="13" fill="rgba(66,133,244,.15)"/>
+    <circle cx="14" cy="14" r="7" fill="#4285F4" stroke="#fff" stroke-width="2.5"/></svg>`;
+  if (!state.posMarker) {
+    state.posMarker = new google.maps.Marker({ position: pos, map: state.map, zIndex: 2000,
+      icon: { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(dotSvg),
+        scaledSize: new google.maps.Size(28, 28), anchor: new google.maps.Point(14, 14) } });
+    state.posCircle = new google.maps.Circle({ map: state.map, center: pos,
+      radius: Math.min(coords.accuracy || 50, 500),
+      fillColor: '#4285F4', fillOpacity: 0.08, strokeColor: '#4285F4', strokeOpacity: 0.25, strokeWeight: 1, clickable: false });
+  } else {
+    state.posMarker.setPosition(pos);
+    state.posCircle.setCenter(pos);
+    state.posCircle.setRadius(Math.min(coords.accuracy || 50, 500));
+  }
+  if (state.followMode) { state.map.panTo(pos); state.map.setZoom(Math.max(state.map.getZoom(), 16)); }
+  // Update distance to current destination
+  if (state.navStops && state.navIndex < state.deliveries.length) {
+    const dest = state.navStops[state.navIndex + 1];
+    const dist = haversine(pos, dest);
+    const meta = document.getElementById('nav-meta');
+    if (dist < 80) {
+      meta.textContent = 'Vous \u00eates arriv\u00e9 !';
+      meta.classList.add('nav-arrived');
+    } else {
+      meta.textContent = dist < 1000 ? Math.round(dist) + ' m restant' : (dist / 1000).toFixed(1) + ' km restant';
+      meta.classList.remove('nav-arrived');
+    }
+  }
+}
+function updateNavPanel() {
+  const i = state.navIndex, total = state.deliveries.length;
+  const stop = state.navStops[i + 1], leg = state.navLegs[i];
+  document.getElementById('nav-badge').textContent = i + 1;
+  document.getElementById('nav-dest').textContent = stop.formatted;
+  document.getElementById('nav-meta').textContent = leg.distance.text + ' \u00b7 ' + leg.duration.text;
+  document.getElementById('nav-meta').classList.remove('nav-arrived');
+  document.getElementById('nav-progress-text').textContent = (i + 1) + ' / ' + total;
+  document.getElementById('nav-progress-fill').style.width = ((i + 1) / total * 100) + '%';
+  document.getElementById('btn-nav-next').textContent = i < total - 1 ? 'Suivant \u25b8' : 'Termin\u00e9 \u2713';
+  // Bounce destination marker
+  state.markers.forEach((m, idx) => m.setAnimation(idx === i + 1 ? google.maps.Animation.BOUNCE : null));
+  setTimeout(() => state.markers.forEach(m => m.setAnimation(null)), 1500);
+}
+function nextNavStop() {
+  if (state.navIndex >= state.deliveries.length - 1) {
+    exitNavigation(); showStatus('success', 'Tourn\u00e9e termin\u00e9e !'); return;
+  }
+  state.navIndex++; state.followMode = true; updateNavPanel();
+}
+function openInGoogleMaps() {
+  const dest = state.navStops[state.navIndex + 1];
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}&travelmode=driving`, '_blank');
+}
+function centerOnMe() {
+  state.followMode = true;
+  if (state.posMarker) { state.map.panTo(state.posMarker.getPosition()); state.map.setZoom(Math.max(state.map.getZoom(), 16)); }
+}
+function exitNavigation() {
+  clearTimeout(state._recenterTimer);
+  if (state.watchId !== null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; }
+  if (state.posMarker) { state.posMarker.setMap(null); state.posMarker = null; }
+  if (state.posCircle) { state.posCircle.setMap(null); state.posCircle = null; }
+  document.getElementById('nav-panel').classList.remove('visible');
+  document.getElementById('btn-nav-start').classList.add('visible');
+  state.markers.forEach(m => m.setAnimation(null));
+}
+
+function resetAll() {
+  if (!confirm('Effacer le trajet, les marqueurs et la liste d\'adresses ?')) return;
+  clearMarkers(); state.directionsRenderer.setDirections({ routes: [] });
+  if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); }
+  state.startPoint = null;
+  state.deliveries.forEach(d => { if (d.marker) d.marker.setMap(null); });
+  state.deliveries = [];
+  if (state.watchId !== null) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; }
+  if (state.posMarker) { state.posMarker.setMap(null); state.posMarker = null; }
+  if (state.posCircle) { state.posCircle.setMap(null); state.posCircle = null; }
+  state.navStops = null; state.navLegs = null; state.navIndex = 0;
+  document.getElementById('delivery-list').innerHTML = '';
+  const sd = document.getElementById('start-display'); if (sd) { sd.textContent = ''; sd.classList.remove('visible'); }
+  document.getElementById('results-panel').classList.remove('visible');
+  document.getElementById('nav-panel').classList.remove('visible');
+  document.getElementById('btn-nav-start').classList.remove('visible');
+  document.getElementById('status-bar').className = '';
+}
+function saveMapPrefs() {
+  localStorage.setItem('livreurGPS_mapPrefs', JSON.stringify({
+    mapTypeId: state.map.getMapTypeId(), zoom: state.map.getZoom(),
+    center: { lat: state.map.getCenter().lat(), lng: state.map.getCenter().lng() },
+    tilt: state.map.getTilt(), heading: state.map.getHeading(),
+  }));
+}
+function restoreMapPrefs() {
+  try { const p = JSON.parse(localStorage.getItem('livreurGPS_mapPrefs'));
+    if (p.mapTypeId) state.map.setMapTypeId(p.mapTypeId); if (p.zoom) state.map.setZoom(p.zoom);
+    if (p.center) state.map.setCenter(p.center); if (p.tilt != null) state.map.setTilt(p.tilt);
+    if (p.heading != null) state.map.setHeading(p.heading);
+  } catch {}
+}
+function setUIBusy(b) { ['btn-set-start','btn-add','btn-optimize','btn-reset','btn-nav-start'].forEach(id => { const e = document.getElementById(id); if (e) e.disabled = b; }); }
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
