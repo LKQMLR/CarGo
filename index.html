@@ -493,6 +493,7 @@
 
       <div id="map-preview" onclick="toggleSidebar()"></div>
       <button id="btn-reset" onclick="resetAll()">Réinitialiser la carte</button>
+      <button id="btn-reset" style="margin-top:4px;background:var(--red-bg);color:var(--red);border:1px solid #5c2a2a;width:100%;padding:8px;font-size:.72rem;border-radius:8px;cursor:pointer" onclick="if(confirm('Effacer toutes les données (cache, session, préférences) et recharger ?')){caches.keys().then(k=>Promise.all(k.map(c=>caches.delete(c))));localStorage.clear();navigator.serviceWorker.getRegistrations().then(r=>r.forEach(s=>s.unregister()));setTimeout(()=>location.reload(true),500)}">Vider le cache &amp; données</button>
     </div>
   </div>
 </div>
