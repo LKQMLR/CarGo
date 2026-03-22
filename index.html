@@ -161,6 +161,10 @@
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       box-shadow: 0 1px 4px rgba(79,140,255,.3);
     }
+    .delivery-num.custom {
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      box-shadow: 0 1px 4px rgba(245,158,11,.35);
+    }
     .delivery-addr { flex: 1; line-height: 1.35; word-break: break-word; min-width: 0; font-size: .78rem; }
     .delivery-place-name {
       font-size: .72rem; font-weight: 600; color: var(--accent); margin-bottom: 1px;
@@ -225,11 +229,11 @@
       border-radius: var(--radius); letter-spacing: .2px;
     }
     #btn-trace {
-      background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); width: 100%; padding: 10px; font-size: .82rem;
+      background: var(--surface2); border: 1px solid #b45309;
+      color: #f59e0b; width: 100%; padding: 10px; font-size: .82rem;
       border-radius: var(--radius); cursor: pointer; margin-top: -4px;
     }
-    #btn-trace:hover { border-color: var(--accent); color: var(--accent); }
+    #btn-trace:hover { border-color: #f59e0b; color: #fbbf24; }
 
     /* ── STATUS ── */
     #status-bar {
@@ -597,7 +601,7 @@ function initApp() {
 function saveSession() {
   const data = {
     startPoint: state.startPoint ? { address: state.startPoint.address, lat: state.startPoint.lat, lng: state.startPoint.lng, formatted: state.startPoint.formatted } : null,
-    deliveries: state.deliveries.map(d => ({ id: d.id, address: d.address, lat: d.lat, lng: d.lng, formatted: d.formatted, placeName: d.placeName || '', note: d.note || '', legDist: d.legDist || '', legDur: d.legDur || '', locked: d.locked || false })),
+    deliveries: state.deliveries.map(d => ({ id: d.id, address: d.address, lat: d.lat, lng: d.lng, formatted: d.formatted, placeName: d.placeName || '', note: d.note || '', legDist: d.legDist || '', legDur: d.legDur || '', locked: d.locked || false, customOrder: d.customOrder || false })),
     routeOptimized: !!state.navStops,
     navActive: !!document.getElementById('nav-panel').classList.contains('visible'),
     navIndex: state.navIndex,
@@ -777,7 +781,7 @@ function renderDeliveryList() {
     const liClass = d.locked ? 'delivery-locked' : '';
     return `<li data-idx="${i}" data-id="${d.id}" class="${liClass}">
       <div class="drag-handle">&#8942;&#8942;</div>
-      <div class="delivery-num">${i + 1}</div>
+      <div class="delivery-num${d.customOrder ? ' custom' : ''}">${i + 1}</div>
       <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
         <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value="" maxlength="44"
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
@@ -959,6 +963,7 @@ async function optimizeRoute() {
     }
     state.deliveries = result;
   }
+  state.deliveries.forEach(d => d.customOrder = false);
   renderDeliveryList(); displayRoute([state.startPoint, ...state.deliveries]); saveSession();
 }
 function traceCustomRoute() {
@@ -972,6 +977,7 @@ function traceCustomRoute() {
 function moveToPosition(from, to) {
   if (from === to) return;
   state.deliveries.splice(to, 0, state.deliveries.splice(from, 1)[0]);
+  state.deliveries[to].customOrder = true;
   renderDeliveryList();
   if (state.startPoint && state.deliveries.length) displayRoute([state.startPoint, ...state.deliveries]);
   saveSession();
