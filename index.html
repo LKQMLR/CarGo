@@ -405,9 +405,8 @@
   </div>
   <div class="sidebar-body">
 
-    <div id="api-status-bar" style="display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:.72rem;">
+    <div id="api-status-bar" style="display:flex;align-items:center;padding:8px 12px;">
       <span class="api-status-dot" id="api-dot"></span>
-      <span id="api-status-text">Connexion...</span>
     </div>
 
     <div id="app-sections">
@@ -505,7 +504,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const dot = document.getElementById('api-dot');
   try { await loadGoogleMaps(API_KEY); initApp(); } catch {
     dot.classList.add('off');
-    document.getElementById('api-status-text').textContent = 'Erreur API';
+    dot.classList.add('off');
   }
 });
 
@@ -513,7 +512,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 function initApp() {
   const dot = document.getElementById('api-dot');
   dot.classList.remove('off'); dot.classList.add('on');
-  document.getElementById('api-status-text').textContent = 'API connectée';
   document.getElementById('app-sections').classList.add('visible');
 
   state.map = new google.maps.Map(document.getElementById('map'), {
