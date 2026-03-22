@@ -191,7 +191,15 @@
     }
     .drag-handle:hover { color: var(--accent); }
     .drag-handle:active { cursor: grabbing; }
-    #delivery-list li.swiping { transition: transform .15s, opacity .15s; }
+    #delivery-list li { position: relative; overflow: hidden; }
+    #delivery-list li .swipe-bg {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 0;
+      background: var(--red); display: flex; align-items: center; justify-content: flex-start;
+      padding-left: 14px; font-size: .75rem; font-weight: 700; color: #fff;
+      pointer-events: none; transition: none;
+    }
+    #delivery-list li.swiping { transition: transform .2s ease-out, opacity .2s; }
+    #delivery-list li.swiping .swipe-bg { transition: width .2s ease-out; }
     #delivery-list li.swipe-out { transform: translateX(-100%); opacity: 0; }
     #delivery-list:empty::after {
       content: 'Aucune adresse ajoutée';
@@ -767,7 +775,7 @@ function renderDeliveryList() {
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
       </div>
       <button class="${lockClass}" onclick="toggleLock(${d.id})" title="Verrouiller la position">${lockIcon}</button>
-      <button class="btn-del" onclick="removeDelivery(${d.id})">&#10005;</button>
+      <div class="swipe-bg">Supprimer</div>
     </li>`;
   }).join('');
   initDragAndDrop();
@@ -1045,26 +1053,37 @@ function getInsertGap(ul, y, dragLi) {
 function initSwipeToDelete() {
   const items = document.querySelectorAll('#delivery-list li');
   items.forEach(li => {
-    let startX = 0, dx = 0, swiping = false;
+    let startX = 0, rawDx = 0, swiping = false;
+    const bg = li.querySelector('.swipe-bg');
     li.addEventListener('touchstart', e => {
-      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input')) return;
-      startX = e.touches[0].clientX; dx = 0; swiping = true;
+      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.btn-lock')) return;
+      startX = e.touches[0].clientX; rawDx = 0; swiping = true;
+      li.classList.remove('swiping');
     }, { passive: true });
     li.addEventListener('touchmove', e => {
       if (!swiping) return;
-      dx = e.touches[0].clientX - startX;
-      if (dx > 0) dx = 0; // only swipe left
-      if (dx < -30) li.style.transform = `translateX(${dx}px)`;
+      rawDx = e.touches[0].clientX - startX;
+      if (rawDx > 0) rawDx = 0;
+      // Resistance: diminishing returns after 80px
+      const absDx = Math.abs(rawDx);
+      const resist = absDx < 80 ? absDx : 80 + (absDx - 80) * 0.3;
+      const tx = -resist;
+      li.style.transform = `translateX(${tx}px)`;
+      if (bg) bg.style.width = Math.abs(tx) + 'px';
     }, { passive: true });
     li.addEventListener('touchend', () => {
       if (!swiping) return; swiping = false;
-      if (dx < -100) {
+      const absDx = Math.abs(rawDx);
+      if (absDx > 120) {
         li.classList.add('swiping', 'swipe-out');
+        if (bg) bg.style.width = '100%';
         const id = parseInt(li.dataset.id);
-        setTimeout(() => removeDelivery(id), 200);
+        setTimeout(() => removeDelivery(id), 250);
       } else {
-        li.style.transform = ''; li.classList.add('swiping');
-        setTimeout(() => li.classList.remove('swiping'), 150);
+        li.classList.add('swiping');
+        li.style.transform = '';
+        if (bg) bg.style.width = '0';
+        setTimeout(() => li.classList.remove('swiping'), 200);
       }
     });
   });
