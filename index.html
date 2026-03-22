@@ -244,10 +244,10 @@
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       color: #fff; width: 100%; padding: 14px; font-size: .95rem; font-weight: 700;
       border-radius: var(--radius); letter-spacing: .3px;
-      box-shadow: 0 4px 16px rgba(79,140,255,.4);
+      border: 1px solid rgba(120,180,255,.5);
       text-transform: uppercase;
     }
-    #btn-optimize:not(:disabled):hover { box-shadow: 0 6px 24px rgba(79,140,255,.5); }
+    #btn-optimize:not(:disabled):hover { border-color: rgba(140,200,255,.7); }
 
     /* ── STATUS ── */
     #status-bar {
@@ -314,9 +314,11 @@
 
     /* ── NAVIGATION ── */
     #btn-nav-start {
-      display: none; width: 100%; padding: 12px; font-size: .88rem;
-      background: linear-gradient(135deg, var(--green), #1a9a4a); color: #fff;
-      border-radius: var(--radius); letter-spacing: .2px;
+      display: none; width: 100%; padding: 14px; font-size: .95rem; font-weight: 700;
+      background: linear-gradient(135deg, #facc15, #eab308); color: #1a1a2e;
+      border-radius: var(--radius); letter-spacing: .3px;
+      text-transform: uppercase;
+      border: 1px solid rgba(250,204,21,.6);
     }
     #btn-nav-start.visible { display: block; }
     #nav-panel { display: none; }
@@ -443,7 +445,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v71</span></h1>
+    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v73</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
