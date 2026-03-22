@@ -182,6 +182,10 @@
       letter-spacing: -.2px;
     }
     .delivery-addr { flex: 1; line-height: 1.3; word-break: break-word; min-width: 0; }
+    .delivery-place-name {
+      font-size: .75rem; font-weight: 700; color: var(--accent); margin-bottom: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .delivery-note {
       font-size: .68rem; color: var(--yellow); margin-top: 3px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -624,7 +628,7 @@ function initApp() {
 function saveSession() {
   const data = {
     startPoint: state.startPoint ? { address: state.startPoint.address, lat: state.startPoint.lat, lng: state.startPoint.lng, formatted: state.startPoint.formatted } : null,
-    deliveries: state.deliveries.map(d => ({ id: d.id, address: d.address, lat: d.lat, lng: d.lng, formatted: d.formatted, note: d.note || '', legDist: d.legDist || '', legDur: d.legDur || '' })),
+    deliveries: state.deliveries.map(d => ({ id: d.id, address: d.address, lat: d.lat, lng: d.lng, formatted: d.formatted, placeName: d.placeName || '', note: d.note || '', legDist: d.legDist || '', legDur: d.legDur || '' })),
     routeOptimized: !!state.navStops,
     navActive: !!document.getElementById('nav-panel').classList.contains('visible'),
     navIndex: state.navIndex,
@@ -682,18 +686,18 @@ function showFreqDropdown(inputId, dropdownId) {
   const input = document.getElementById(inputId), dd = document.getElementById(dropdownId);
   const q = input.value.trim().toLowerCase(), all = getFrequentAddresses();
   if (!all.length) { dd.classList.remove('visible'); return; }
-  const matches = q.length === 0 ? all.slice(0, 8) : all.filter(a => a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q)).slice(0, 8);
+  const matches = q.length === 0 ? all.slice(0, 8) : all.filter(a => a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q) || (a.placeName && a.placeName.toLowerCase().includes(q))).slice(0, 8);
   if (!matches.length) { dd.classList.remove('visible'); return; }
   dd.innerHTML = matches.map(a => `
-    <div class="freq-item" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${a.formatted.replace(/"/g,'&quot;')}" data-address="${a.address.replace(/"/g,'&quot;')}" data-note="${(a.note||'').replace(/"/g,'&quot;')}">
-      <span class="freq-icon">&#9733;</span><span>${a.formatted.length > 50 ? a.formatted.substring(0,47)+'...' : a.formatted}${a.note ? ' <small style="color:var(--yellow)">'+a.note+'</small>' : ''}</span>
+    <div class="freq-item" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${a.formatted.replace(/"/g,'&quot;')}" data-address="${a.address.replace(/"/g,'&quot;')}" data-note="${(a.note||'').replace(/"/g,'&quot;')}" data-place-name="${(a.placeName||'').replace(/"/g,'&quot;')}">
+      <span class="freq-icon">&#9733;</span><span>${a.placeName ? '<b>'+a.placeName+'</b> · ' : ''}${a.formatted.length > 50 ? a.formatted.substring(0,47)+'...' : a.formatted}${a.note ? ' <small style="color:var(--yellow)">'+a.note+'</small>' : ''}</span>
     </div>`).join('');
   dd.classList.add('visible');
   dd.querySelectorAll('.freq-item').forEach(item => {
     item.addEventListener('mousedown', e => {
       e.preventDefault(); input.value = item.dataset.address;
       input.dataset.lat = item.dataset.lat; input.dataset.lng = item.dataset.lng;
-      input.dataset.formatted = item.dataset.formatted; input.dataset.resolved = 'true';
+      input.dataset.formatted = item.dataset.formatted; input.dataset.placeName = item.dataset.placeName || ''; input.dataset.resolved = 'true';
       dd.classList.remove('visible');
     });
   });
@@ -713,7 +717,8 @@ function setupAutocomplete(inputId) {
   ac.addListener('place_changed', () => {
     const p = ac.getPlace();
     if (p.geometry) { input.dataset.lat = p.geometry.location.lat(); input.dataset.lng = p.geometry.location.lng();
-      input.dataset.formatted = p.name ? p.name + ', ' + p.formatted_address : p.formatted_address; input.dataset.resolved = 'true'; }
+      input.dataset.placeName = (p.name && p.name !== p.formatted_address) ? p.name : '';
+      input.dataset.formatted = p.formatted_address; input.dataset.resolved = 'true'; }
   });
   input.addEventListener('input', () => { input.dataset.resolved = ''; });
 }
@@ -740,7 +745,7 @@ function geocodeAddress(address) {
   });
 }
 async function resolveInput(el) {
-  if (el.dataset.resolved === 'true') return { lat: parseFloat(el.dataset.lat), lng: parseFloat(el.dataset.lng), formatted: el.dataset.formatted };
+  if (el.dataset.resolved === 'true') return { lat: parseFloat(el.dataset.lat), lng: parseFloat(el.dataset.lng), formatted: el.dataset.formatted, placeName: el.dataset.placeName || '' };
   return geocodeAddress(el.value.trim());
 }
 
@@ -777,7 +782,8 @@ function renderDeliveryList() {
   if (!state.deliveries.length) { ul.innerHTML = ''; return; }
   const navActive = document.getElementById('nav-panel').classList.contains('visible');
   ul.innerHTML = state.deliveries.map((d, i) => {
-    const name = d.formatted.length > 50 ? d.formatted.substring(0, 47) + '...' : d.formatted;
+    const addr = d.formatted.length > 50 ? d.formatted.substring(0, 47) + '...' : d.formatted;
+    const placeLabel = d.placeName ? `<div class="delivery-place-name">${d.placeName}</div>` : '';
     const noteDisplay = d.note ? `<div class="delivery-note" onclick="editNote(${d.id})" title="Cliquer pour modifier">${d.note}</div>` : '';
     const inputStyle = d.note ? 'display:none' : '';
     const legInfo = d.legDist && d.legDur ? `<div class="delivery-leg-info"><span>${d.legDist}</span><span>·</span><span>${d.legDur}</span></div>` : '';
@@ -785,7 +791,7 @@ function renderDeliveryList() {
     return `<li data-idx="${i}" data-id="${d.id}" class="${liClass}">
       <div class="drag-handle">&#8942;&#8942;</div>
       <div class="delivery-num">${i + 1}</div>
-      <div class="delivery-addr">${name}${noteDisplay}
+      <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
         <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value=""
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
       </div>
@@ -848,10 +854,12 @@ async function handleAddDelivery() {
   try {
     const geo = await resolveInput(input);
     const marker = createClassicMarker({ lat: geo.lat, lng: geo.lng }, String(state.deliveries.length + 1), '#ef4444', geo.formatted);
-    const freqNote = (getFrequentAddresses().find(a => a.formatted === geo.formatted) || {}).note || '';
-    state.deliveries.push({ id: idCounter++, address: addr, ...geo, marker, note: freqNote });
+    const freq = getFrequentAddresses().find(a => a.formatted === geo.formatted) || {};
+    const freqNote = freq.note || '';
+    const placeName = geo.placeName || freq.placeName || '';
+    state.deliveries.push({ id: idCounter++, address: addr, ...geo, placeName, marker, note: freqNote });
     state.map.panTo({ lat: geo.lat, lng: geo.lng }); state.map.setZoom(14);
-    renderDeliveryList(); saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted });
+    renderDeliveryList(); saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted, placeName });
     updateAutocompleteBias(); input.value = ''; input.dataset.resolved = '';
     showStatus('success', `${state.deliveries.length} adresse(s) ajoutée(s).`); saveSession();
   } catch (e) { showStatus('error', e.message); } finally { setUIBusy(false); }
@@ -1057,7 +1065,8 @@ function showResults(stops, legs, distM, durS) {
     cumSeconds += legs[i].duration.value;
     const eta = new Date(now.getTime() + cumSeconds * 1000);
     const etaStr = eta.getHours() + 'h' + String(eta.getMinutes()).padStart(2, '0');
-    html += `<li><div class="step-badge">${i+1}</div><span class="step-text">${stops[i+1].formatted}</span>
+    const pn = state.deliveries[i] && state.deliveries[i].placeName ? `<b>${state.deliveries[i].placeName}</b> — ` : '';
+    html += `<li><div class="step-badge">${i+1}</div><span class="step-text">${pn}${stops[i+1].formatted}</span>
       <span class="step-dist">${legs[i].distance.text} · ${legs[i].duration.text} · ~${etaStr}</span></li>`;
   }
   document.getElementById('route-steps').innerHTML = html;
