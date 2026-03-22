@@ -961,36 +961,89 @@ function initSwipeToDelete() {
 // ── DISPLAY ROUTE ──
 function displayRoute(stops) {
   setUIBusy(true); showStatus('loading', 'Tracé...');
-  const origin = { lat: stops[0].lat, lng: stops[0].lng };
-  const dest = { lat: stops[stops.length-1].lat, lng: stops[stops.length-1].lng };
-  const wps = stops.slice(1, -1).map(s => ({ location: { lat: s.lat, lng: s.lng }, stopover: true }));
-  state.directionsService.route({
-    origin, destination: dest, waypoints: wps, optimizeWaypoints: false,
-    travelMode: google.maps.TravelMode.DRIVING, unitSystem: google.maps.UnitSystem.METRIC, language: 'fr',
-  }, (result, status) => {
-    if (status !== 'OK') { showStatus('error', 'Erreur itinéraire : ' + status); setUIBusy(false); return; }
-    clearMarkers();
-    if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); state.startPoint.marker = null; }
-    state.deliveries.forEach(d => { if (d.marker) { d.marker.setMap(null); d.marker = null; } });
-    state.directionsRenderer.setDirections(result);
-    if (state.previewRenderer) state.previewRenderer.setDirections(result);
-    stops.forEach((s, r) => {
-      const lbl = r === 0 ? 'D' : String(r), col = r === 0 ? '#22c55e' : '#4f8cff', ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
-      const pos = { lat: s.lat, lng: s.lng };
-      state.markers.push(createClassicMarker(pos, lbl, col, ttl));
-      if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65));
+  clearMarkers();
+  if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); state.startPoint.marker = null; }
+  state.deliveries.forEach(d => { if (d.marker) { d.marker.setMap(null); d.marker = null; } });
+
+  // Split into batches of max 25 points (origin + 23 waypoints + destination)
+  const batches = [];
+  const MAX_WP = 23;
+  for (let i = 0; i < stops.length - 1; i += MAX_WP) {
+    const chunk = stops.slice(i, i + MAX_WP + 1);
+    if (chunk.length < 2) break;
+    batches.push(chunk);
+  }
+
+  let allLegs = [];
+  let totalDist = 0, totalDur = 0;
+  let completed = 0;
+  const allResults = [];
+
+  batches.forEach((batch, bIdx) => {
+    const origin = { lat: batch[0].lat, lng: batch[0].lng };
+    const dest = { lat: batch[batch.length - 1].lat, lng: batch[batch.length - 1].lng };
+    const wps = batch.slice(1, -1).map(s => ({ location: { lat: s.lat, lng: s.lng }, stopover: true }));
+    state.directionsService.route({
+      origin, destination: dest, waypoints: wps, optimizeWaypoints: false,
+      travelMode: google.maps.TravelMode.DRIVING, unitSystem: google.maps.UnitSystem.METRIC, language: 'fr',
+    }, (result, status) => {
+      if (status !== 'OK') { showStatus('error', 'Erreur itinéraire : ' + status); setUIBusy(false); return; }
+      allResults[bIdx] = result;
+      completed++;
+      if (completed < batches.length) return;
+
+      // All batches done — combine results
+      allResults.forEach(r => {
+        const legs = r.routes[0].legs;
+        legs.forEach(l => { totalDist += l.distance.value; totalDur += l.duration.value; });
+        allLegs.push(...legs);
+      });
+
+      // Show last batch directions on map (best visual)
+      if (batches.length === 1) {
+        state.directionsRenderer.setDirections(allResults[0]);
+        if (state.previewRenderer) state.previewRenderer.setDirections(allResults[0]);
+      } else {
+        // For multi-batch, draw polyline manually
+        state.directionsRenderer.setDirections({ routes: [] });
+        if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
+        const path = [];
+        allResults.forEach(r => {
+          r.routes[0].overview_path.forEach(p => path.push(p));
+        });
+        if (state._routePoly) state._routePoly.setMap(null);
+        if (state._routePolyPreview) state._routePolyPreview.setMap(null);
+        const arrowIcon = { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5, strokeColor: '#fff', strokeWeight: 1, fillColor: '#fff', fillOpacity: 0.9 };
+        state._routePoly = new google.maps.Polyline({
+          path, map: state.map, strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9,
+          icons: [{ icon: arrowIcon, offset: '0', repeat: '80px' }]
+        });
+        if (state.previewMap) {
+          state._routePolyPreview = new google.maps.Polyline({
+            path, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 3, strokeOpacity: 0.9
+          });
+        }
+      }
+
+      // Place markers
+      stops.forEach((s, r) => {
+        const lbl = r === 0 ? 'D' : String(r), col = r === 0 ? '#22c55e' : '#4f8cff', ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
+        const pos = { lat: s.lat, lng: s.lng };
+        state.markers.push(createClassicMarker(pos, lbl, col, ttl));
+        if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65));
+      });
+
+      state.navStops = stops; state.navLegs = allLegs;
+      state.deliveries.forEach((d, i) => {
+        if (allLegs[i]) { d.legDist = allLegs[i].distance.text; d.legDur = allLegs[i].duration.text; }
+      });
+      showResults(stops, allLegs, totalDist, totalDur);
+      showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s).`);
+      renderDeliveryList();
+      document.getElementById('btn-nav-start').classList.add('visible');
+      document.getElementById('nav-panel').classList.remove('visible');
+      saveSession(); setUIBusy(false);
     });
-    const legs = result.routes[0].legs; let td = 0, tt = 0;
-    legs.forEach(l => { td += l.distance.value; tt += l.duration.value; });
-    state.navStops = stops; state.navLegs = legs;
-    state.deliveries.forEach((d, i) => {
-      if (legs[i]) { d.legDist = legs[i].distance.text; d.legDur = legs[i].duration.text; }
-    });
-    showResults(stops, legs, td, tt); showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s).`);
-    renderDeliveryList();
-    document.getElementById('btn-nav-start').classList.add('visible');
-    document.getElementById('nav-panel').classList.remove('visible');
-    saveSession(); setUIBusy(false);
   });
 }
 
@@ -1140,6 +1193,8 @@ function resetAll() {
   clearMarkers(); state.directionsRenderer.setDirections({ routes: [] });
   if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
   if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); }
+  if (state._routePoly) { state._routePoly.setMap(null); state._routePoly = null; }
+  if (state._routePolyPreview) { state._routePolyPreview.setMap(null); state._routePolyPreview = null; }
   state.startPoint = null;
   state.deliveries.forEach(d => { if (d.marker) d.marker.setMap(null); });
   state.deliveries = [];
