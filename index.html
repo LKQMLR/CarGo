@@ -1034,7 +1034,8 @@ function updateNavPanel() {
 }
 function nextNavStop() {
   if (state.navIndex >= state.deliveries.length - 1) {
-    exitNavigation(); showStatus('success', 'Tourn\u00e9e termin\u00e9e !'); return;
+    exitNavigation(); showStatus('success', 'Tourn\u00e9e termin\u00e9e !');
+    localStorage.removeItem('livreurGPS_session'); return;
   }
   state.navIndex++; state.followMode = true; updateNavPanel(); saveSession();
 }
