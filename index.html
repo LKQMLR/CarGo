@@ -963,7 +963,7 @@ async function optimizeRoute() {
     }
     state.deliveries = result;
   }
-  state.deliveries.forEach(d => d.customOrder = false);
+  state.deliveries.forEach(d => { if (!d.locked) d.customOrder = false; });
   renderDeliveryList(); displayRoute([state.startPoint, ...state.deliveries]); saveSession();
 }
 function traceCustomRoute() {
