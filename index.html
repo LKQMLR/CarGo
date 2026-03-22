@@ -71,31 +71,12 @@
     #app-sections { display: none; flex-direction: column; gap: 12px; }
     #app-sections.visible { display: flex; }
 
-    /* ── API KEY ── */
-    #api-key-section { border-radius: var(--radius); overflow: hidden; }
-    .api-key-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px; cursor: pointer; user-select: none;
-    }
-    .api-key-header .api-status {
-      display: flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 600;
-    }
+    /* ── API STATUS ── */
     .api-status-dot {
       width: 8px; height: 8px; border-radius: 50%;
     }
     .api-status-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
     .api-status-dot.off { background: var(--red); box-shadow: 0 0 6px var(--red); }
-    .api-key-toggle {
-      background: none; border: none; color: var(--text2); font-size: .9rem;
-      cursor: pointer; padding: 2px 4px; transition: transform .2s;
-    }
-    .api-key-toggle.open { transform: rotate(180deg); }
-    .api-key-body {
-      display: none; padding: 0 12px 12px;
-    }
-    .api-key-body.visible { display: block; }
-    .api-key-help { font-size: .75rem; color: var(--yellow); line-height: 1.4; margin-bottom: 8px; }
-    .api-key-help a { color: var(--accent); }
 
     /* ── INPUTS ── */
     .input-row { display: flex; gap: 8px; }
@@ -424,25 +405,9 @@
   </div>
   <div class="sidebar-body">
 
-    <div id="api-key-section">
-      <div class="api-key-header" onclick="toggleApiKey()">
-        <div class="api-status">
-          <span class="api-status-dot" id="api-dot"></span>
-          <span id="api-status-text">API non connectée</span>
-        </div>
-        <span class="api-key-toggle" id="api-key-toggle">&#9662;</span>
-      </div>
-      <div class="api-key-body" id="api-key-body">
-        <div class="api-key-help">
-          Entrez votre clé API Google Maps.<br>
-          Activez : <b>Maps JS</b>, <b>Geocoding</b>, <b>Directions</b>, <b>Places</b>.<br>
-          <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Obtenir une clé</a>
-        </div>
-        <div class="input-row">
-          <input type="text" id="api-key-input" placeholder="Coller la clé API..." />
-          <button class="btn-warning" id="btn-api-key" onclick="handleApiKey()">OK</button>
-        </div>
-      </div>
+    <div id="api-status-bar" style="display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:.72rem;">
+      <span class="api-status-dot" id="api-dot"></span>
+      <span id="api-status-text">Connexion...</span>
     </div>
 
     <div id="app-sections">
@@ -534,48 +499,21 @@ function loadGoogleMaps(apiKey) {
   });
 }
 
-async function handleApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key) return;
-  document.getElementById('btn-api-key').disabled = true;
-  try { await loadGoogleMaps(key); localStorage.setItem('nexum_apiKey', key); initApp(); }
-  catch (e) { alert(e.message); document.getElementById('btn-api-key').disabled = false; }
-}
+const API_KEY = 'AIzaSyAMvy_xjhvYS51Yyy6bNMgJrMRLpvVd8Go';
 
 window.addEventListener('DOMContentLoaded', async () => {
-  const k = localStorage.getItem('nexum_apiKey');
   const dot = document.getElementById('api-dot');
-  if (k) {
-    document.getElementById('api-key-input').value = k;
-    try { await loadGoogleMaps(k); initApp(); } catch {
-      dot.classList.add('off');
-      document.getElementById('api-status-text').textContent = 'Erreur API';
-      document.getElementById('api-key-body').classList.add('visible');
-    }
-  } else {
+  try { await loadGoogleMaps(API_KEY); initApp(); } catch {
     dot.classList.add('off');
-    document.getElementById('api-key-body').classList.add('visible');
-    document.getElementById('api-key-toggle').classList.add('open');
-    document.getElementById('api-key-section').style.background = 'var(--yellow-bg)';
-    document.getElementById('api-key-section').style.borderColor = '#5c4a1a';
+    document.getElementById('api-status-text').textContent = 'Erreur API';
   }
 });
 
 // ── INIT ──
-function toggleApiKey() {
-  const body = document.getElementById('api-key-body');
-  const toggle = document.getElementById('api-key-toggle');
-  body.classList.toggle('visible');
-  toggle.classList.toggle('open');
-}
 function initApp() {
-  const ks = document.getElementById('api-key-section');
-  ks.style.background = 'var(--green-bg)'; ks.style.borderColor = '#1a4a2a';
   const dot = document.getElementById('api-dot');
   dot.classList.remove('off'); dot.classList.add('on');
   document.getElementById('api-status-text').textContent = 'API connectée';
-  document.getElementById('api-key-body').classList.remove('visible');
-  document.getElementById('api-key-toggle').classList.remove('open');
   document.getElementById('app-sections').classList.add('visible');
 
   state.map = new google.maps.Map(document.getElementById('map'), {
