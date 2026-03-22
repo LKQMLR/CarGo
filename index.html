@@ -738,7 +738,7 @@ function renderDeliveryList() {
       <div class="drag-handle">&#8942;&#8942;</div>
       <div class="delivery-num">${i + 1}</div>
       <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
-        <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value=""
+        <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value="" maxlength="30"
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
       </div>
       <button class="btn-del" onclick="removeDelivery(${d.id})">&#10005;</button>
