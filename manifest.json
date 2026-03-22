@@ -1,6 +1,6 @@
 {
-  "name": "Nexum - Planification intelligente de tournées",
-  "short_name": "Nexum",
+  "name": "CarGo - Planification intelligente de tournées",
+  "short_name": "CarGo",
   "description": "Planification intelligente de tournées de livraison",
   "start_url": "./index.html",
   "display": "standalone",

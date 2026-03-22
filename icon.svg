@@ -2,6 +2,6 @@
   <rect width="512" height="512" rx="96" fill="#1a1a2e"/>
   <path d="M256 420 C256 420 120 290 120 200 A136 136 0 1 1 392 200 C392 290 256 420 256 420Z" fill="#4f8cff"/>
   <circle cx="256" cy="200" r="56" fill="rgba(255,255,255,.92)"/>
-  <text x="256" y="218" text-anchor="middle" fill="#4f8cff" font-family="Arial,sans-serif" font-weight="800" font-size="60">N</text>
-  <text x="256" y="478" text-anchor="middle" fill="rgba(255,255,255,.7)" font-family="Arial,sans-serif" font-weight="700" font-size="48">Nexum</text>
+  <text x="256" y="218" text-anchor="middle" fill="#4f8cff" font-family="Arial,sans-serif" font-weight="800" font-size="60">C</text>
+  <text x="256" y="478" text-anchor="middle" fill="rgba(255,255,255,.7)" font-family="Arial,sans-serif" font-weight="700" font-size="48">CarGo</text>
 </svg>
