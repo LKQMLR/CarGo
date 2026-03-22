@@ -725,8 +725,7 @@ function renderDeliveryList() {
     const noteDisplay = d.note ? `<div class="delivery-note" onclick="editNote(${d.id})" title="Cliquer pour modifier">${d.note}</div>` : '';
     const inputStyle = d.note ? 'display:none' : '';
     const legInfo = d.legDist && d.legDur ? `<div class="delivery-leg-info"><span>${d.legDist}</span><span>·</span><span>${d.legDur}</span></div>` : '';
-    const liClass = navActive && i < state.navIndex ? 'delivered' : navActive && i === state.navIndex ? 'nav-current-stop' : '';
-    return `<li data-idx="${i}" data-id="${d.id}" class="${liClass}">
+    return `<li data-idx="${i}" data-id="${d.id}">
       <div class="drag-handle">&#8942;&#8942;</div>
       <div class="delivery-num">${i + 1}</div>
       <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
