@@ -1,4 +1,4 @@
-const CACHE = 'nexum-v39';
+const CACHE = 'nexum-v41';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('googleapis.com') || e.request.url.includes('gstatic.com')) return;
+  if (e.request.url.includes('googleapis.com') || e.request.url.includes('gstatic.com') || e.request.url.includes('googlesyndication.com') || e.request.url.includes('doubleclick.net')) return;
   e.respondWith(
     fetch(e.request).then(r => {
       const clone = r.clone();
