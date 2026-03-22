@@ -262,8 +262,8 @@
     }
     .step-badge.depot { background: linear-gradient(135deg, var(--green), #1a9a4a); box-shadow: 0 2px 6px rgba(34,197,94,.3); }
     .step-content { flex: 1; min-width: 0; }
-    .step-place-name { font-size: .8rem; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
-    .step-addr { line-height: 1.4; word-break: break-word; color: var(--text); font-size: .8rem; }
+    .step-place-name { font-size: .75rem; font-weight: 400; color: var(--accent); margin-bottom: 3px; }
+    .step-addr { line-height: 1.4; word-break: break-word; color: var(--text); font-size: .8rem; font-weight: 600; }
     .step-meta { font-size: .7rem; color: var(--text2); margin-top: 6px; display: flex; gap: 8px; }
     .step-note {
       font-size: .72rem; color: var(--yellow); font-style: italic; font-weight: 600; margin-top: 6px;
@@ -1128,7 +1128,7 @@ function startNavigation() {
   updateNavPanel(); renderDeliveryList(); renderRouteSteps(); saveSession();
   openInGoogleMaps();
   // Wake Lock — écran toujours allumé
-  if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(l => state.wakeLock = l).catch(() => {});
+  requestWakeLock();
   state.watchId = navigator.geolocation.watchPosition(
     pos => updateGPSPosition(pos.coords),
     err => {
@@ -1199,6 +1199,12 @@ function openInGoogleMaps() {
   const dest = state.navStops[state.navIndex + 1];
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}&travelmode=driving`, '_blank');
 }
+function requestWakeLock() {
+  if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(l => state.wakeLock = l).catch(() => {});
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.watchId !== null) requestWakeLock();
+});
 function centerOnMe() {
   state.followMode = true;
   if (state.posMarker) { state.map.panTo(state.posMarker.getPosition()); state.map.setZoom(Math.max(state.map.getZoom(), 16)); }
