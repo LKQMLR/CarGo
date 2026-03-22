@@ -1007,7 +1007,7 @@ function showResults(stops, legs, distM, durS) {
 function renderRouteSteps() {
   if (!state.navStops || !state.navLegs) return;
   const stops = state.navStops, legs = state.navLegs;
-  const navActive = document.getElementById('nav-panel').classList.contains('visible');
+  const navActive = document.getElementById('nav-panel').classList.contains('visible') || state._tourComplete;
   const now = new Date();
   let cumSeconds = 0;
   let html = `<li><div class="step-badge depot">D</div><div class="step-content">
@@ -1106,6 +1106,7 @@ function updateNavPanel() {
 function nextNavStop() {
   if (state.navIndex >= state.deliveries.length - 1) {
     state.navIndex = state.deliveries.length;
+    state._tourComplete = true;
     exitNavigation(); renderRouteSteps(); showStatus('success', 'Tournée terminée ! Vérifiez vos livraisons puis réinitialisez.');
     saveSession(); return;
   }
@@ -1118,13 +1119,17 @@ function openInGoogleMaps() {
   const coords = `${dest.lat},${dest.lng}`;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isAndroid = /Android/i.test(navigator.userAgent);
+  let url;
   if (isAndroid) {
-    window.open(`google.navigation:q=${coords}&mode=d`, '_self');
+    url = `google.navigation:q=${coords}&mode=d`;
   } else if (isIOS) {
-    window.open(`comgooglemaps://?daddr=${coords}&directionsmode=driving`, '_self');
+    url = `comgooglemaps://?daddr=${coords}&directionsmode=driving`;
   } else {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`, '_blank');
+    url = `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`;
   }
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 function centerOnMe() {
   state.followMode = true;
@@ -1144,6 +1149,7 @@ function exitNavigation() {
 
 function resetAll() {
   if (!confirm('Réinitialiser la tournée ? Toutes les adresses et le tracé seront effacés.')) return;
+  state._tourComplete = false;
   clearMarkers(); state.directionsRenderer.setDirections({ routes: [] });
   if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
   if (state.startPoint?.marker) { state.startPoint.marker.setMap(null); }
