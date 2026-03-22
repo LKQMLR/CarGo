@@ -1020,7 +1020,7 @@ function renderRouteSteps() {
     const etaStr = eta.getHours() + 'h' + String(eta.getMinutes()).padStart(2, '0');
     const d = state.deliveries[i];
     const pn = d && d.placeName ? `<div class="step-place-name">${d.placeName}</div>` : '';
-    const note = d && d.note ? `<div class="step-note">${d.note}</div>` : '';
+    const note = d && d.note ? `<div class="step-note">— ${d.note}</div>` : '';
     const stepClass = navActive && i < state.navIndex ? 'step-delivered' : navActive && i === state.navIndex ? 'step-current' : '';
     const delivered = navActive && i < state.navIndex ? '<div class="step-status">Livré ✓</div>' : '';
     html += `<li class="${stepClass}"><div class="step-badge">${i+1}</div><div class="step-content">
