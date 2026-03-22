@@ -69,6 +69,23 @@
       font-size: .68rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: .8px; color: var(--text2); margin-bottom: 8px;
     }
+    /* Point de départ — discret, en retrait */
+    .section-start {
+      background: rgba(22,33,62,.4); border-color: rgba(42,58,92,.5);
+      padding: 10px;
+    }
+    .section-start .section-title { opacity: .6; font-size: .62rem; }
+    /* Adresses de livraison — back-end, neutre mais présent */
+    .section-deliveries {
+      background: var(--surface2); border-color: var(--border);
+    }
+    /* Itinéraire optimisé — front-end, actif, mis en avant */
+    .section-route {
+      background: linear-gradient(135deg, rgba(22,33,62,.9), rgba(15,52,96,.6));
+      border-color: rgba(79,140,255,.25);
+      box-shadow: 0 2px 16px rgba(79,140,255,.08);
+    }
+    .section-route .results-title { color: var(--accent); opacity: .9; }
     #app-sections { display: none; flex-direction: column; gap: 12px; }
     #app-sections.visible { display: flex; }
 
@@ -436,7 +453,7 @@
     </div>
 
     <div id="app-sections">
-      <div class="section">
+      <div class="section section-start">
         <div class="section-title">Point de départ</div>
         <div class="input-wrapper">
           <input type="text" id="start-input" placeholder="Adresse de départ..." autocomplete="off" />
@@ -446,7 +463,7 @@
         <div id="start-display"></div>
       </div>
 
-      <div class="section">
+      <div class="section section-deliveries">
         <div class="section-title">Adresses de livraison <span id="delivery-count"></span></div>
         <ul id="delivery-list"></ul>
         <div class="input-row">
@@ -461,7 +478,7 @@
       <button id="btn-optimize" onclick="optimizeRoute()">Optimiser l'itinéraire</button>
       <div id="status-bar"></div>
 
-      <div id="results-panel" class="section">
+      <div id="results-panel" class="section section-route">
         <div class="results-title">Itinéraire optimisé</div>
         <div class="summary-grid" id="route-summary"></div>
         <ul id="route-steps"></ul>
