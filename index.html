@@ -445,7 +445,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v75</span></h1>
+    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v76</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -932,6 +932,29 @@ function twoOpt(tour, mx) {
   return tour;
 }
 
+// ── GOOGLE DIRECTIONS OPTIMIZE ──
+function googleOptimize(origin, deliveries) {
+  return new Promise((resolve) => {
+    const wps = deliveries.map(d => ({ location: { lat: d.lat, lng: d.lng }, stopover: true }));
+    state.directionsService.route({
+      origin: { lat: origin.lat, lng: origin.lng },
+      destination: { lat: origin.lat, lng: origin.lng },
+      waypoints: wps, optimizeWaypoints: true,
+      travelMode: google.maps.TravelMode.DRIVING, language: 'fr',
+    }, (result, status) => {
+      if (status === 'OK') {
+        const order = result.routes[0].waypoint_order;
+        resolve(order.map(i => deliveries[i]));
+      } else {
+        // Fallback local
+        const all = [origin, ...deliveries];
+        const tour = nearestNeighborTSP(buildDistanceMatrix(all), 0);
+        resolve(tour.slice(1).map(i => all[i]));
+      }
+    });
+  });
+}
+
 // ── OPTIMIZE ──
 async function optimizeRoute() {
   if (!state.startPoint) return showStatus('error', 'Définissez un point de départ.');
@@ -941,12 +964,26 @@ async function optimizeRoute() {
 
   const hasLocked = state.deliveries.some(d => d.locked);
   if (!hasLocked) {
-    // No locks — optimize everything
-    const all = [state.startPoint, ...state.deliveries];
-    const tour = nearestNeighborTSP(buildDistanceMatrix(all), 0);
-    state.deliveries = tour.slice(1).map(i => all[i]);
+    const unlocked = [...state.deliveries];
+    if (unlocked.length <= 23) {
+      state.deliveries = await googleOptimize(state.startPoint, unlocked);
+    } else {
+      // > 23 : split in batches, optimize each with Google, then assemble
+      const batches = [];
+      for (let i = 0; i < unlocked.length; i += 23) batches.push(unlocked.slice(i, i + 23));
+      let optimized = [];
+      let prevEnd = state.startPoint;
+      for (const batch of batches) {
+        const result = batch.length <= 23
+          ? await googleOptimize(prevEnd, batch)
+          : batch;
+        optimized.push(...result);
+        prevEnd = result[result.length - 1];
+      }
+      state.deliveries = optimized;
+    }
   } else {
-    // Optimize unlocked deliveries around locked positions
+    // Optimize unlocked around locked positions
     const result = new Array(state.deliveries.length);
     const lockedPositions = [];
     const unlocked = [];
@@ -955,8 +992,6 @@ async function optimizeRoute() {
       else unlocked.push(d);
     });
     if (unlocked.length > 0) {
-      // Build segments between locked positions
-      // Anchors: start point, then each locked delivery, define segments of free slots
       const anchors = [-1, ...lockedPositions, state.deliveries.length];
       const freeSlots = [];
       for (let a = 0; a < anchors.length - 1; a++) {
@@ -966,14 +1001,11 @@ async function optimizeRoute() {
         }
         if (slots.length) {
           const anchorStart = anchors[a] === -1 ? state.startPoint : state.deliveries[anchors[a]];
-          const anchorEnd = anchors[a + 1] >= state.deliveries.length ? null : state.deliveries[anchors[a + 1]];
-          freeSlots.push({ slots, anchorStart, anchorEnd });
+          freeSlots.push({ slots, anchorStart });
         }
       }
-      // Distribute unlocked to nearest segment, then optimize within each segment
       let remaining = [...unlocked];
-      freeSlots.forEach(seg => {
-        // Pick the closest unlocked deliveries for this segment's slots
+      for (const seg of freeSlots) {
         const needed = seg.slots.length;
         const segCenter = seg.anchorStart;
         remaining.sort((a, b) => {
@@ -982,16 +1014,18 @@ async function optimizeRoute() {
           return da - db;
         });
         const segDeliveries = remaining.splice(0, needed);
-        if (segDeliveries.length > 1) {
-          const segAll = [seg.anchorStart, ...segDeliveries];
+        if (segDeliveries.length > 1 && segDeliveries.length <= 23) {
+          const optimized = await googleOptimize(segCenter, segDeliveries);
+          seg.slots.forEach((slot, idx) => { result[slot] = optimized[idx]; });
+        } else if (segDeliveries.length > 1) {
+          const segAll = [segCenter, ...segDeliveries];
           const tour = nearestNeighborTSP(buildDistanceMatrix(segAll), 0);
           const optimized = tour.slice(1).map(i => segAll[i]);
           seg.slots.forEach((slot, idx) => { result[slot] = optimized[idx]; });
         } else if (segDeliveries.length === 1) {
           result[seg.slots[0]] = segDeliveries[0];
         }
-      });
-      // Any remaining unlocked (shouldn't happen, but safety)
+      }
       remaining.forEach(d => {
         const emptyIdx = result.findIndex(r => !r);
         if (emptyIdx !== -1) result[emptyIdx] = d;
