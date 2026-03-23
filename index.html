@@ -492,7 +492,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v88</span></h1>
+    <h1>CarGo <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v89</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -1384,7 +1384,7 @@ function renderRouteSteps() {
     const delivered = navActive && i < state.navIndex ? '<div class="step-status">Livré ✓</div>' : '';
     html += `<li class="${stepClass}"><div class="step-badge">${i+1}</div><div class="step-content">
       ${pn}<div class="step-addr">${stops[i+1].formatted}</div>
-      <div class="step-meta"><span>${legs[i].distance.text}</span><span>·</span><span>${legs[i].duration.text}</span><span>·</span><span>~${etaStr}</span></div>
+      <div class="step-meta"><span>~${etaStr}</span></div>
       ${note}${delivered}
     </div></li>`;
   }
@@ -1602,12 +1602,12 @@ function toggleSimMode() {
   const tag = document.getElementById('version-tag');
   if (_simMode) {
     tag.style.color = '#ef4444';
-    tag.textContent = 'v88 [SIM]';
+    tag.textContent = 'v89 [SIM]';
     showStatus('success', 'Mode simulation activé. Lancez une tournée pour simuler le trajet.');
   } else {
     stopSim();
     tag.style.color = '';
-    tag.textContent = 'v88';
+    tag.textContent = 'v89';
     showStatus('success', 'Mode simulation désactivé.');
   }
 }
