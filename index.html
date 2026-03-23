@@ -445,7 +445,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v76</span></h1>
+    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v77</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -935,16 +935,26 @@ function twoOpt(tour, mx) {
 // ── GOOGLE DIRECTIONS OPTIMIZE ──
 function googleOptimize(origin, deliveries) {
   return new Promise((resolve) => {
-    const wps = deliveries.map(d => ({ location: { lat: d.lat, lng: d.lng }, stopover: true }));
+    // Find farthest delivery from origin as endpoint (linear route, no loop back)
+    let farthestIdx = 0, farthestDist = 0;
+    deliveries.forEach((d, i) => {
+      const dist = haversine(origin, d);
+      if (dist > farthestDist) { farthestDist = dist; farthestIdx = i; }
+    });
+    const dest = deliveries[farthestIdx];
+    const others = deliveries.filter((_, i) => i !== farthestIdx);
+    const wps = others.map(d => ({ location: { lat: d.lat, lng: d.lng }, stopover: true }));
     state.directionsService.route({
       origin: { lat: origin.lat, lng: origin.lng },
-      destination: { lat: origin.lat, lng: origin.lng },
+      destination: { lat: dest.lat, lng: dest.lng },
       waypoints: wps, optimizeWaypoints: true,
       travelMode: google.maps.TravelMode.DRIVING, language: 'fr',
     }, (result, status) => {
       if (status === 'OK') {
         const order = result.routes[0].waypoint_order;
-        resolve(order.map(i => deliveries[i]));
+        const reordered = order.map(i => others[i]);
+        reordered.push(dest);
+        resolve(reordered);
       } else {
         // Fallback local
         const all = [origin, ...deliveries];
