@@ -409,6 +409,7 @@
       animation: slideUp .3s ease;
     }
     @keyframes slideUp { from { transform: translateX(-50%) translateY(40px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+    .prox-current { font-size: .7rem; color: var(--text2); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); line-height: 1.4; }
     .prox-text { font-size: .82rem; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
     .prox-text span { font-size: .72rem; color: var(--text2); }
     .prox-btns { display: flex; gap: 8px; }
@@ -491,7 +492,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v87</span></h1>
+    <h1>CarGo <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v88</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -1479,7 +1480,11 @@ function showProximityAlert(num, label, deliveryIdx) {
   if (existing) existing.remove();
   const div = document.createElement('div');
   div.id = 'proximity-alert';
+  const currentD = state.deliveries[state.navIndex];
+  const currentLabel = currentD ? (currentD.placeName || currentD.formatted) : '';
+  const currentNum = state.navIndex + 1;
   div.innerHTML = `
+    <div class="prox-current">En cours : <b>${currentNum}</b> — ${currentLabel}</div>
     <div class="prox-text">📍 Livraison <b>${num}</b> à proximité<br><span>${label}</span></div>
     <div class="prox-btns">
       <button onclick="acceptProximitySwitch(${deliveryIdx})">Livrer maintenant</button>
@@ -1597,12 +1602,12 @@ function toggleSimMode() {
   const tag = document.getElementById('version-tag');
   if (_simMode) {
     tag.style.color = '#ef4444';
-    tag.textContent = 'v87 [SIM]';
+    tag.textContent = 'v88 [SIM]';
     showStatus('success', 'Mode simulation activé. Lancez une tournée pour simuler le trajet.');
   } else {
     stopSim();
     tag.style.color = '';
-    tag.textContent = 'v87';
+    tag.textContent = 'v88';
     showStatus('success', 'Mode simulation désactivé.');
   }
 }
