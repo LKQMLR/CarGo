@@ -182,6 +182,24 @@
       background: linear-gradient(135deg, #a78bfa, #7c3aed);
       box-shadow: 0 1px 4px rgba(124,58,237,.35);
     }
+    .sector-badge {
+      position: absolute; bottom: 4px; right: 6px;
+      font-size: .55rem; font-weight: 700; padding: 2px 5px;
+      border-radius: 4px; cursor: pointer; opacity: .3;
+      color: var(--text2); transition: all .2s; z-index: 3;
+      user-select: none; line-height: 1;
+    }
+    .sector-badge.active { opacity: 1; color: #fff; }
+    .sector-badge.s1 { background: #ef4444; }
+    .sector-badge.s2 { background: #f59e0b; }
+    .sector-badge.s3 { background: #10b981; }
+    .sector-badge.s4 { background: #3b82f6; }
+    .sector-badge.s5 { background: #8b5cf6; }
+    #delivery-list li.sector-1 { border-color: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,.15); }
+    #delivery-list li.sector-2 { border-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,.15); }
+    #delivery-list li.sector-3 { border-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,.15); }
+    #delivery-list li.sector-4 { border-color: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,.15); }
+    #delivery-list li.sector-5 { border-color: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,.15); }
     .delivery-addr { flex: 1; line-height: 1.35; word-break: break-word; min-width: 0; font-size: .78rem; }
     .delivery-place-name {
       font-size: .72rem; font-weight: 600; color: var(--accent); margin-bottom: 1px;
@@ -445,7 +463,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v77</span></h1>
+    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v78</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -616,7 +634,7 @@ function initApp() {
 function saveSession() {
   const data = {
     startPoint: state.startPoint ? { address: state.startPoint.address, lat: state.startPoint.lat, lng: state.startPoint.lng, formatted: state.startPoint.formatted } : null,
-    deliveries: state.deliveries.map(d => ({ id: d.id, address: d.address, lat: d.lat, lng: d.lng, formatted: d.formatted, placeName: d.placeName || '', note: d.note || '', legDist: d.legDist || '', legDur: d.legDur || '', locked: d.locked || false, customOrder: d.customOrder || false })),
+    deliveries: state.deliveries.map(d => ({ id: d.id, address: d.address, lat: d.lat, lng: d.lng, formatted: d.formatted, placeName: d.placeName || '', note: d.note || '', legDist: d.legDist || '', legDur: d.legDur || '', locked: d.locked || false, customOrder: d.customOrder || false, sector: d.sector || 0 })),
     routeOptimized: !!state.navStops,
     navActive: !!document.getElementById('nav-panel').classList.contains('visible'),
     navIndex: state.navIndex,
@@ -793,8 +811,12 @@ function renderDeliveryList() {
     const lockSvg = d.locked
       ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
       : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
-    const liClass = d.locked ? 'delivery-locked' : '';
-    return `<li data-idx="${i}" data-id="${d.id}" class="${liClass}">
+    const sec = d.sector || 0;
+    const liClasses = [d.locked ? 'delivery-locked' : '', sec ? `sector-${sec}` : ''].filter(Boolean).join(' ');
+    const sectorBadge = sec
+      ? `<div class="sector-badge active s${sec}" onclick="toggleSector(${d.id})">S${sec}</div>`
+      : `<div class="sector-badge" onclick="toggleSector(${d.id})">S</div>`;
+    return `<li data-idx="${i}" data-id="${d.id}" class="${liClasses}">
       <div class="drag-handle">&#8942;&#8942;</div>
       <div class="delivery-num${d.customOrder ? ' custom' : ''}">${i + 1}</div>
       <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
@@ -802,6 +824,7 @@ function renderDeliveryList() {
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
       </div>
       <div class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</div>
+      ${sectorBadge}
     </li>`;
   }).join('');
   initDragAndDrop();
@@ -837,6 +860,21 @@ function toggleLock(id) {
       badge.innerHTML = d.locked
         ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
         : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+    }
+  }
+  saveSession();
+}
+function toggleSector(id) {
+  const d = state.deliveries.find(d => d.id === id); if (!d) return;
+  d.sector = ((d.sector || 0) + 1) % 6; // 0=none, 1-5=sectors
+  const li = document.querySelector(`[data-id="${id}"]`);
+  if (li) {
+    li.className = li.className.replace(/sector-\d/g, '').trim();
+    if (d.sector) li.classList.add(`sector-${d.sector}`);
+    const badge = li.querySelector('.sector-badge');
+    if (badge) {
+      badge.className = d.sector ? `sector-badge active s${d.sector}` : 'sector-badge';
+      badge.textContent = d.sector ? `S${d.sector}` : 'S';
     }
   }
   saveSession();
@@ -877,6 +915,12 @@ async function handleAddDelivery() {
   setUIBusy(true); showStatus('loading', 'Géocodage...');
   try {
     const geo = await resolveInput(input);
+    // Duplicate detection
+    const duplicate = state.deliveries.find(d => d.formatted === geo.formatted || (Math.abs(d.lat - geo.lat) < 0.0002 && Math.abs(d.lng - geo.lng) < 0.0002));
+    if (duplicate) {
+      const confirmed = confirm(`⚠️ Cette adresse semble déjà dans la liste :\n\n${duplicate.formatted}\n\nAjouter quand même ?`);
+      if (!confirmed) { setUIBusy(false); return; }
+    }
     const marker = createClassicMarker({ lat: geo.lat, lng: geo.lng }, String(state.deliveries.length + 1), '#ef4444', geo.formatted);
     const freq = getFrequentAddresses().find(a => a.formatted === geo.formatted) || {};
     const freqNote = freq.note || '';
@@ -965,6 +1009,22 @@ function googleOptimize(origin, deliveries) {
   });
 }
 
+// ── OPTIMIZE SEGMENT (handles >23 with batching) ──
+async function optimizeSegment(origin, deliveries) {
+  if (deliveries.length <= 1) return deliveries;
+  if (deliveries.length <= 23) return await googleOptimize(origin, deliveries);
+  // >23: batch and chain
+  const batches = [];
+  for (let i = 0; i < deliveries.length; i += 23) batches.push(deliveries.slice(i, i + 23));
+  let result = [], prevEnd = origin;
+  for (const batch of batches) {
+    const opt = await googleOptimize(prevEnd, batch);
+    result.push(...opt);
+    prevEnd = opt[opt.length - 1];
+  }
+  return result;
+}
+
 // ── OPTIMIZE ──
 async function optimizeRoute() {
   if (!state.startPoint) return showStatus('error', 'Définissez un point de départ.');
@@ -972,76 +1032,71 @@ async function optimizeRoute() {
   setUIBusy(true); showStatus('loading', 'Optimisation...'); document.getElementById('results-panel').classList.remove('visible');
   if (state.deliveries.length === 1) { displayRoute([state.startPoint, state.deliveries[0]]); return; }
 
-  const hasLocked = state.deliveries.some(d => d.locked);
-  if (!hasLocked) {
-    const unlocked = [...state.deliveries];
-    if (unlocked.length <= 23) {
-      state.deliveries = await googleOptimize(state.startPoint, unlocked);
-    } else {
-      // > 23 : split in batches, optimize each with Google, then assemble
-      const batches = [];
-      for (let i = 0; i < unlocked.length; i += 23) batches.push(unlocked.slice(i, i + 23));
-      let optimized = [];
-      let prevEnd = state.startPoint;
-      for (const batch of batches) {
-        const result = batch.length <= 23
-          ? await googleOptimize(prevEnd, batch)
-          : batch;
-        optimized.push(...result);
-        prevEnd = result[result.length - 1];
-      }
-      state.deliveries = optimized;
-    }
-  } else {
-    // Optimize unlocked around locked positions
-    const result = new Array(state.deliveries.length);
-    const lockedPositions = [];
-    const unlocked = [];
-    state.deliveries.forEach((d, i) => {
-      if (d.locked) { result[i] = d; lockedPositions.push(i); }
-      else unlocked.push(d);
+  const hasSectors = state.deliveries.some(d => d.sector);
+
+  if (hasSectors) {
+    // Group by sector: S1, S2, S3, S4, S5, then no-sector (0)
+    const groups = {};
+    state.deliveries.forEach(d => {
+      const s = d.sector || 0;
+      if (!groups[s]) groups[s] = [];
+      groups[s].push(d);
     });
-    if (unlocked.length > 0) {
-      const anchors = [-1, ...lockedPositions, state.deliveries.length];
-      const freeSlots = [];
-      for (let a = 0; a < anchors.length - 1; a++) {
-        const slots = [];
-        for (let s = anchors[a] + 1; s < anchors[a + 1]; s++) {
-          if (!result[s]) slots.push(s);
-        }
-        if (slots.length) {
-          const anchorStart = anchors[a] === -1 ? state.startPoint : state.deliveries[anchors[a]];
-          freeSlots.push({ slots, anchorStart });
-        }
-      }
-      let remaining = [...unlocked];
-      for (const seg of freeSlots) {
-        const needed = seg.slots.length;
-        const segCenter = seg.anchorStart;
-        remaining.sort((a, b) => {
-          const da = Math.abs(a.lat - segCenter.lat) + Math.abs(a.lng - segCenter.lng);
-          const db = Math.abs(b.lat - segCenter.lat) + Math.abs(b.lng - segCenter.lng);
-          return da - db;
+    // Order sectors: 1,2,3,4,5 then 0 (no sector last)
+    const sectorOrder = [1,2,3,4,5].filter(s => groups[s]);
+    if (groups[0]) sectorOrder.push(0);
+
+    // Optimize each sector, chaining from previous sector's last point
+    let allOptimized = [];
+    let prevEnd = state.startPoint;
+    for (const s of sectorOrder) {
+      const locked = groups[s].filter(d => d.locked);
+      const unlocked = groups[s].filter(d => !d.locked);
+      if (locked.length && unlocked.length) {
+        // Mix of locked/unlocked in sector: keep locked positions, optimize unlocked
+        const sectorDeliveries = [...groups[s]];
+        const lockedIdxs = [];
+        sectorDeliveries.forEach((d, i) => { if (d.locked) lockedIdxs.push(i); });
+        // Simple: optimize unlocked with Google, then interleave with locked at original relative positions
+        const optimizedUnlocked = await optimizeSegment(prevEnd, unlocked);
+        const result = [];
+        let ui = 0;
+        sectorDeliveries.forEach(d => {
+          if (d.locked) result.push(d);
+          else if (ui < optimizedUnlocked.length) result.push(optimizedUnlocked[ui++]);
         });
-        const segDeliveries = remaining.splice(0, needed);
-        if (segDeliveries.length > 1 && segDeliveries.length <= 23) {
-          const optimized = await googleOptimize(segCenter, segDeliveries);
-          seg.slots.forEach((slot, idx) => { result[slot] = optimized[idx]; });
-        } else if (segDeliveries.length > 1) {
-          const segAll = [segCenter, ...segDeliveries];
-          const tour = nearestNeighborTSP(buildDistanceMatrix(segAll), 0);
-          const optimized = tour.slice(1).map(i => segAll[i]);
-          seg.slots.forEach((slot, idx) => { result[slot] = optimized[idx]; });
-        } else if (segDeliveries.length === 1) {
-          result[seg.slots[0]] = segDeliveries[0];
-        }
+        allOptimized.push(...result);
+      } else if (unlocked.length) {
+        const optimized = await optimizeSegment(prevEnd, unlocked);
+        allOptimized.push(...optimized);
+      } else {
+        allOptimized.push(...locked);
       }
-      remaining.forEach(d => {
-        const emptyIdx = result.findIndex(r => !r);
-        if (emptyIdx !== -1) result[emptyIdx] = d;
-      });
+      prevEnd = allOptimized[allOptimized.length - 1];
     }
-    state.deliveries = result;
+    state.deliveries = allOptimized;
+  } else {
+    // No sectors — optimize all, respecting locks
+    const hasLocked = state.deliveries.some(d => d.locked);
+    if (!hasLocked) {
+      state.deliveries = await optimizeSegment(state.startPoint, state.deliveries);
+    } else {
+      // Split into segments between locked positions
+      const locked = [], unlocked = [];
+      state.deliveries.forEach((d, i) => {
+        if (d.locked) locked.push({ d, i });
+        else unlocked.push(d);
+      });
+      // Optimize unlocked as one group, then insert locked at their positions
+      const optimizedUnlocked = await optimizeSegment(state.startPoint, unlocked);
+      const result = [];
+      let ui = 0;
+      state.deliveries.forEach(d => {
+        if (d.locked) result.push(d);
+        else if (ui < optimizedUnlocked.length) result.push(optimizedUnlocked[ui++]);
+      });
+      state.deliveries = result;
+    }
   }
   state.deliveries.forEach(d => { if (!d.locked) d.customOrder = false; });
   renderDeliveryList(); displayRoute([state.startPoint, ...state.deliveries]); saveSession();
@@ -1156,7 +1211,7 @@ function initTouchGestures() {
   items.forEach(li => {
     let startX = 0, startY = 0, moved = false;
     li.addEventListener('touchstart', e => {
-      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.lock-badge')) return;
+      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.lock-badge') || e.target.closest('.sector-badge')) return;
       startX = e.touches[0].clientX; startY = e.touches[0].clientY; moved = false;
     }, { passive: true });
     li.addEventListener('touchmove', e => {
