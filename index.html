@@ -182,6 +182,11 @@
       background: linear-gradient(135deg, #a78bfa, #7c3aed);
       box-shadow: 0 1px 4px rgba(124,58,237,.35);
     }
+    .delivery-num.sec-1 { background: #60a5fa; box-shadow: 0 1px 4px rgba(96,165,250,.4); }
+    .delivery-num.sec-2 { background: #6ee7b7; color: #1a1a2e; box-shadow: 0 1px 4px rgba(110,231,183,.4); }
+    .delivery-num.sec-3 { background: #fbbf24; color: #1a1a2e; box-shadow: 0 1px 4px rgba(251,191,36,.4); }
+    .delivery-num.sec-4 { background: #f9a8d4; color: #1a1a2e; box-shadow: 0 1px 4px rgba(249,168,212,.4); }
+    .delivery-num.sec-5 { background: #a5b4fc; color: #1a1a2e; box-shadow: 0 1px 4px rgba(165,180,252,.4); }
     #btn-sector {
       width: 100%; margin-top: 6px; padding: 6px 10px;
       border: 1px solid var(--border); border-radius: 8px;
@@ -467,7 +472,7 @@
 
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v81</span></h1>
+    <h1>CarGo <span style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle">v82</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -820,7 +825,7 @@ function renderDeliveryList() {
     const liClasses = [d.locked ? 'delivery-locked' : '', sec && !d.locked ? `sector-${sec}` : ''].filter(Boolean).join(' ');
     return `<li data-idx="${i}" data-id="${d.id}" class="${liClasses}">
       <div class="drag-handle">&#8942;&#8942;</div>
-      <div class="delivery-num${d.customOrder ? ' custom' : ''}">${i + 1}</div>
+      <div class="delivery-num${d.customOrder ? ' custom' : ''}${sec ? ` sec-${sec}` : ''}">${i + 1}</div>
       <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
         <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value="" maxlength="44"
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
@@ -1304,8 +1309,11 @@ function displayRoute(stops) {
       }
 
       // Place markers
+      const SECTOR_COLS = { 0: '#4f8cff', 1: '#60a5fa', 2: '#6ee7b7', 3: '#fbbf24', 4: '#f9a8d4', 5: '#a5b4fc' };
       stops.forEach((s, r) => {
-        const lbl = r === 0 ? 'D' : String(r), col = r === 0 ? '#22c55e' : '#4f8cff', ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
+        const lbl = r === 0 ? 'D' : String(r);
+        const col = r === 0 ? '#22c55e' : (SECTOR_COLS[s.sector || 0] || '#4f8cff');
+        const ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
         const pos = { lat: s.lat, lng: s.lng };
         state.markers.push(createClassicMarker(pos, lbl, col, ttl));
         if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65));
