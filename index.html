@@ -535,6 +535,9 @@
       </div>
 
       <button id="btn-nav-start" onclick="startNavigation()">Commencer la tournée</button>
+      <label id="prox-toggle" style="display:flex;align-items:center;gap:6px;margin:6px 0 2px 2px;font-size:.72rem;color:var(--text2);cursor:pointer;user-select:none;">
+        <input type="checkbox" id="prox-check" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;" checked> Alertes de proximité
+      </label>
 
       <div id="nav-panel">
         <button id="btn-nav-center" onclick="centerOnMe()" title="Recentrer">&#8982;</button>
@@ -1448,6 +1451,10 @@ function updateGPSPosition(coords) {
     if (dist < 80) {
       meta.textContent = 'Vous \u00eates arriv\u00e9 !';
       meta.classList.add('nav-arrived');
+      if (_simMode && !state._simAutoAdvancing) {
+        state._simAutoAdvancing = true;
+        setTimeout(() => { state._simAutoAdvancing = false; nextNavStop(); }, 1500);
+      }
     } else {
       meta.textContent = dist < 1000 ? Math.round(dist) + ' m restant' : (dist / 1000).toFixed(1) + ' km restant';
       meta.classList.remove('nav-arrived');
@@ -1459,6 +1466,8 @@ function updateGPSPosition(coords) {
 let _proximityAlertShown = {};
 let _proximityAlertOpen = false;
 function checkProximityAlert(pos) {
+  const cb = document.getElementById('prox-check');
+  if (!cb || !cb.checked) return;
   if (_proximityAlertOpen) return;
   const RADIUS = 150; // meters
   for (let i = state.navIndex + 3; i < state.deliveries.length; i++) {
