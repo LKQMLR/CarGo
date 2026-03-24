@@ -192,10 +192,10 @@
     .delivery-num.sec-4 { background: #db2777; box-shadow: 0 1px 4px rgba(219,39,119,.4); }
     .delivery-num.sec-5 { background: #7c3aed; box-shadow: 0 1px 4px rgba(124,58,237,.4); }
     #btn-sector {
-      width: 100%; margin-top: 6px; padding: 6px 10px;
-      border: 1px solid var(--border); border-radius: 8px;
+      width: 100%; margin-top: 6px; padding: 12px 14px;
+      border: 1px solid var(--border); border-radius: 10px;
       background: var(--bg); color: var(--text2);
-      font-size: .7rem; font-weight: 600; cursor: pointer;
+      font-size: .85rem; font-weight: 700; cursor: pointer;
       transition: all .2s;
     }
     #btn-sector.s1 { background: #3b82f6; color: #fff; border-color: #3b82f6; }
@@ -551,6 +551,12 @@
           <input type="checkbox" id="prox-check" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;" checked> Alertes de proximité
         </label>
         <span class="prox-help" style="position:relative;width:18px;height:18px;border-radius:50%;background:var(--surface2,#232340);color:var(--text2);font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" onclick="this.querySelector('.prox-tooltip').classList.toggle('show')">?<span class="prox-tooltip" style="display:none;position:absolute;bottom:calc(100% + 8px);right:0;width:220px;padding:10px 12px;background:var(--surface2,#232340);border:1px solid var(--border);border-radius:10px;font-size:.7rem;font-weight:400;color:var(--text);line-height:1.4;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:100;">Si vous passez près d'une livraison prévue plus loin, une alerte propose de la faire maintenant.</span></span>
+      </div>
+      <div id="autoreturn-toggle" style="display:flex;align-items:center;gap:8px;margin:4px 4px 2px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--text2);cursor:pointer;user-select:none;flex:1;">
+          <input type="checkbox" id="autoreturn-check" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;"> Détection auto de retour
+        </label>
+        <span class="prox-help" style="position:relative;width:18px;height:18px;border-radius:50%;background:var(--surface2,#232340);color:var(--text2);font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" onclick="this.querySelector('.prox-tooltip').classList.toggle('show')">?<span class="prox-tooltip" style="display:none;position:absolute;bottom:calc(100% + 8px);right:0;width:220px;padding:10px 12px;background:var(--surface2,#232340);border:1px solid var(--border);border-radius:10px;font-size:.7rem;font-weight:400;color:var(--text);line-height:1.4;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:100;">Quand vous revenez dans l'app après Google Maps, propose automatiquement de passer à l'étape suivante si vous êtes arrivé.</span></span>
       </div>
 
       <div id="nav-panel">
@@ -1068,36 +1074,46 @@ async function optimizeRoute() {
   setUIBusy(true); showStatus('loading', 'Optimisation...'); document.getElementById('results-panel').classList.remove('visible');
   if (state.deliveries.length === 1) { displayRoute([state.startPoint, state.deliveries[0]]); return; }
 
+  // Save original order for time comparison
+  const originalOrder = [...state.deliveries];
+
   const hasSectors = state.deliveries.some(d => d.sector);
 
   if (hasSectors) {
-    // Group by sector: S1, S2, S3, S4, S5, then no-sector (0)
     const groups = {};
     state.deliveries.forEach(d => {
       const s = d.sector || 0;
       if (!groups[s]) groups[s] = [];
       groups[s].push(d);
     });
-    // Order sectors: 1,2,3,4,5 then 0 (no sector last)
     const sectorOrder = [1,2,3,4,5].filter(s => groups[s]);
     if (groups[0]) sectorOrder.push(0);
 
-    // Optimize each sector, chaining from previous sector's last point
     let allOptimized = [];
     let prevEnd = state.startPoint;
     for (const s of sectorOrder) {
-      const locked = groups[s].filter(d => d.locked);
-      const unlocked = groups[s].filter(d => !d.locked);
+      const sectorItems = groups[s];
+      // Find closest point to prevEnd as sector entry point
+      let closestIdx = 0, closestDist = Infinity;
+      sectorItems.forEach((d, idx) => {
+        if (!d.locked) {
+          const dist = haversine(prevEnd, d);
+          if (dist < closestDist) { closestDist = dist; closestIdx = idx; }
+        }
+      });
+      // Move closest to front (entry point) if not locked
+      if (!sectorItems[closestIdx].locked && closestIdx > 0) {
+        const [entry] = sectorItems.splice(closestIdx, 1);
+        sectorItems.unshift(entry);
+      }
+
+      const locked = sectorItems.filter(d => d.locked);
+      const unlocked = sectorItems.filter(d => !d.locked);
       if (locked.length && unlocked.length) {
-        // Mix of locked/unlocked in sector: keep locked positions, optimize unlocked
-        const sectorDeliveries = [...groups[s]];
-        const lockedIdxs = [];
-        sectorDeliveries.forEach((d, i) => { if (d.locked) lockedIdxs.push(i); });
-        // Simple: optimize unlocked with Google, then interleave with locked at original relative positions
         const optimizedUnlocked = await optimizeSegment(prevEnd, unlocked);
         const result = [];
         let ui = 0;
-        sectorDeliveries.forEach(d => {
+        sectorItems.forEach(d => {
           if (d.locked) result.push(d);
           else if (ui < optimizedUnlocked.length) result.push(optimizedUnlocked[ui++]);
         });
@@ -1112,18 +1128,15 @@ async function optimizeRoute() {
     }
     state.deliveries = allOptimized;
   } else {
-    // No sectors — optimize all, respecting locks
     const hasLocked = state.deliveries.some(d => d.locked);
     if (!hasLocked) {
       state.deliveries = await optimizeSegment(state.startPoint, state.deliveries);
     } else {
-      // Split into segments between locked positions
       const locked = [], unlocked = [];
       state.deliveries.forEach((d, i) => {
         if (d.locked) locked.push({ d, i });
         else unlocked.push(d);
       });
-      // Optimize unlocked as one group, then insert locked at their positions
       const optimizedUnlocked = await optimizeSegment(state.startPoint, unlocked);
       const result = [];
       let ui = 0;
@@ -1135,6 +1148,8 @@ async function optimizeRoute() {
     }
   }
   state.deliveries.forEach(d => { if (!d.locked) d.customOrder = false; });
+  // Store original order for time comparison after route is calculated
+  state._originalOrder = originalOrder;
   renderDeliveryList(); displayRoute([state.startPoint, ...state.deliveries]); saveSession();
 }
 
@@ -1361,7 +1376,28 @@ function displayRoute(stops) {
         if (allLegs[i]) { d.legDist = allLegs[i].distance.text; d.legDur = allLegs[i].duration.text; }
       });
       showResults(stops, allLegs, totalDist, totalDur);
-      showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s).`);
+      // Calculate time saved vs original order (distance-based estimate, no extra API call)
+      if (state._originalOrder && state._originalOrder.length > 1) {
+        const origStops = [state.startPoint, ...state._originalOrder];
+        let origDist = 0;
+        for (let k = 0; k < origStops.length - 1; k++) origDist += haversine(origStops[k], origStops[k+1]);
+        const optStops = stops;
+        let optDist = 0;
+        for (let k = 0; k < optStops.length - 1; k++) optDist += haversine(optStops[k], optStops[k+1]);
+        const pctSaved = origDist > 0 ? Math.round((1 - optDist / origDist) * 100) : 0;
+        // Estimate time saved from actual route duration
+        const optDur = allLegs.reduce((s, l) => s + l.duration.value, 0);
+        const estOrigDur = origDist > 0 ? Math.round(optDur * origDist / optDist) : optDur;
+        const savedMin = Math.round((estOrigDur - optDur) / 60);
+        if (savedMin > 1) {
+          showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s) — ~${savedMin} min gagnée(s) !`);
+        } else {
+          showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s).`);
+        }
+        delete state._originalOrder;
+      } else {
+        showStatus('success', `${state.deliveries.length} livraison(s) optimisée(s).`);
+      }
       renderDeliveryList();
       document.getElementById('btn-nav-start').classList.add('visible');
       document.getElementById('nav-panel').classList.remove('visible');
@@ -1578,7 +1614,22 @@ function requestWakeLock() {
   if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(l => state.wakeLock = l).catch(() => {});
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && state.watchId !== null) requestWakeLock();
+  if (document.visibilityState === 'visible' && state.watchId !== null) {
+    requestWakeLock();
+    // Auto-return detection
+    const arCheck = document.getElementById('autoreturn-check');
+    if (arCheck && arCheck.checked && state.navStops && state.navIndex < state.deliveries.length) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const dest = state.navStops[state.navIndex + 1];
+        const dist = haversine({ lat: pos.coords.latitude, lng: pos.coords.longitude }, dest);
+        if (dist < 100) {
+          if (confirm('Vous êtes arrivé à destination. Passer à la livraison suivante ?')) {
+            nextNavStop();
+          }
+        }
+      }, () => {}, { enableHighAccuracy: true, timeout: 5000 });
+    }
+  }
 });
 function centerOnMe() {
   state.followMode = true;
