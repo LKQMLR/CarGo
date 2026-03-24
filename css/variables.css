@@ -1,0 +1,38 @@
+/* ══════════════════════════════════════════
+   CarGo — Variables & Reset
+   Couleurs, typographie, variables globales
+   ══════════════════════════════════════════ */
+
+:root {
+  --bg: #141a24;
+  --surface: #1b2432;
+  --surface2: #1e2a3a;
+  --card: #243244;
+  --border: #2e3e52;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --accent: #4f8cff;
+  --accent2: #3b6fcf;
+  --green: #22c55e;
+  --green-bg: #16332a;
+  --red: #ef4444;
+  --red-bg: #331a1a;
+  --yellow: #f59e0b;
+  --yellow-bg: #33291a;
+  --radius: 10px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}

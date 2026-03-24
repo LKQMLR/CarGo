@@ -1,0 +1,96 @@
+/* ══════════════════════════════════════════
+   CarGo — Navigation & Alertes
+   Panneau de nav, GPS, proximité, wake lock
+   ══════════════════════════════════════════ */
+
+/* ── BOUTON COMMENCER LA TOURNÉE ── */
+#btn-nav-start {
+  display: none; width: 100%; padding: 14px; font-size: .95rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--green), #1a9a4a); color: #fff;
+  border-radius: var(--radius); letter-spacing: .3px;
+  text-transform: uppercase;
+  border: 1px solid rgba(34,197,94,.5);
+}
+#btn-nav-start.visible { display: block; }
+
+/* ── PANNEAU NAVIGATION ── */
+#nav-panel { display: none; }
+#nav-panel.visible {
+  display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(135deg, #0d2847, #163a5c);
+  border: 1px solid var(--accent); border-radius: var(--radius); padding: 14px;
+}
+.nav-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-header-title {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--accent);
+}
+.nav-progress-text { font-size: .72rem; color: rgba(255,255,255,.6); }
+.nav-progress-bar {
+  height: 4px; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden;
+}
+.nav-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--green), #34d399);
+  border-radius: 2px; transition: width .4s ease;
+}
+.nav-current {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(0,0,0,.2); border-radius: 8px; padding: 10px 12px;
+}
+.nav-badge {
+  background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+  min-width: 38px; height: 38px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.05rem; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(79,140,255,.4);
+}
+.nav-info { flex: 1; min-width: 0; }
+.nav-dest { color: #fff; font-size: .82rem; font-weight: 600; line-height: 1.3; word-break: break-word; }
+.nav-meta { color: rgba(255,255,255,.5); font-size: .72rem; margin-top: 3px; }
+.nav-actions { display: flex; gap: 6px; }
+#btn-nav-go {
+  flex: 1; background: var(--green); color: #fff; padding: 10px; font-size: .82rem;
+}
+#btn-nav-next {
+  flex: 1; background: var(--accent); color: #fff; padding: 10px; font-size: .82rem;
+}
+#btn-nav-center {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--surface2); color: var(--text2); border: 1px solid var(--border);
+  width: 32px; height: 32px; border-radius: 8px; padding: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+#btn-nav-center:hover { color: var(--accent); border-color: var(--accent); }
+#btn-nav-exit {
+  background: transparent; color: var(--text2); border: 1px solid var(--border);
+  padding: 6px 10px; font-size: .72rem; width: 100%;
+}
+.nav-arrived { color: var(--green) !important; font-weight: 600; }
+
+/* ── ALERTE DE PROXIMITÉ ── */
+#proximity-alert {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; background: #1e1e2e; border: 1px solid var(--accent);
+  border-radius: 14px; padding: 14px 18px; width: calc(100% - 32px); max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 12px rgba(79,140,255,.2);
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(40px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+.prox-current {
+  font-size: .7rem; color: var(--text2); margin-bottom: 8px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border); line-height: 1.4;
+}
+.prox-text { font-size: .82rem; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
+.prox-text span { font-size: .72rem; color: var(--text2); }
+.prox-btns { display: flex; gap: 8px; }
+.prox-btns button {
+  flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 600;
+  font-size: .75rem; cursor: pointer;
+}
+.prox-btns button:first-child { background: var(--green); color: #fff; }
+.prox-btns .prox-skip { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }

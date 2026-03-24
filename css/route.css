@@ -1,0 +1,73 @@
+/* ══════════════════════════════════════════
+   CarGo — Itinéraire optimisé
+   Résumé, étapes, statuts de livraison
+   ══════════════════════════════════════════ */
+
+/* ── PANNEAU RÉSULTATS ── */
+#results-panel { display: none; }
+#results-panel.visible { display: block; }
+.results-title {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--text2); margin-bottom: 8px;
+}
+
+/* ── GRILLE RÉSUMÉ (distance, durée, arrêts) ── */
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.summary-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 6px; text-align: center;
+}
+.summary-card span { display: block; font-size: .65rem; color: var(--text2); margin-bottom: 2px; }
+.summary-card strong { font-size: .9rem; color: var(--text); }
+
+/* ── ÉTAPES D'ITINÉRAIRE ── */
+#route-steps { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+#route-steps li {
+  display: flex; gap: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; font-size: .78rem; color: var(--text2);
+  box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.15);
+}
+
+/* ── BADGE NUMÉROTÉ ── */
+.step-badge {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, #8896a7, #6b7a8d); color: #fff;
+  font-weight: 700; font-size: .65rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(136,150,167,.3); margin-top: 1px;
+}
+.step-badge.depot {
+  background: linear-gradient(135deg, var(--green), #1a9a4a);
+  box-shadow: 0 2px 6px rgba(34,197,94,.3);
+}
+.step-content { flex: 1; min-width: 0; }
+.step-place-name { font-size: .72rem; font-weight: 400; color: var(--accent); margin-bottom: 2px; }
+.step-addr { line-height: 1.35; word-break: break-word; color: var(--text); font-size: .78rem; font-weight: 600; }
+.step-meta { font-size: .7rem; color: var(--text2); margin-top: 6px; display: flex; gap: 8px; }
+.step-note {
+  font-size: .72rem; color: var(--yellow); font-style: italic; font-weight: 600; margin-top: 6px;
+  text-align: left;
+}
+.step-status {
+  font-size: .68rem; font-weight: 700; color: var(--green);
+  text-align: right; margin-top: 6px; text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* ── STATUTS PENDANT LA TOURNÉE ── */
+#route-steps li.step-delivered {
+  opacity: .5; border-color: var(--green); background: var(--green-bg);
+}
+#route-steps li.step-delivered .step-badge {
+  background: var(--green); box-shadow: none;
+}
+#route-steps li.step-current {
+  border-color: var(--accent); box-shadow: 0 0 8px rgba(79,140,255,.3);
+}
+
+/* ── COULEURS SECTEUR DANS L'ITINÉRAIRE ── */
+#route-steps li.sector-1 { border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.08); }
+#route-steps li.sector-2 { border-color: rgba(13,148,136,.35); background: rgba(13,148,136,.08); }
+#route-steps li.sector-3 { border-color: rgba(217,119,6,.35); background: rgba(217,119,6,.08); }
+#route-steps li.sector-4 { border-color: rgba(219,39,119,.35); background: rgba(219,39,119,.08); }
+#route-steps li.sector-5 { border-color: rgba(124,58,237,.35); background: rgba(124,58,237,.08); }

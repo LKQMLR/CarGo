@@ -1,0 +1,115 @@
+/* ══════════════════════════════════════════
+   CarGo — Liste de livraisons
+   Cards, drag & drop, swipe, secteurs
+   ══════════════════════════════════════════ */
+
+/* ── LISTE ── */
+#delivery-list {
+  list-style: none; display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 8px; max-height: 300px; overflow-y: auto; padding: 4px 2px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+
+/* ── CARD DE LIVRAISON ── */
+#delivery-list li {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 28px 12px 10px;
+  font-size: .8rem; color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.15);
+  transition: box-shadow .2s, border-color .2s, margin .2s;
+  position: relative;
+}
+
+/* ── DRAG & DROP — voisins lumineux ── */
+#delivery-list li.drag-neighbor-above {
+  border-color: rgba(100,180,255,.7);
+  box-shadow: 0 0 10px rgba(80,160,255,.4), inset 0 0 6px rgba(80,160,255,.1);
+  transform: translateY(-3px);
+}
+#delivery-list li.drag-neighbor-below {
+  border-color: rgba(100,180,255,.7);
+  box-shadow: 0 0 10px rgba(80,160,255,.4), inset 0 0 6px rgba(80,160,255,.1);
+  transform: translateY(3px);
+}
+#delivery-list li.dragging { opacity: .15; }
+
+/* ── SWIPE TO DELETE ── */
+#delivery-list li.swiping { transition: transform .2s ease-out, opacity .2s; }
+#delivery-list li.swipe-out { transform: translateX(-100%); opacity: 0; }
+
+/* ── LISTE VIDE ── */
+#delivery-list:empty::after {
+  content: 'Aucune adresse ajoutée';
+  color: var(--text2); font-size: .8rem; font-style: italic;
+  text-align: center; padding: 10px 0; display: block;
+}
+
+/* ── CONTENU DE LA CARD ── */
+.delivery-addr {
+  flex: 1; line-height: 1.35; word-break: break-word;
+  min-width: 0; font-size: .78rem;
+}
+.delivery-place-name {
+  font-size: .72rem; font-weight: 600; color: var(--accent); margin-bottom: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.delivery-note {
+  font-size: .68rem; color: var(--yellow); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-style: italic; cursor: pointer;
+}
+.delivery-note::before { content: '\00AB\00A0'; }
+.delivery-note::after { content: '\00A0\00BB'; }
+.delivery-note-input {
+  width: 48ch; max-width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); font-size: .7rem; padding: 4px 8px;
+  margin-top: 3px; outline: none; font-style: italic; box-sizing: border-box;
+}
+.delivery-note-input:focus { border-color: var(--accent); }
+.delivery-leg-info {
+  font-size: .62rem; color: var(--text2); margin-top: 3px;
+  display: flex; gap: 8px; opacity: .75;
+}
+
+/* ── POIGNÉE DE DRAG ── */
+.drag-handle {
+  cursor: grab; color: var(--text2); font-size: .7rem;
+  padding: 2px 0; flex-shrink: 0; user-select: none;
+  touch-action: none; display: flex; align-items: center;
+  transition: color .15s; opacity: .5;
+}
+.drag-handle:hover { color: var(--accent); }
+.drag-handle:active { cursor: grabbing; }
+
+/* ── GHOST (clone visible pendant le drag) ── */
+.drag-ghost {
+  position: fixed; z-index: 99999; pointer-events: none;
+  background: var(--surface2); border: 1.5px solid var(--accent);
+  border-radius: 8px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: .8rem; color: var(--text);
+  opacity: .88; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  transform: rotate(1.5deg);
+  max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.drag-ghost .delivery-num {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border-radius: 5px;
+  min-width: 22px; height: 22px; font-size: .65rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ── COULEURS PAR SECTEUR (bordure gauche) ── */
+#delivery-list li.sector-1 { border-left: 3px solid #3b82f6; }
+#delivery-list li.sector-2 { border-left: 3px solid #0d9488; }
+#delivery-list li.sector-3 { border-left: 3px solid #d97706; }
+#delivery-list li.sector-4 { border-left: 3px solid #db2777; }
+#delivery-list li.sector-5 { border-left: 3px solid #7c3aed; }
+
+/* Quand verrouillé : pas de bordure secteur */
+#delivery-list li.delivery-locked.sector-1,
+#delivery-list li.delivery-locked.sector-2,
+#delivery-list li.delivery-locked.sector-3,
+#delivery-list li.delivery-locked.sector-4,
+#delivery-list li.delivery-locked.sector-5 { border-left: 1px solid var(--border); }

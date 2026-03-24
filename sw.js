@@ -1,5 +1,12 @@
-const CACHE = 'cargo-v90';
-const ASSETS = ['./index.html', './manifest.json'];
+const CACHE = 'cargo-v91';
+const ASSETS = [
+  './index.html', './manifest.json',
+  './css/variables.css', './css/layout.css', './css/components.css',
+  './css/deliveries.css', './css/navigation.css', './css/route.css',
+  './js/app.js', './js/map.js', './js/geocoding.js',
+  './js/deliveries.js', './js/optimizer.js', './js/route.js',
+  './js/navigation.js', './js/simulation.js',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
