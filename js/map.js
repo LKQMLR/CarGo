@@ -28,6 +28,8 @@ function createClassicMarker(position, label, color, title, targetMap, scale) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
     <!-- Ombre portée -->
     <rect x="${tagX + shadowOff}" y="${shadowOff + 1}" width="${tagW}" height="${tagH}" rx="${tagR}" fill="rgba(0,0,0,.35)"/>
+    <!-- Contour extérieur couleur secteur -->
+    <rect x="${tagX}" y="0" width="${tagW}" height="${tagH}" rx="${tagR}" fill="none" stroke="${color}" stroke-width="${sw + Math.round(2 * s)}"/>
     <!-- Étiquette avec contour blanc -->
     <rect x="${tagX}" y="0" width="${tagW}" height="${tagH}" rx="${tagR}" fill="${color}" stroke="#fff" stroke-width="${sw}"/>
     <!-- Numéro -->
