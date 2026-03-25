@@ -16,9 +16,9 @@
 /* ── PANNEAU NAVIGATION ── */
 #nav-panel { display: none; }
 #nav-panel.visible {
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: 8px;
   background: linear-gradient(135deg, #0d2847, #163a5c);
-  border: 1px solid var(--accent); border-radius: var(--radius); padding: 14px;
+  border: 1px solid var(--accent); border-radius: var(--radius); padding: 12px;
 }
 .nav-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -35,63 +35,68 @@
   height: 100%; background: linear-gradient(90deg, var(--green), #34d399);
   border-radius: 2px; transition: width .4s ease;
 }
+
+/* ── Bloc adresse en cours ── */
 .nav-current {
-  background: rgba(0,0,0,.2); border-radius: 8px; padding: 10px 12px;
-}
-.nav-current-row {
-  display: flex; align-items: center; gap: 12px;
+  background: rgba(0,0,0,.2); border-radius: 8px; padding: 8px 10px;
+  position: relative;
 }
 .nav-status {
-  font-size: .65rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .5px; color: var(--green); margin-bottom: 6px;
+  font-size: .58rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--green); margin-bottom: 6px;
   animation: navBlink 1.5s ease-in-out infinite;
 }
 @keyframes navBlink {
   0%, 100% { opacity: 1; }
-  50% { opacity: .3; }
+  50% { opacity: .25; }
 }
 .nav-status.arrived {
-  color: var(--green); animation: none; font-size: .72rem;
+  color: var(--green); animation: none;
+}
+.nav-current-row {
+  display: flex; align-items: center; gap: 10px;
 }
 .nav-badge {
   background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
-  min-width: 38px; height: 38px; border-radius: 8px;
+  min-width: 30px; height: 30px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 1.05rem; flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(79,140,255,.4);
+  font-weight: 800; font-size: .82rem; flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(79,140,255,.3);
 }
 .nav-info { flex: 1; min-width: 0; }
-.nav-dest { color: #fff; font-size: .82rem; font-weight: 600; line-height: 1.3; word-break: break-word; }
-.nav-meta { color: rgba(255,255,255,.5); font-size: .72rem; margin-top: 3px; }
+.nav-dest { color: #fff; font-size: .78rem; font-weight: 600; line-height: 1.3; word-break: break-word; }
+.nav-meta { color: rgba(255,255,255,.45); font-size: .68rem; margin-top: 2px; }
+
 /* ── Bloc suivant ── */
 .nav-next-block {
-  background: rgba(255,255,255,.05); border-radius: 8px; padding: 8px 12px;
-  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04); border-radius: 8px; padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; gap: 10px;
 }
 .nav-next-label {
-  font-size: .6rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .5px; color: rgba(255,255,255,.35); margin-bottom: 4px;
-}
-.nav-next-row {
-  display: flex; align-items: center; gap: 8px;
+  font-size: .55rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .4px; color: rgba(255,255,255,.3);
+  writing-mode: vertical-lr; text-orientation: mixed;
+  transform: rotate(180deg);
 }
 .nav-next-badge {
-  background: rgba(255,255,255,.1); color: rgba(255,255,255,.5);
-  min-width: 26px; height: 26px; border-radius: 6px;
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.4);
+  min-width: 24px; height: 24px; border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: .75rem; flex-shrink: 0;
+  font-weight: 800; font-size: .68rem; flex-shrink: 0;
 }
 .nav-next-dest {
-  color: rgba(255,255,255,.5); font-size: .72rem; line-height: 1.3;
-  word-break: break-word;
+  color: rgba(255,255,255,.4); font-size: .68rem; line-height: 1.3;
+  word-break: break-word; flex: 1; min-width: 0;
 }
 
+/* ── Actions ── */
 .nav-actions { display: flex; gap: 6px; }
 #btn-nav-go {
   flex: 1; background: var(--green); color: #fff; padding: 10px; font-size: .82rem;
 }
 #btn-nav-next {
-  flex: 1; background: var(--accent); color: #fff; padding: 10px; font-size: .82rem;
+  flex: 1; background: var(--accent); color: #fff; padding: 10px; font-size: .78rem;
 }
 #btn-nav-center {
   position: absolute; top: 10px; right: 10px;

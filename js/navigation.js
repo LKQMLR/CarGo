@@ -155,18 +155,21 @@ function updateNavPanel() {
   document.getElementById('nav-progress-text').textContent = (i + 1) + ' / ' + total;
   document.getElementById('nav-progress-fill').style.width = ((i + 1) / total * 100) + '%';
 
-  // Bloc suivant
+  // Bloc suivant + bouton
   const nextBlock = document.getElementById('nav-next-block');
+  const btnNext = document.getElementById('btn-nav-next');
   if (i < total - 1) {
     const nextStop = state.navStops[i + 2];
     const nextD = state.deliveries[i + 1];
+    const nextName = (nextD && nextD.placeName) || nextStop.formatted;
+    const nextShort = nextName.length > 35 ? nextName.substring(0, 32) + '...' : nextName;
     nextBlock.style.display = '';
     document.getElementById('nav-next-badge').textContent = i + 2;
-    document.getElementById('nav-next-dest').textContent = (nextD && nextD.placeName) || nextStop.formatted;
-    document.getElementById('btn-nav-next').textContent = 'Suivant ▸';
+    document.getElementById('nav-next-dest').textContent = nextName;
+    btnNext.innerHTML = 'Suivant ▸ <span style="font-size:.65rem;opacity:.7;display:block;font-weight:400;margin-top:2px">' + nextShort + '</span>';
   } else {
     nextBlock.style.display = 'none';
-    document.getElementById('btn-nav-next').textContent = 'Terminé ✓';
+    btnNext.innerHTML = 'Terminé ✓';
   }
 
   // Animation du marker de destination
