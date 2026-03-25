@@ -160,9 +160,18 @@ async function subscribePremium() {
 }
 
 // ── Gérer l'abonnement existant ──
-function managePremium() {
+async function managePremium() {
   const email = localStorage.getItem('cargo_premium_email');
-  if (confirm(`Abonnement Premium actif (${email}).\n\nPour gérer ou annuler votre abonnement, rendez-vous sur le portail Stripe.`)) {
-    // On pourrait rediriger vers le Stripe Customer Portal
+  try {
+    const res = await fetch(`${CARGO_API}/api/customer-portal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    window.location.href = data.url;
+  } catch {
+    showStatus('error', 'Impossible d\'ouvrir le portail de gestion');
   }
 }
