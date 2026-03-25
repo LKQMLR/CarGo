@@ -12,17 +12,17 @@ function createClassicMarker(position, label, color, title, targetMap, scale) {
   const s = scale || 1;
 
   // Dimensions
-  const fontSize = Math.round((label.length > 2 ? 11 : label.length > 1 ? 12 : 14) * s);
-  const tagH = Math.round(28 * s);
+  const fontSize = Math.round((label.length > 2 ? 12 : label.length > 1 ? 14 : 16) * s);
+  const tagH = Math.round(32 * s);
   const lineH = Math.round(16 * s);
   const totalH = tagH + lineH + Math.round(4 * s);
-  const tagW = Math.round((label.length > 2 ? 42 : label.length > 1 ? 34 : 30) * s);
-  const totalW = tagW + Math.round(8 * s);
+  const tagW = Math.round((label.length > 2 ? 46 : label.length > 1 ? 38 : 34) * s);
+  const totalW = tagW + Math.round(10 * s);
   const cx = totalW / 2;
   const tagR = Math.round(6 * s);
   const lineW = Math.round(2 * s);
   const tagX = (totalW - tagW) / 2;
-  const shadowOff = Math.round(2 * s);
+  const shadowOff = Math.round(3 * s);
   const sw = Math.round(3.5 * s);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
