@@ -101,6 +101,9 @@ function initApp() {
   state.map.addListener('heading_changed', saveMapPrefs);
 
   restoreSession();
+
+  // Initialiser le système premium
+  if (typeof initPremium === 'function') initPremium();
 }
 
 // ── SESSION PERSISTENCE ──

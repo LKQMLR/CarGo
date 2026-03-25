@@ -22,13 +22,14 @@
   <link rel="stylesheet" href="css/deliveries.css" />
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/route.css" />
+  <link rel="stylesheet" href="css/premium.css" />
 </head>
 <body>
 
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v90</span></h1>
+    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v91</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -128,6 +129,9 @@
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
       </div>
 
+      <!-- Premium -->
+      <button id="btn-premium"></button>
+
       <!-- Actions -->
       <button id="btn-reset" onclick="resetAll()">Réinitialiser la tournée</button>
       <button id="btn-reset" style="margin-top:4px;background:var(--red-bg);color:var(--red);border:1px solid #5c2a2a;width:100%;padding:8px;font-size:.72rem;border-radius:8px;cursor:pointer" onclick="if(confirm('Effacer toutes les données (cache, session, préférences) et recharger ?')){const sp=localStorage.getItem('cargo_startPoint');caches.keys().then(k=>Promise.all(k.map(c=>caches.delete(c))));localStorage.clear();if(sp)localStorage.setItem('cargo_startPoint',sp);navigator.serviceWorker.getRegistrations().then(r=>r.forEach(s=>s.unregister()));setTimeout(()=>location.reload(true),500)}">Vider le cache &amp; données</button>
@@ -150,6 +154,7 @@
 <script src="js/route.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/simulation.js"></script>
+<script src="js/premium.js"></script>
 
 </body>
 </html>
