@@ -9,7 +9,6 @@ const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRS
 // ── Vérifier le statut premium au lancement ──
 function initPremium() {
   const email = localStorage.getItem('cargo_premium_email');
-  const cached = localStorage.getItem('cargo_premium_status');
 
   // Vérifier si on revient d'un paiement réussi
   const params = new URLSearchParams(window.location.search);
@@ -24,14 +23,11 @@ function initPremium() {
     window.history.replaceState({}, '', window.location.pathname);
   }
 
-  // Appliquer le cache local en attendant la vérification serveur
-  if (cached === 'true') {
-    applyPremium(true);
-  }
-
-  // Vérifier côté serveur si on a un email
+  // Vérifier côté serveur si on a un email — pas de cache local, seul le serveur fait foi
   if (email) {
     checkPremiumStatus(email);
+  } else {
+    applyPremium(false);
   }
 
   updatePremiumUI();
@@ -69,7 +65,6 @@ function updatePremiumUI() {
   const btn = document.getElementById('btn-premium');
   if (!btn) return;
 
-  const email = localStorage.getItem('cargo_premium_email');
   const isPremium = localStorage.getItem('cargo_premium_status') === 'true';
 
   if (isPremium) {
