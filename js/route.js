@@ -151,6 +151,7 @@ function showResults(stops, legs, distM, durS) {
 // ── ÉTAPES DE L'ITINÉRAIRE ──
 function renderRouteSteps() {
   if (!state.navStops || !state.navLegs) return;
+  const esc = s => { const el = document.createElement('div'); el.appendChild(document.createTextNode(s || '')); return el.innerHTML; };
   const stops = state.navStops, legs = state.navLegs;
   const navActive = document.getElementById('nav-panel').classList.contains('visible') || state._tourComplete;
   const now = new Date();
@@ -159,7 +160,7 @@ function renderRouteSteps() {
   // Carte de départ
   let html = `<li><div class="step-badge depot">D</div><div class="step-content">
     <div class="step-place-name" style="color:var(--green)">Départ</div>
-    <div class="step-addr">${stops[0].formatted}</div>
+    <div class="step-addr">${esc(stops[0].formatted)}</div>
   </div></li>`;
 
   for (let i = 0; i < legs.length; i++) {
@@ -167,8 +168,8 @@ function renderRouteSteps() {
     const eta = new Date(now.getTime() + cumSeconds * 1000);
     const etaStr = eta.getHours() + 'h' + String(eta.getMinutes()).padStart(2, '0');
     const d = state.deliveries[i];
-    const pn = d && d.placeName ? `<div class="step-place-name">${d.placeName}</div>` : '';
-    const note = d && d.note ? `<div class="step-note">— ${d.note}</div>` : '';
+    const pn = d && d.placeName ? `<div class="step-place-name">${esc(d.placeName)}</div>` : '';
+    const note = d && d.note ? `<div class="step-note">— ${esc(d.note)}</div>` : '';
     const stepClass = navActive && i < state.navIndex ? 'step-delivered' : navActive && i === state.navIndex ? 'step-current' : '';
     const sectorClass = d && d.sector ? 'sector-' + d.sector : '';
     const secCols = { 1: '#3b82f6', 2: '#0d9488', 3: '#d97706', 4: '#db2777', 5: '#7c3aed' };
@@ -179,7 +180,7 @@ function renderRouteSteps() {
     // Séparateur entre les étapes
     html += `<li style="list-style:none;display:flex;justify-content:center;background:none;border:none;box-shadow:none;padding:0;margin:-4px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></li>`;
     html += `<li class="${stepClass} ${sectorClass}"><div class="step-badge"${badgeStyle}>${i + 1}</div><div class="step-content">
-      ${pn}<div class="step-addr">${stops[i + 1].formatted}</div>
+      ${pn}<div class="step-addr">${esc(stops[i + 1].formatted)}</div>
       ${note}
       <div class="step-meta"><span>~${etaStr}</span></div>
       ${delivered}

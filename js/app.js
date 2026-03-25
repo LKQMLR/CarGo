@@ -28,6 +28,17 @@ function loadGoogleMaps(apiKey) {
   });
 }
 
+// ── MIGRATION localStorage nexum_ → cargo_ ──
+['cargo_session', 'nexum_freqAddr', 'cargo_mapPrefs'].forEach(oldKey => {
+  const val = localStorage.getItem(oldKey);
+  if (val !== null) {
+    localStorage.setItem(oldKey.replace('nexum_', 'cargo_'), val);
+    localStorage.removeItem(oldKey);
+  }
+});
+// Supprimer l'ancien cargo_premium_status (la vérification est désormais serveur uniquement)
+localStorage.removeItem('cargo_premium_status');
+
 // ── DÉMARRAGE ──
 window.addEventListener('DOMContentLoaded', async () => {
   const dot = document.getElementById('api-dot');
@@ -121,12 +132,12 @@ function saveSession() {
     navIndex: state.navIndex,
     idCounter: idCounter,
   };
-  localStorage.setItem('nexum_session', JSON.stringify(data));
+  localStorage.setItem('cargo_session', JSON.stringify(data));
 }
 
 function restoreSession() {
   try {
-    const data = JSON.parse(localStorage.getItem('nexum_session'));
+    const data = JSON.parse(localStorage.getItem('cargo_session'));
     if (!data || (!data.startPoint && !data.deliveries.length)) {
       // Pas de session mais peut-être un point de départ sauvegardé
       const sp = localStorage.getItem('cargo_startPoint');
@@ -177,7 +188,7 @@ function restoreSession() {
 
 // ── MAP PREFERENCES ──
 function saveMapPrefs() {
-  localStorage.setItem('nexum_mapPrefs', JSON.stringify({
+  localStorage.setItem('cargo_mapPrefs', JSON.stringify({
     mapTypeId: state.map.getMapTypeId(), zoom: state.map.getZoom(),
     center: { lat: state.map.getCenter().lat(), lng: state.map.getCenter().lng() },
     tilt: state.map.getTilt(), heading: state.map.getHeading(),
@@ -186,7 +197,7 @@ function saveMapPrefs() {
 
 function restoreMapPrefs() {
   try {
-    const p = JSON.parse(localStorage.getItem('nexum_mapPrefs'));
+    const p = JSON.parse(localStorage.getItem('cargo_mapPrefs'));
     if (p && p.center) {
       if (p.mapTypeId) state.map.setMapTypeId(p.mapTypeId);
       if (p.zoom) state.map.setZoom(p.zoom);
@@ -250,7 +261,7 @@ function resetAll() {
   document.getElementById('nav-panel').classList.remove('visible');
   document.getElementById('btn-nav-start').classList.remove('visible');
   document.getElementById('status-bar').className = '';
-  localStorage.removeItem('nexum_session');
+  localStorage.removeItem('cargo_session');
 }
 
 // Service Worker

@@ -11,12 +11,12 @@ function toggleSimMode() {
   const tag = document.getElementById('version-tag');
   if (_simMode) {
     tag.style.color = '#ef4444';
-    tag.textContent = 'v90 [SIM]';
+    tag.textContent = tag.textContent.replace(' [SIM]', '') + ' [SIM]';
     showStatus('success', 'Mode simulation activé. Lancez une tournée pour simuler le trajet.');
   } else {
     stopSim();
     tag.style.color = '';
-    tag.textContent = 'v90';
+    tag.textContent = tag.textContent.replace(' [SIM]', '');
     showStatus('success', 'Mode simulation désactivé.');
   }
 }

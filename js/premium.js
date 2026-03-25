@@ -6,34 +6,37 @@
 const CARGO_API = 'https://cargo-api-seven.vercel.app';
 const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRSiDOjAwsaG3vhTL0RLwn22qeDns7afLlPlh3z00JJMuTqFx';
 
+// État premium en mémoire — seul le serveur peut le mettre à true
+let _premiumVerified = false;
+
 // ── Vérifier le statut premium au lancement ──
 function initPremium() {
-  const email = localStorage.getItem('cargo_premium_email');
+  // Par défaut : pas premium
+  _premiumVerified = false;
+  applyPremium(false);
 
   // Vérifier si on revient d'un paiement réussi
   const params = new URLSearchParams(window.location.search);
   if (params.get('premium') === 'success') {
     window.history.replaceState({}, '', window.location.pathname);
-    // Confirmer l'email seulement après paiement réussi
-    const pendingEmail = sessionStorage.getItem('cargo_pending_email');
+    // Récupérer l'email temporaire (localStorage car sessionStorage peut être perdu après redirect)
+    const pendingEmail = localStorage.getItem('cargo_pending_email');
     if (pendingEmail) {
       localStorage.setItem('cargo_premium_email', pendingEmail);
-      sessionStorage.removeItem('cargo_pending_email');
+      localStorage.removeItem('cargo_pending_email');
     }
     const confirmedEmail = localStorage.getItem('cargo_premium_email');
     if (confirmedEmail) {
       checkPremiumStatus(confirmedEmail);
-      showStatus('success', 'Bienvenue dans CarGo Premium !');
+      showStatus('success', 'Vérification de votre abonnement...');
     }
   } else if (params.get('premium') === 'cancel') {
     window.history.replaceState({}, '', window.location.pathname);
-    sessionStorage.removeItem('cargo_pending_email');
+    localStorage.removeItem('cargo_pending_email');
   }
 
-  // Par défaut : pas premium. Seul le serveur peut activer.
-  applyPremium(false);
-
-  // Vérifier côté serveur si on a un email
+  // Vérifier côté serveur si on a un email enregistré
+  const email = localStorage.getItem('cargo_premium_email');
   if (email) {
     checkPremiumStatus(email);
   }
@@ -43,37 +46,43 @@ function initPremium() {
 async function checkPremiumStatus(email) {
   try {
     const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`);
-    if (!res.ok) return;
+    if (!res.ok) {
+      applyPremium(false);
+      return;
+    }
     const data = await res.json();
-    localStorage.setItem('cargo_premium_status', data.premium ? 'true' : 'false');
-    applyPremium(data.premium);
+    _premiumVerified = !!data.premium;
+    applyPremium(_premiumVerified);
+    // Si plus premium, nettoyer
+    if (!data.premium) {
+      localStorage.removeItem('cargo_premium_email');
+    }
   } catch {
-    // En cas d'erreur réseau, garder le statut en cache
+    // Erreur réseau — rester sur non-premium par sécurité
+    applyPremium(false);
   }
 }
 
 // ── Appliquer le mode premium ──
 function applyPremium(isPremium) {
-  // Masquer/afficher les pubs
   const adBanner = document.getElementById('ad-banner');
   if (adBanner) adBanner.style.display = isPremium ? 'none' : '';
 
-  // Mettre à jour le badge
   const badge = document.getElementById('premium-badge');
   if (badge) badge.style.display = isPremium ? 'inline-flex' : 'none';
 
-  // Mettre à jour le bouton
-  updatePremiumUI();
+  updatePremiumUI(isPremium);
 }
 
 // ── Mettre à jour l'UI du bouton premium ──
-function updatePremiumUI() {
+function updatePremiumUI(isPremium) {
   const btn = document.getElementById('btn-premium');
   if (!btn) return;
 
-  const isPremium = localStorage.getItem('cargo_premium_status') === 'true';
+  // Utiliser l'état mémoire, jamais localStorage
+  const premium = typeof isPremium === 'boolean' ? isPremium : _premiumVerified;
 
-  if (isPremium) {
+  if (premium) {
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Premium actif';
     btn.classList.add('premium-active');
     btn.onclick = managePremium;
@@ -84,11 +93,19 @@ function updatePremiumUI() {
   }
 }
 
+// ── Échappement HTML ──
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(s || ''));
+  return d.innerHTML;
+}
+
 // ── Afficher la modale d'abonnement ──
 function showPremiumModal() {
-  // Supprimer une modale existante
   const old = document.getElementById('premium-modal');
   if (old) old.remove();
+
+  const savedEmail = escHtml(localStorage.getItem('cargo_premium_email') || '');
 
   const modal = document.createElement('div');
   modal.id = 'premium-modal';
@@ -106,7 +123,7 @@ function showPremiumModal() {
         <li>Soutenir le d\u00e9veloppement</li>
         <li>Fonctionnalit\u00e9s futures en priorit\u00e9</li>
       </ul>
-      <input type="email" id="premium-email" placeholder="Votre adresse email" value="${localStorage.getItem('cargo_premium_email') || ''}" />
+      <input type="email" id="premium-email" placeholder="Votre adresse email" value="${savedEmail}" />
       <button class="premium-subscribe" onclick="subscribePremium()">S'abonner</button>
       <p class="premium-legal">Paiement s\u00e9curis\u00e9 via Stripe. Annulable \u00e0 tout moment.</p>
     </div>
@@ -115,7 +132,6 @@ function showPremiumModal() {
   requestAnimationFrame(() => modal.classList.add('show'));
 }
 
-// ── Fermer la modale ──
 function closePremiumModal() {
   const modal = document.getElementById('premium-modal');
   if (modal) {
@@ -124,18 +140,23 @@ function closePremiumModal() {
   }
 }
 
+// ── Validation email ──
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 // ── Lancer le paiement Stripe ──
 async function subscribePremium() {
   const emailInput = document.getElementById('premium-email');
   const email = emailInput.value.trim();
 
-  if (!email || !email.includes('@')) {
+  if (!email || !isValidEmail(email)) {
     emailInput.style.borderColor = '#ef4444';
     return;
   }
 
-  // Email sauvegardé temporairement, sera confirmé au retour de Stripe
-  sessionStorage.setItem('cargo_pending_email', email);
+  // Sauver dans localStorage (survit aux redirections cross-origin, contrairement à sessionStorage)
+  localStorage.setItem('cargo_pending_email', email);
 
   const btn = document.querySelector('.premium-subscribe');
   btn.textContent = 'Redirection...';
@@ -150,12 +171,11 @@ async function subscribePremium() {
 
     if (!res.ok) throw new Error('Erreur serveur');
     const data = await res.json();
-
-    // Rediriger vers Stripe Checkout
     window.location.href = data.url;
   } catch (err) {
     btn.textContent = "S'abonner";
     btn.disabled = false;
+    localStorage.removeItem('cargo_pending_email');
     showStatus('error', 'Erreur de connexion au serveur de paiement');
   }
 }
@@ -163,6 +183,10 @@ async function subscribePremium() {
 // ── Gérer l'abonnement existant ──
 async function managePremium() {
   const email = localStorage.getItem('cargo_premium_email');
+  if (!email) {
+    showStatus('error', 'Aucun email associé au premium');
+    return;
+  }
   try {
     const res = await fetch(`${CARGO_API}/api/customer-portal`, {
       method: 'POST',

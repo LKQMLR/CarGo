@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CarGo" />
   <meta name="theme-color" content="#1a1a2e" />
@@ -29,7 +29,7 @@
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v99</span></h1>
+    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v100</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -134,7 +134,7 @@
 
       <!-- Actions -->
       <button id="btn-reset" onclick="resetAll()">Réinitialiser la tournée</button>
-      <button id="btn-reset" style="margin-top:4px;background:var(--red-bg);color:var(--red);border:1px solid #5c2a2a;width:100%;padding:8px;font-size:.72rem;border-radius:8px;cursor:pointer" onclick="if(confirm('Effacer toutes les données (cache, session, préférences) et recharger ?')){const sp=localStorage.getItem('cargo_startPoint');caches.keys().then(k=>Promise.all(k.map(c=>caches.delete(c))));localStorage.clear();if(sp)localStorage.setItem('cargo_startPoint',sp);navigator.serviceWorker.getRegistrations().then(r=>r.forEach(s=>s.unregister()));setTimeout(()=>location.reload(true),500)}">Vider le cache &amp; données</button>
+      <button id="btn-clear-cache" style="margin-top:4px;background:var(--red-bg);color:var(--red);border:1px solid #5c2a2a;width:100%;padding:8px;font-size:.72rem;border-radius:8px;cursor:pointer" onclick="if(confirm('Effacer toutes les données (cache, session, préférences) et recharger ?')){const sp=localStorage.getItem('cargo_startPoint');caches.keys().then(k=>Promise.all(k.map(c=>caches.delete(c))));localStorage.clear();if(sp)localStorage.setItem('cargo_startPoint',sp);navigator.serviceWorker.getRegistrations().then(r=>r.forEach(s=>s.unregister()));setTimeout(()=>location.reload(true),500)}">Vider le cache &amp; données</button>
     </div>
   </div>
 </div>

@@ -64,7 +64,7 @@ async function resolveInput(el) {
 
 // ── ADRESSES FRÉQUENTES ──
 function getFrequentAddresses() {
-  try { return JSON.parse(localStorage.getItem('nexum_freqAddr') || '[]'); }
+  try { return JSON.parse(localStorage.getItem('cargo_freqAddr') || '[]'); }
   catch { return []; }
 }
 
@@ -74,7 +74,7 @@ function saveFrequentAddress(addr) {
   if (ex) { ex.count++; ex.lastUsed = Date.now(); }
   else { list.push({ ...addr, count: 1, lastUsed: Date.now() }); }
   list.sort((a, b) => b.count - a.count);
-  localStorage.setItem('nexum_freqAddr', JSON.stringify(list.slice(0, 50)));
+  localStorage.setItem('cargo_freqAddr', JSON.stringify(list.slice(0, 50)));
 }
 
 function showFreqDropdown(inputId, dropdownId) {
@@ -85,10 +85,13 @@ function showFreqDropdown(inputId, dropdownId) {
     ? all.slice(0, 8)
     : all.filter(a => a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q) || (a.placeName && a.placeName.toLowerCase().includes(q))).slice(0, 8);
   if (!matches.length) { dd.classList.remove('visible'); return; }
-  dd.innerHTML = matches.map(a => `
-    <div class="freq-item" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${a.formatted.replace(/"/g,'&quot;')}" data-address="${a.address.replace(/"/g,'&quot;')}" data-note="${(a.note||'').replace(/"/g,'&quot;')}" data-place-name="${(a.placeName||'').replace(/"/g,'&quot;')}">
-      <span class="freq-icon">&#9733;</span><span>${a.placeName ? '<b>'+a.placeName+'</b> · ' : ''}${a.formatted.length > 50 ? a.formatted.substring(0,47)+'...' : a.formatted}${a.note ? ' <small style="color:var(--yellow)">'+a.note+'</small>' : ''}</span>
-    </div>`).join('');
+  dd.innerHTML = matches.map(a => {
+    const esc = s => { const d = document.createElement('div'); d.appendChild(document.createTextNode(s || '')); return d.innerHTML; };
+    const fmtShort = a.formatted.length > 50 ? a.formatted.substring(0,47)+'...' : a.formatted;
+    return `<div class="freq-item" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${esc(a.formatted)}" data-address="${esc(a.address)}" data-note="${esc(a.note||'')}" data-place-name="${esc(a.placeName||'')}">
+      <span class="freq-icon">&#9733;</span><span>${a.placeName ? '<b>'+esc(a.placeName)+'</b> · ' : ''}${esc(fmtShort)}${a.note ? ' <small style="color:var(--yellow)">'+esc(a.note)+'</small>' : ''}</span>
+    </div>`;
+  }).join('');
   dd.classList.add('visible');
   dd.querySelectorAll('.freq-item').forEach(item => {
     item.addEventListener('mousedown', e => {
@@ -113,5 +116,5 @@ function setupFreqDropdown(inputId, dropdownId) {
 function saveNoteToFrequent(formatted, note) {
   const list = getFrequentAddresses();
   const ex = list.find(a => a.formatted === formatted);
-  if (ex) { ex.note = note; localStorage.setItem('nexum_freqAddr', JSON.stringify(list)); }
+  if (ex) { ex.note = note; localStorage.setItem('cargo_freqAddr', JSON.stringify(list)); }
 }

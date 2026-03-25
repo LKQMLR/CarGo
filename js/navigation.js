@@ -104,11 +104,12 @@ function showProximityAlert(num, label, deliveryIdx) {
   if (existing) existing.remove();
   const div = document.createElement('div');
   div.id = 'proximity-alert';
+  const esc = s => { const el = document.createElement('div'); el.appendChild(document.createTextNode(s || '')); return el.innerHTML; };
   const currentD = state.deliveries[state.navIndex];
-  const currentLabel = currentD ? (currentD.placeName || currentD.formatted) : '';
+  const currentLabel = currentD ? esc(currentD.placeName || currentD.formatted) : '';
   div.innerHTML = `
     <div class="prox-current">En cours : <b>${state.navIndex + 1}</b> — ${currentLabel}</div>
-    <div class="prox-text">📍 Livraison <b>${num}</b> à proximité<br><span>${label}</span></div>
+    <div class="prox-text">📍 Livraison <b>${num}</b> à proximité<br><span>${esc(label)}</span></div>
     <div class="prox-btns">
       <button onclick="acceptProximitySwitch(${deliveryIdx})">Livrer maintenant</button>
       <button class="prox-skip" onclick="dismissProximityAlert()">Ignorer</button>
@@ -135,7 +136,7 @@ function updateNavPanel() {
   const i = state.navIndex, total = state.deliveries.length;
   const stop = state.navStops[i + 1], leg = state.navLegs[i];
   document.getElementById('nav-badge').textContent = i + 1;
-  document.getElementById('nav-dest').textContent = stop.formatted;
+  document.getElementById('nav-dest').textContent = stop.placeName || stop.formatted;
   document.getElementById('nav-meta').textContent = leg.distance.text + ' · ' + leg.duration.text;
   document.getElementById('nav-meta').classList.remove('nav-arrived');
   document.getElementById('nav-progress-text').textContent = (i + 1) + ' / ' + total;

@@ -4,6 +4,13 @@
    drag & drop, swipe-to-delete
    ══════════════════════════════════════════ */
 
+// ── ÉCHAPPEMENT HTML (anti-XSS) ──
+function esc(s) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(s || ''));
+  return d.innerHTML;
+}
+
 // ── SECTEUR ACTIF ──
 let activeSector = 0;
 const SECTOR_LABELS = ['Aucun secteur', 'Secteur 1', 'Secteur 2', 'Secteur 3', 'Secteur 4', 'Secteur 5'];
@@ -124,9 +131,10 @@ function renderDeliveryList() {
   countEl.textContent = state.deliveries.length ? `(${state.deliveries.length})` : '';
   if (!state.deliveries.length) { ul.innerHTML = ''; return; }
   ul.innerHTML = state.deliveries.map((d, i) => {
-    const addr = d.formatted.length > 50 ? d.formatted.substring(0, 47) + '...' : d.formatted;
-    const placeLabel = d.placeName ? `<div class="delivery-place-name">${d.placeName}</div>` : '';
-    const noteDisplay = d.note ? `<div class="delivery-note" onclick="editNote(${d.id})" title="Cliquer pour modifier">${d.note}</div>` : '';
+    const rawAddr = d.formatted.length > 50 ? d.formatted.substring(0, 47) + '...' : d.formatted;
+    const addr = esc(rawAddr);
+    const placeLabel = d.placeName ? `<div class="delivery-place-name">${esc(d.placeName)}</div>` : '';
+    const noteDisplay = d.note ? `<div class="delivery-note" onclick="editNote(${d.id})" title="Cliquer pour modifier">${esc(d.note)}</div>` : '';
     const inputStyle = d.note ? 'display:none' : '';
     const legInfo = d.legDist && d.legDur ? `<div class="delivery-leg-info"><span>${d.legDist}</span><span>·</span><span>${d.legDur}</span></div>` : '';
     const badgeClass = d.locked ? 'lock-badge locked' : 'lock-badge unlocked';
