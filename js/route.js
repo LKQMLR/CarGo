@@ -48,28 +48,22 @@ function displayRoute(stops) {
         allLegs.push(...legs);
       });
 
-      // Affichage sur la carte
-      if (batches.length === 1) {
-        state.directionsRenderer.setDirections(allResults[0]);
-        if (state.previewRenderer) state.previewRenderer.setDirections(allResults[0]);
-      } else {
-        // Multi-lots : polyline manuelle
-        state.directionsRenderer.setDirections({ routes: [] });
-        if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
-        const path = [];
-        allResults.forEach(r => { r.routes[0].overview_path.forEach(p => path.push(p)); });
-        if (state._routePoly) state._routePoly.setMap(null);
-        if (state._routePolyPreview) state._routePolyPreview.setMap(null);
-        const arrowIcon = { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5, strokeColor: '#fff', strokeWeight: 1, fillColor: '#fff', fillOpacity: 0.9 };
-        state._routePoly = new google.maps.Polyline({
-          path, map: state.map, strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9,
-          icons: [{ icon: arrowIcon, offset: '0', repeat: '80px' }]
+      // Affichage sur la carte — toujours en polyline custom (pas de markers Google)
+      state.directionsRenderer.setDirections({ routes: [] });
+      if (state.previewRenderer) state.previewRenderer.setDirections({ routes: [] });
+      const path = [];
+      allResults.forEach(r => { r.routes[0].overview_path.forEach(p => path.push(p)); });
+      if (state._routePoly) state._routePoly.setMap(null);
+      if (state._routePolyPreview) state._routePolyPreview.setMap(null);
+      const arrowIcon = { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.5, strokeColor: '#fff', strokeWeight: 1, fillColor: '#fff', fillOpacity: 0.9 };
+      state._routePoly = new google.maps.Polyline({
+        path, map: state.map, strokeColor: '#4f8cff', strokeWeight: 5, strokeOpacity: 0.9,
+        icons: [{ icon: arrowIcon, offset: '0', repeat: '80px' }]
+      });
+      if (state.previewMap) {
+        state._routePolyPreview = new google.maps.Polyline({
+          path, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 3, strokeOpacity: 0.9
         });
-        if (state.previewMap) {
-          state._routePolyPreview = new google.maps.Polyline({
-            path, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 3, strokeOpacity: 0.9
-          });
-        }
       }
 
       // Placer les markers
