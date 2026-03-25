@@ -4,7 +4,7 @@
    ══════════════════════════════════════════ */
 
 const CARGO_API = 'https://cargo-api-seven.vercel.app';
-const STRIPE_PK = 'pk_test_51TEmxoIPUomr66UcUNlLZee6odxyWVqx7w2CxPMCECIgAeewj6DdhUyb5ck6jRiflJe7iyH1IpPu1GpYVsIf3EYe00vCX0TuxI';
+const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRSiDOjAwsaG3vhTL0RLwn22qeDns7afLlPlh3z00JJMuTqFx';
 
 // ── Vérifier le statut premium au lancement ──
 function initPremium() {
