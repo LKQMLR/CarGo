@@ -3,7 +3,7 @@
    Gestion abonnement, vérification, UI
    ══════════════════════════════════════════ */
 
-const CARGO_API = 'https://cargo-api-chi.vercel.app';
+const CARGO_API = 'https://cargo-api-seven.vercel.app';
 const STRIPE_PK = 'pk_test_51TEmxoIPUomr66UcUNlLZee6odxyWVqx7w2CxPMCECIgAeewj6DdhUyb5ck6jRiflJe7iyH1IpPu1GpYVsIf3EYe00vCX0TuxI';
 
 // ── Vérifier le statut premium au lancement ──
