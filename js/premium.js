@@ -7,17 +7,27 @@
 const CARGO_API = 'https://cargo-api-seven.vercel.app';
 const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRSiDOjAwsaG3vhTL0RLwn22qeDns7afLlPlh3z00JJMuTqFx';
 
-// Emails propriétaire (premium gratuit)
-const OWNER_EMAILS = ['rossignolyannis@gmail.com'];
+// Hash SHA-256 des emails propriétaire (premium gratuit, non lisible)
+const OWNER_HASHES = ['10780fdbd1fbc4d15ff792fa79466263f73f368bde5a3a3d0032d2ed69afdf46'];
 
 // État premium en mémoire — seul le serveur peut le mettre à true
 let _premiumVerified = false;
 
+// ── SHA-256 hash ──
+async function sha256(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function isOwnerEmail(email) {
+  const hash = await sha256(email.toLowerCase());
+  return OWNER_HASHES.includes(hash);
+}
+
 // ── Vérifier si l'utilisateur est premium ──
 function isPremium() {
-  if (_premiumVerified) return true;
-  const email = localStorage.getItem('cargo_premium_email');
-  return email && OWNER_EMAILS.includes(email.toLowerCase());
+  return _premiumVerified;
 }
 
 // ── Limites par plan ──
@@ -74,10 +84,10 @@ function showLimitAlert(_, message) {
 function initPremium() {
   // Vérifier si email propriétaire
   const ownerEmail = localStorage.getItem('cargo_premium_email');
-  if (ownerEmail && OWNER_EMAILS.includes(ownerEmail.toLowerCase())) {
-    _premiumVerified = true;
-    applyPremium(true);
-    return;
+  if (ownerEmail) {
+    isOwnerEmail(ownerEmail).then(isOwner => {
+      if (isOwner) { _premiumVerified = true; applyPremium(true); }
+    });
   }
 
   // Par défaut : pas premium
@@ -113,6 +123,8 @@ function initPremium() {
 
 // ── Vérifier l'abonnement côté serveur ──
 async function checkPremiumStatus(email) {
+  // Ne pas vérifier côté serveur si c'est un email propriétaire
+  if (await isOwnerEmail(email)) { _premiumVerified = true; applyPremium(true); return; }
   try {
     const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`);
     if (!res.ok) {
@@ -258,7 +270,7 @@ async function subscribePremium() {
   }
 
   // Bypass propriétaire : activer premium sans payer
-  if (OWNER_EMAILS.includes(email.toLowerCase())) {
+  if (await isOwnerEmail(email)) {
     localStorage.setItem('cargo_premium_email', email);
     _premiumVerified = true;
     applyPremium(true);
