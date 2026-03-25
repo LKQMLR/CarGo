@@ -27,8 +27,9 @@ function createClassicMarker(position, label, color, title, targetMap, scale) {
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
     <defs>
-      <radialGradient id="${gid}" cx="50%" cy="50%" r="70%">
+      <radialGradient id="${gid}" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="${color}"/>
+        <stop offset="70%" stop-color="${color}"/>
         <stop offset="100%" stop-color="#0a0a1a"/>
       </radialGradient>
       <linearGradient id="${gid}l" x1="0" y1="0" x2="0" y2="1">
