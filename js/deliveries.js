@@ -16,7 +16,12 @@ let activeSector = 0;
 const SECTOR_LABELS = ['Aucun secteur', 'Secteur 1', 'Secteur 2', 'Secteur 3', 'Secteur 4', 'Secteur 5'];
 
 function cycleSector() {
-  activeSector = (activeSector + 1) % 6;
+  let next = (activeSector + 1) % 6;
+  // En gratuit : secteurs 0, 1, 2 uniquement
+  if (next > 0 && !checkSectorLimit(next)) {
+    next = 0; // revenir à "Aucun secteur"
+  }
+  activeSector = next;
   const btn = document.getElementById('btn-sector');
   btn.textContent = SECTOR_LABELS[activeSector];
   btn.className = activeSector ? `s${activeSector}` : '';
@@ -45,6 +50,7 @@ async function handleSetStart() {
 async function handleAddDelivery() {
   const input = document.getElementById('delivery-input'), addr = input.value.trim();
   if (!addr) return;
+  if (!checkAddressLimit()) return;
   setUIBusy(true); showStatus('loading', 'Géocodage...');
   try {
     const geo = await resolveInput(input);
@@ -108,6 +114,8 @@ function editNote(id) {
 // ── CADENAS (lock/unlock) ──
 function toggleLock(id) {
   const d = state.deliveries.find(d => d.id === id); if (!d) return;
+  // Si on veut verrouiller (pas déverrouiller), vérifier la limite
+  if (!d.locked && !checkLockLimit()) return;
   d.locked = !d.locked;
   // Mise à jour in-place sans re-render complet
   const li = document.querySelector(`[data-id="${id}"]`);

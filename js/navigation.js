@@ -85,6 +85,7 @@ let _proximityAlertShown = {};
 let _proximityAlertOpen = false;
 
 function checkProximityAlert(pos) {
+  if (!canUseProximityAlerts()) return;
   const cb = document.getElementById('prox-check');
   if (!cb || !cb.checked) return;
   if (_proximityAlertOpen) return;
