@@ -3,12 +3,16 @@
    Création de markers modernes, nettoyage
    ══════════════════════════════════════════ */
 
-// ── MARKER MODERNE : étiquette arrondie + contour + ombre + trait fin ──
+// ── Compteur unique pour les dégradés SVG ──
+let _markerGradId = 0;
+
+// ── MARKER MODERNE : étiquette avec dégradé noir→couleur + trait ──
 function createClassicMarker(position, label, color, title, targetMap, scale) {
   const isStart = label === 'D';
   const s = scale || 1;
+  const gid = 'mg' + (++_markerGradId);
 
-  // Dimensions agrandies
+  // Dimensions
   const fontSize = Math.round((label.length > 2 ? 11 : label.length > 1 ? 12 : 14) * s);
   const tagH = Math.round(28 * s);
   const lineH = Math.round(16 * s);
@@ -20,22 +24,29 @@ function createClassicMarker(position, label, color, title, targetMap, scale) {
   const lineW = Math.round(2 * s);
   const tagX = (totalW - tagW) / 2;
   const shadowOff = Math.round(2 * s);
-  const borderW = Math.round(2.5 * s);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
+    <defs>
+      <radialGradient id="${gid}" cx="50%" cy="50%" r="70%">
+        <stop offset="0%" stop-color="${color}"/>
+        <stop offset="100%" stop-color="#0a0a1a"/>
+      </radialGradient>
+      <linearGradient id="${gid}l" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}"/>
+        <stop offset="100%" stop-color="#0a0a1a"/>
+      </linearGradient>
+    </defs>
     <!-- Ombre portée -->
     <rect x="${tagX + shadowOff}" y="${shadowOff + 1}" width="${tagW}" height="${tagH}" rx="${tagR}" fill="rgba(0,0,0,.35)"/>
-    <!-- Contour noir -->
-    <rect x="${tagX}" y="0" width="${tagW}" height="${tagH}" rx="${tagR}" fill="#1a1a2e" stroke="#1a1a2e" stroke-width="1"/>
-    <!-- Étiquette couleur -->
-    <rect x="${tagX + borderW}" y="${borderW}" width="${tagW - borderW * 2}" height="${tagH - borderW * 2}" rx="${tagR - 1}" fill="${color}"/>
+    <!-- Étiquette avec dégradé -->
+    <rect x="${tagX}" y="0" width="${tagW}" height="${tagH}" rx="${tagR}" fill="url(#${gid})"/>
     <!-- Numéro -->
     <text x="${cx}" y="${tagH / 2 + fontSize * 0.36}" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-weight="800" font-size="${fontSize}">${label}</text>
-    <!-- Trait noir -->
-    <line x1="${cx}" y1="${tagH}" x2="${cx}" y2="${tagH + lineH}" stroke="#1a1a2e" stroke-width="${lineW + Math.round(1 * s)}" stroke-linecap="round"/>
-    <!-- Point noir -->
-    <circle cx="${cx}" cy="${tagH + lineH}" r="${Math.round(3.5 * s)}" fill="#1a1a2e"/>
-    <circle cx="${cx}" cy="${tagH + lineH}" r="${Math.round(1.5 * s)}" fill="${color}"/>
+    <!-- Trait dégradé -->
+    <line x1="${cx}" y1="${tagH}" x2="${cx}" y2="${tagH + lineH}" stroke="url(#${gid}l)" stroke-width="${lineW + Math.round(1 * s)}" stroke-linecap="round"/>
+    <!-- Point -->
+    <circle cx="${cx}" cy="${tagH + lineH}" r="${Math.round(3.5 * s)}" fill="#0a0a1a"/>
+    <circle cx="${cx}" cy="${tagH + lineH}" r="${Math.round(1.5 * s)}" fill="${color}" opacity=".7"/>
   </svg>`;
 
   return new google.maps.Marker({
