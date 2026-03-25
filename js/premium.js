@@ -13,24 +13,30 @@ function initPremium() {
   // Vérifier si on revient d'un paiement réussi
   const params = new URLSearchParams(window.location.search);
   if (params.get('premium') === 'success') {
-    // Nettoyer l'URL
     window.history.replaceState({}, '', window.location.pathname);
-    if (email) {
-      checkPremiumStatus(email);
+    // Confirmer l'email seulement après paiement réussi
+    const pendingEmail = sessionStorage.getItem('cargo_pending_email');
+    if (pendingEmail) {
+      localStorage.setItem('cargo_premium_email', pendingEmail);
+      sessionStorage.removeItem('cargo_pending_email');
+    }
+    const confirmedEmail = localStorage.getItem('cargo_premium_email');
+    if (confirmedEmail) {
+      checkPremiumStatus(confirmedEmail);
       showStatus('success', 'Bienvenue dans CarGo Premium !');
     }
   } else if (params.get('premium') === 'cancel') {
     window.history.replaceState({}, '', window.location.pathname);
+    sessionStorage.removeItem('cargo_pending_email');
   }
 
-  // Vérifier côté serveur si on a un email — pas de cache local, seul le serveur fait foi
+  // Par défaut : pas premium. Seul le serveur peut activer.
+  applyPremium(false);
+
+  // Vérifier côté serveur si on a un email
   if (email) {
     checkPremiumStatus(email);
-  } else {
-    applyPremium(false);
   }
-
-  updatePremiumUI();
 }
 
 // ── Vérifier l'abonnement côté serveur ──
@@ -128,8 +134,8 @@ async function subscribePremium() {
     return;
   }
 
-  // Sauvegarder l'email
-  localStorage.setItem('cargo_premium_email', email);
+  // Email sauvegardé temporairement, sera confirmé au retour de Stripe
+  sessionStorage.setItem('cargo_pending_email', email);
 
   const btn = document.querySelector('.premium-subscribe');
   btn.textContent = 'Redirection...';
