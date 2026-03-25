@@ -155,7 +155,6 @@ async function subscribePremium() {
   } catch (err) {
     btn.textContent = "S'abonner";
     btn.disabled = false;
-    alert('Erreur: ' + err.message);
     showStatus('error', 'Erreur de connexion au serveur de paiement');
   }
 }
