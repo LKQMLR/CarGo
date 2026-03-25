@@ -29,7 +29,7 @@
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v104</span></h1>
+    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v105</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -107,15 +107,25 @@
         </div>
         <div class="nav-progress-bar"><div class="nav-progress-fill" id="nav-progress-fill"></div></div>
         <div class="nav-current">
-          <div class="nav-badge" id="nav-badge"></div>
-          <div class="nav-info">
-            <div class="nav-dest" id="nav-dest"></div>
-            <div class="nav-meta" id="nav-meta"></div>
+          <div class="nav-status" id="nav-status">En cours de livraison</div>
+          <div class="nav-current-row">
+            <div class="nav-badge" id="nav-badge"></div>
+            <div class="nav-info">
+              <div class="nav-dest" id="nav-dest"></div>
+              <div class="nav-meta" id="nav-meta"></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-next-block" id="nav-next-block">
+          <div class="nav-next-label">Suivant</div>
+          <div class="nav-next-row">
+            <div class="nav-next-badge" id="nav-next-badge"></div>
+            <div class="nav-next-dest" id="nav-next-dest"></div>
           </div>
         </div>
         <div class="nav-actions">
           <button id="btn-nav-go" onclick="openInGoogleMaps()">&#x1F4CD; Google Maps</button>
-          <button id="btn-nav-next" onclick="nextNavStop()">Suivant</button>
+          <button id="btn-nav-next" onclick="nextNavStop()">Suivant ▸</button>
         </div>
         <button id="btn-nav-exit" onclick="exitNavigation()">Quitter la navigation</button>
       </div>

@@ -65,6 +65,9 @@ function updateGPSPosition(coords) {
     if (dist < 80) {
       meta.textContent = 'Vous êtes arrivé !';
       meta.classList.add('nav-arrived');
+      const statusEl = document.getElementById('nav-status');
+      statusEl.textContent = 'Trajet terminé';
+      statusEl.classList.add('arrived');
       if (_simMode && !state._simAutoAdvancing) {
         state._simAutoAdvancing = true;
         setTimeout(() => { state._simAutoAdvancing = false; nextNavStop(); }, 1500);
@@ -135,13 +138,37 @@ function dismissProximityAlert() {
 function updateNavPanel() {
   const i = state.navIndex, total = state.deliveries.length;
   const stop = state.navStops[i + 1], leg = state.navLegs[i];
+  const d = state.deliveries[i];
+
+  // Adresse en cours
   document.getElementById('nav-badge').textContent = i + 1;
-  document.getElementById('nav-dest').textContent = stop.placeName || stop.formatted;
+  document.getElementById('nav-dest').textContent = (d && d.placeName) || stop.formatted;
   document.getElementById('nav-meta').textContent = leg.distance.text + ' · ' + leg.duration.text;
   document.getElementById('nav-meta').classList.remove('nav-arrived');
+
+  // Status clignotant
+  const statusEl = document.getElementById('nav-status');
+  statusEl.textContent = 'En cours de livraison';
+  statusEl.classList.remove('arrived');
+
+  // Progression
   document.getElementById('nav-progress-text').textContent = (i + 1) + ' / ' + total;
   document.getElementById('nav-progress-fill').style.width = ((i + 1) / total * 100) + '%';
-  document.getElementById('btn-nav-next').textContent = i < total - 1 ? 'Suivant ▸' : 'Terminé ✓';
+
+  // Bloc suivant
+  const nextBlock = document.getElementById('nav-next-block');
+  if (i < total - 1) {
+    const nextStop = state.navStops[i + 2];
+    const nextD = state.deliveries[i + 1];
+    nextBlock.style.display = '';
+    document.getElementById('nav-next-badge').textContent = i + 2;
+    document.getElementById('nav-next-dest').textContent = (nextD && nextD.placeName) || nextStop.formatted;
+    document.getElementById('btn-nav-next').textContent = 'Suivant ▸';
+  } else {
+    nextBlock.style.display = 'none';
+    document.getElementById('btn-nav-next').textContent = 'Terminé ✓';
+  }
+
   // Animation du marker de destination
   state.markers.forEach((m, idx) => m.setAnimation(idx === i + 1 ? google.maps.Animation.BOUNCE : null));
   setTimeout(() => state.markers.forEach(m => m.setAnimation(null)), 1500);
