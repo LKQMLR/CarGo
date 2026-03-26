@@ -25,8 +25,19 @@ function setupAutocomplete(inputId) {
       input.dataset.formatted = p.formatted_address;
       input.dataset.resolved = 'true';
     }
+    // Forcer la fermeture du dropdown après sélection
+    dismissPacContainers();
   });
   input.addEventListener('input', () => { input.dataset.resolved = ''; });
+  // Fermer le dropdown quand on quitte le champ
+  input.addEventListener('blur', () => { setTimeout(dismissPacContainers, 150); });
+}
+
+// ── Fermer tous les dropdowns autocomplete Google ──
+function dismissPacContainers() {
+  document.querySelectorAll('.pac-container').forEach(el => {
+    el.style.display = 'none';
+  });
 }
 
 // ── BIAIS AUTOCOMPLETE (~30km autour du départ) ──

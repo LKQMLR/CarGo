@@ -98,3 +98,4 @@
 
 /* ── AUTOCOMPLETE GOOGLE ── */
 .pac-container { z-index: 10001 !important; }
+.pac-container[style*="display: none"] { pointer-events: none !important; }
