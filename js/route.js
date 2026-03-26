@@ -27,6 +27,14 @@ function displayRoute(stops) {
   let completed = 0;
   const allResults = [];
 
+  // Timeout global 20s pour le tracé
+  const routeTimeout = setTimeout(() => {
+    if (completed < batches.length) {
+      showStatus('error', 'Le tracé a pris trop de temps. Réessayez.');
+      setUIBusy(false);
+    }
+  }, 20000);
+
   batches.forEach((batch, bIdx) => {
     const origin = { lat: batch[0].lat, lng: batch[0].lng };
     const dest = { lat: batch[batch.length - 1].lat, lng: batch[batch.length - 1].lng };
@@ -36,10 +44,11 @@ function displayRoute(stops) {
       origin, destination: dest, waypoints: wps, optimizeWaypoints: false,
       travelMode: google.maps.TravelMode.DRIVING, unitSystem: google.maps.UnitSystem.METRIC, language: 'fr',
     }, (result, status) => {
-      if (status !== 'OK') { showStatus('error', 'Erreur itinéraire : ' + status); setUIBusy(false); return; }
+      if (status !== 'OK') { clearTimeout(routeTimeout); showStatus('error', 'Erreur itinéraire : ' + status); setUIBusy(false); return; }
       allResults[bIdx] = result;
       completed++;
       if (completed < batches.length) return;
+      clearTimeout(routeTimeout);
 
       // Tous les lots terminés — combiner les résultats
       allResults.forEach(r => {

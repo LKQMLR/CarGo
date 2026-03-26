@@ -47,9 +47,18 @@ function twoOpt(tour, mx) {
   return tour;
 }
 
-// ── GOOGLE DIRECTIONS OPTIMIZE ──
+// ── GOOGLE DIRECTIONS OPTIMIZE (avec timeout) ──
 function googleOptimize(origin, deliveries) {
   return new Promise((resolve) => {
+    let done = false;
+    // Timeout 15s — fallback local si Google ne répond pas
+    const timer = setTimeout(() => {
+      if (done) return; done = true;
+      const all = [origin, ...deliveries];
+      const tour = nearestNeighborTSP(buildDistanceMatrix(all), 0);
+      resolve(tour.slice(1).map(i => all[i]));
+    }, 15000);
+
     // Point le plus éloigné comme destination (route linéaire)
     let farthestIdx = 0, farthestDist = 0;
     deliveries.forEach((d, i) => {
@@ -65,6 +74,7 @@ function googleOptimize(origin, deliveries) {
       waypoints: wps, optimizeWaypoints: true,
       travelMode: google.maps.TravelMode.DRIVING, language: 'fr',
     }, (result, status) => {
+      if (done) return; done = true; clearTimeout(timer);
       if (status === 'OK') {
         const order = result.routes[0].waypoint_order;
         const reordered = order.map(i => others[i]);
@@ -100,10 +110,17 @@ async function optimizeSegment(origin, deliveries) {
 async function optimizeRoute() {
   if (!state.startPoint) return showStatus('error', 'Définissez un point de départ.');
   if (!state.deliveries.length) return showStatus('error', 'Ajoutez au moins une adresse.');
+
+  // Sauvegarder la session AVANT l'optimisation (protection contre perte)
+  saveSession();
+  const backupDeliveries = state.deliveries.map(d => ({ ...d }));
+
   setUIBusy(true); showStatus('loading', 'Optimisation...');
   document.getElementById('results-panel').classList.remove('visible');
 
   if (state.deliveries.length === 1) { displayRoute([state.startPoint, state.deliveries[0]]); return; }
+
+  try {
 
   // Sauvegarder l'ordre original pour comparaison
   const originalOrder = [...state.deliveries];
@@ -174,4 +191,13 @@ async function optimizeRoute() {
   renderDeliveryList();
   displayRoute([state.startPoint, ...state.deliveries]);
   saveSession();
+
+  } catch (err) {
+    // Restaurer les adresses en cas d'erreur
+    state.deliveries = backupDeliveries;
+    renderDeliveryList();
+    saveSession();
+    showStatus('error', 'Erreur d\'optimisation. Vos adresses ont été conservées.');
+    setUIBusy(false);
+  }
 }
