@@ -139,11 +139,14 @@ function deleteHistoryEntry(idx) {
 // ── BLINK SUR TEXTE ACTION ──
 function blinkAction(el, fn) {
   el.classList.remove('blink');
-  void el.offsetWidth; // reflow pour reset l'animation
+  void el.offsetWidth;
   el.classList.add('blink');
   el.addEventListener('animationend', () => el.classList.remove('blink'), { once: true });
   fn();
 }
+function triggerExport(el)  { blinkAction(el, exportRoute); }
+function triggerShare(el)   { blinkAction(el, shareRouteUrl); }
+function triggerSave(el)    { blinkAction(el, promptSaveHistory); }
 
 // ── EXPORT TEXTE / PARTAGE NATIF ──
 async function exportRoute() {
