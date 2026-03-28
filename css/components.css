@@ -207,11 +207,11 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 
 /* ── ACTIONS ITINÉRAIRE (texte cliquable) ── */
 .route-actions {
-  display: flex; gap: 18px; margin-top: 14px; padding: 10px 2px 2px;
+  display: flex; gap: 18px; margin-top: 14px;
   border-top: 1px solid var(--border);
 }
 .btn-route-action {
-  background: none; border: none; border-radius: 0; padding: 0;
+  background: none; border: none; border-radius: 0; padding: 10px 0 2px;
   color: var(--text2); font-size: .73rem; font-weight: 500;
   cursor: pointer; white-space: nowrap;
   transition: color .15s;

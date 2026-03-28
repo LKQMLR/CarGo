@@ -178,12 +178,15 @@ async function shareRouteUrl() {
     s: state.startPoint
       ? { a: state.startPoint.address, la: state.startPoint.lat, ln: state.startPoint.lng, f: state.startPoint.formatted }
       : null,
-    d: state.deliveries.map(d => ({
-      a: d.address, la: d.lat, ln: d.lng, f: d.formatted,
-      n: d.note || '', s: d.sector || 0, l: d.locked || false
-    }))
+    d: state.deliveries.map(d => {
+      const o = { a: d.address, la: d.lat, ln: d.lng, f: d.formatted };
+      if (d.note)   o.n = d.note;
+      if (d.sector) o.s = d.sector;
+      if (d.locked) o.l = true;
+      return o;
+    })
   };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const encoded = LZString.compressToEncodedURIComponent(JSON.stringify(data));
   const url = `${location.origin}${location.pathname}?route=${encoded}`;
   try {
     if (navigator.share) {
@@ -201,7 +204,10 @@ function checkSharedRoute() {
   const encoded = params.get('route');
   if (!encoded) return false;
   try {
-    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    // Décodage : essayer lz-string d'abord, fallback sur ancien base64
+    let raw = LZString.decompressFromEncodedURIComponent(encoded);
+    if (!raw) raw = decodeURIComponent(escape(atob(encoded)));
+    const data = JSON.parse(raw);
     window.history.replaceState({}, '', window.location.pathname);
     if (data.s) {
       const s = data.s;

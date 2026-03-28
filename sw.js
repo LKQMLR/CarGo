@@ -1,4 +1,4 @@
-const CACHE = 'cargo-v130';
+const CACHE = 'cargo-v131';
 const ASSETS = [
   './index.html', './manifest.json',
   './css/variables.css', './css/layout.css', './css/components.css',
@@ -7,7 +7,7 @@ const ASSETS = [
   './js/app.js', './js/map.js', './js/geocoding.js',
   './js/deliveries.js', './js/optimizer.js', './js/route.js',
   './js/navigation.js', './js/simulation.js', './js/premium.js',
-  './js/history.js',
+  './js/history.js', './js/lz-string.min.js',
 ];
 
 self.addEventListener('install', e => {
