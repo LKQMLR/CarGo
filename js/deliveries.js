@@ -63,8 +63,10 @@ async function handleAddDelivery() {
     // Détection de doublon par adresse formatée
     const duplicate = state.deliveries.find(d => d.formatted === geo.formatted);
     if (duplicate) {
-      const confirmed = confirm(`⚠️ Cette adresse semble déjà dans la liste :\n\n${duplicate.formatted}\n\nAjouter quand même ?`);
-      if (!confirmed) { setUIBusy(false); return; }
+      setUIBusy(false);
+      const confirmed = await showConfirm(`Cette adresse est déjà dans la liste :<strong>${esc(duplicate.formatted)}</strong>`);
+      if (!confirmed) return;
+      setUIBusy(true);
     }
     const marker = createClassicMarker({ lat: geo.lat, lng: geo.lng }, String(state.deliveries.length + 1), '#ef4444', geo.formatted);
     const freq = getFrequentAddresses().find(a => a.formatted === geo.formatted) || {};

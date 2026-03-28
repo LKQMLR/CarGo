@@ -27,16 +27,12 @@
 <body>
 
 <!-- Pull-to-refresh indicator -->
-<div id="ptr-indicator">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>
-  </svg>
-</div>
+<div id="ptr-indicator"><span id="ptr-label">Actualiser ?</span></div>
 
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <div id="sidebar">
   <div class="sidebar-header">
-    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v136</span></h1>
+    <h1>CarGo <span id="premium-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> PRO</span> <span id="version-tag" style="font-size:.5rem;font-weight:400;opacity:.5;vertical-align:middle;cursor:pointer" onclick="toggleSimMode()">v137</span></h1>
     <p>Planification intelligente de tournées</p>
   </div>
   <div class="sidebar-body">
@@ -52,7 +48,7 @@
       <div class="section section-start">
         <div class="section-title">
           Votre base
-          <span class="help-btn" style="position:relative;" ontouchstart="this.querySelector('.prox-tooltip').classList.add('show')" ontouchend="this.querySelector('.prox-tooltip').classList.remove('show')" ontouchcancel="this.querySelector('.prox-tooltip').classList.remove('show')" onmousedown="this.querySelector('.prox-tooltip').classList.add('show')" onmouseup="this.querySelector('.prox-tooltip').classList.remove('show')" onmouseleave="this.querySelector('.prox-tooltip').classList.remove('show')">?<span class="prox-tooltip" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:220px;padding:10px 12px;background:var(--surface2,#232340);border:1px solid var(--border);border-radius:10px;font-size:.7rem;font-weight:400;color:var(--text);line-height:1.4;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:100;">Entrepôt, dépôt ou domicile. CarGo calcule l'itinéraire optimal depuis ce point.</span></span>
+          <span class="help-btn" style="position:relative;" ontouchstart="this.querySelector('.prox-tooltip').classList.add('show')" ontouchend="this.querySelector('.prox-tooltip').classList.remove('show')" ontouchcancel="this.querySelector('.prox-tooltip').classList.remove('show')" onmousedown="this.querySelector('.prox-tooltip').classList.add('show')" onmouseup="this.querySelector('.prox-tooltip').classList.remove('show')" onmouseleave="this.querySelector('.prox-tooltip').classList.remove('show')">?<span class="prox-tooltip" style="display:none;position:absolute;bottom:calc(100% + 8px);right:0;width:220px;padding:10px 12px;background:var(--surface2,#232340);border:1px solid var(--border);border-radius:10px;font-size:.7rem;font-weight:400;color:var(--text);line-height:1.4;text-align:left;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:100;">Entrepôt, dépôt ou domicile. CarGo calcule l'itinéraire optimal depuis ce point.</span></span>
         </div>
         <div class="input-wrapper">
           <input type="text" id="start-input" placeholder="Adresse de départ..." autocomplete="off" />
@@ -83,7 +79,7 @@
         </div>
         <div class="sector-optimize-row">
           <button id="btn-sector" onclick="cycleSector()" title="Secteur actif pour les nouvelles adresses">Aucun secteur</button>
-          <button id="btn-optimize" onclick="optimizeRoute()">Lancer la tournée</button>
+          <button id="btn-optimize" onclick="optimizeRoute()">Optimiser</button>
         </div>
       </div>
       <div id="status-bar"></div>
@@ -174,6 +170,18 @@
 <button id="mobile-toggle" onclick="toggleSidebar()">
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg>
 </button>
+
+<!-- ══════════════ MODALE CONFIRMATION ══════════════ -->
+<div id="confirm-modal" class="modal-overlay">
+  <div class="modal-box confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" id="confirm-cancel">Annuler</button>
+      <button class="btn-warning" id="confirm-ok">Ajouter quand même</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════ MODALE SAUVEGARDER ══════════════ -->
 <div id="save-history-modal" class="modal-overlay" onclick="if(event.target===this)closeSaveHistoryModal()">

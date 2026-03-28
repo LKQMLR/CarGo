@@ -254,6 +254,29 @@ function setUIBusy(b) {
   });
 }
 
+// ── CONFIRM CUSTOM (remplace window.confirm) ──
+function showConfirm(msg) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('confirm-modal');
+    document.getElementById('confirm-msg').innerHTML = msg;
+    modal.classList.add('visible');
+    const input = document.activeElement;
+    if (input && input.blur) input.blur(); // ferme le clavier
+    const ok = document.getElementById('confirm-ok');
+    const cancel = document.getElementById('confirm-cancel');
+    function close(result) {
+      modal.classList.remove('visible');
+      ok.removeEventListener('click', onOk);
+      cancel.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk() { close(true); }
+    function onCancel() { close(false); }
+    ok.addEventListener('click', onOk);
+    cancel.addEventListener('click', onCancel);
+  });
+}
+
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const btn = document.getElementById('mobile-toggle');
