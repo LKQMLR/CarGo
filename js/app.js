@@ -254,18 +254,6 @@ function setUIBusy(b) {
   });
 }
 
-function toggleTip(id) {
-  const el = document.getElementById(id);
-  const wasVisible = el.classList.contains('visible');
-  document.querySelectorAll('.panel-tip.visible').forEach(t => t.classList.remove('visible'));
-  if (!wasVisible) {
-    el.classList.add('visible');
-    setTimeout(() => document.addEventListener('click', function close(e) {
-      if (!el.contains(e.target)) { el.classList.remove('visible'); document.removeEventListener('click', close); }
-    }), 50);
-  }
-}
-
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const btn = document.getElementById('mobile-toggle');

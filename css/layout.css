@@ -39,15 +39,6 @@
 }
 .section-title .help-btn { margin-left: auto; flex-shrink: 0; text-transform: none; letter-spacing: 0; }
 
-/* ── INFO-BULLE PANEL ── */
-.panel-tip {
-  display: none; font-size: .72rem; color: var(--text2); line-height: 1.65;
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
-}
-.panel-tip.visible { display: block; }
-.panel-tip b { color: var(--text); font-weight: 600; }
-
 /* Point de départ — discret, en retrait */
 .section-start {
   background: rgba(20,26,36,.6); border-color: rgba(46,62,82,.4);
