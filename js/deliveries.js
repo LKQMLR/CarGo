@@ -164,6 +164,7 @@ function renderDeliveryList() {
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
       </div>
       <div class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</div>
+      <button class="delivery-delete" onclick="removeDelivery(${d.id})">&#128465;</button>
     </li>`;
   }).join('');
   initDragAndDrop();
@@ -308,11 +309,19 @@ function initTouchGestures() {
     li.addEventListener('touchend', e => {
       if (!swiping) return;
       const dx = Math.abs(Math.min(0, e.changedTouches[0].clientX - startX));
-      if (dx > 200) {
-        // Suppression directe sans confirmation
-        const id = parseInt(li.dataset.id);
-        li.classList.add('swiping', 'swipe-out');
-        setTimeout(() => removeDelivery(id), 250);
+      if (dx > 60) {
+        // Révéler le bouton supprimer
+        li.style.transform = '';
+        li.style.opacity = '';
+        li.classList.add('swipe-reveal');
+        // Fermer si on clique ailleurs
+        const closeSwipe = (ev) => {
+          if (!ev.target.closest('.delivery-delete') && !ev.target.closest(`[data-id="${li.dataset.id}"]`)) {
+            li.classList.remove('swipe-reveal');
+            document.removeEventListener('touchstart', closeSwipe);
+          }
+        };
+        setTimeout(() => document.addEventListener('touchstart', closeSwipe), 100);
       } else {
         // Retour à la position initiale
         li.classList.add('swiping');

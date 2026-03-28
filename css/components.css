@@ -3,8 +3,10 @@
    Boutons, inputs, cards, badges, secteurs
    ══════════════════════════════════════════ */
 
-/* ── Anti double-tap zoom + zones tactiles ── */
+/* ── Anti double-tap zoom + zones tactiles + anti-sélection ── */
 button, input, label { touch-action: manipulation; }
+#sidebar { -webkit-user-select: none; user-select: none; }
+#sidebar input, #sidebar textarea { -webkit-user-select: text; user-select: text; }
 
 /* ── API STATUS ── */
 .api-status-dot {
@@ -80,13 +82,14 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 
 /* ── CADENAS (lock/unlock) ── */
 .lock-badge {
-  position: absolute; top: 4px; right: 6px;
+  position: absolute; top: 2px; right: 2px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; padding: 4px; transition: all .2s;
-  z-index: 3;
+  cursor: pointer; padding: 8px; transition: opacity .2s, color .2s;
+  z-index: 3; min-width: 28px; min-height: 28px;
 }
-.lock-badge svg { width: 12px; height: 12px; }
-.lock-badge.unlocked { color: var(--text2); opacity: .25; }
+.lock-badge svg { width: 14px; height: 14px; }
+.lock-badge.unlocked { color: var(--text2); opacity: .2; }
+.lock-badge.unlocked:active { opacity: .6; }
 .lock-badge.locked { color: var(--yellow); opacity: 1; }
 
 /* ── POINT DE DÉPART — affichage confirmé ── */
