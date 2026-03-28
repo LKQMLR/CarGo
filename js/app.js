@@ -3,6 +3,18 @@
    State global, init, session, UI helpers
    ══════════════════════════════════════════ */
 
+// ── DEBUG SESSION (temporaire) ──
+function debugSessionBanner(msg) {
+  let el = document.getElementById('debug-session');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'debug-session';
+    el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:11px;padding:4px 8px;z-index:99999;font-family:monospace;opacity:.9;';
+    document.body.appendChild(el);
+  }
+  el.textContent = new Date().toLocaleTimeString() + ' | ' + msg;
+}
+
 // ── STATE GLOBAL ──
 const state = {
   map: null, geocoder: null, directionsService: null, directionsRenderer: null,
@@ -134,18 +146,22 @@ function saveSession() {
       idCounter: idCounter,
     };
     localStorage.setItem('cargo_session', JSON.stringify(data));
-    console.warn('[CarGo] Session sauvegardée:', data.deliveries.length, 'adresses');
+    // DEBUG VISIBLE — vérification immédiate
+    const check = localStorage.getItem('cargo_session');
+    const parsed = check ? JSON.parse(check) : null;
+    const count = parsed?.deliveries?.length || 0;
+    debugSessionBanner('Sauvé: ' + count + ' addr | ' + (check ? check.length + ' octets' : 'ECHEC'));
   } catch (e) {
-    console.error('[CarGo] ERREUR sauvegarde session:', e);
+    debugSessionBanner('ERREUR SAVE: ' + e.message);
   }
 }
 
 function restoreSession() {
   try {
     const raw = localStorage.getItem('cargo_session');
-    if (!raw) { console.warn('[CarGo] Aucune session sauvegardée'); return; }
+    if (!raw) { debugSessionBanner('RESTORE: aucune session trouvée dans localStorage'); return; }
     const data = JSON.parse(raw);
-    console.warn('[CarGo] Restauration session:', data.deliveries?.length || 0, 'adresses');
+    debugSessionBanner('RESTORE: ' + (data.deliveries?.length || 0) + ' addr trouvées | ' + raw.length + ' octets');
     if (!data || (!data.startPoint && !data.deliveries.length)) {
       // Pas de session mais peut-être un point de départ sauvegardé
       const sp = localStorage.getItem('cargo_startPoint');
