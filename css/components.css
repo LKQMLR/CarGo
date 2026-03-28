@@ -172,24 +172,23 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 .freq-item .freq-count { color: var(--text2); font-size: .68rem; margin-left: auto; flex-shrink: 0; }
 
 /* ── ÉTOILE FAVORIS (dans input départ) ── */
-#start-input { padding-right: 32px; }
+#start-input { padding-right: 36px; }
 .fav-star {
-  position: absolute; right: 6px; top: 50%;
+  position: absolute; right: 4px; top: 50%;
   transform: translateY(-50%);
-  background: none; border: none; padding: 4px;
-  font-size: 1.2rem; color: var(--text2);
-  cursor: pointer; z-index: 2; opacity: .4;
-  transition: color .2s, opacity .2s, transform .2s;
-  line-height: 1;
+  background: none; border: none; padding: 6px;
+  cursor: pointer; z-index: 2; opacity: .45;
+  transition: opacity .2s, transform .2s;
+  line-height: 0; display: flex; align-items: center; justify-content: center;
 }
 .fav-star:hover { opacity: .7; }
 .fav-star.active {
-  color: var(--yellow); opacity: 1;
+  opacity: 1;
   animation: fav-pop .3s ease-out;
 }
 @keyframes fav-pop {
   0%   { transform: translateY(-50%) scale(1); }
-  50%  { transform: translateY(-50%) scale(1.35); }
+  50%  { transform: translateY(-50%) scale(1.3); }
   100% { transform: translateY(-50%) scale(1); }
 }
 
