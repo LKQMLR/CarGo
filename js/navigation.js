@@ -189,7 +189,6 @@ function nextNavStop() {
   }
   state.navIndex++; state.followMode = true;
   updateNavPanel(); renderDeliveryList(); renderRouteSteps(); updateRouteProgress(); saveSession();
-  openInGoogleMaps();
 }
 
 function openInGoogleMaps() {
