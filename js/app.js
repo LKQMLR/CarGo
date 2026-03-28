@@ -324,24 +324,25 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   const THRESHOLD = 72;
   let startY = 0, active = false;
   const indicator = document.getElementById('ptr-indicator');
-  if (!indicator) return;
+  const sb = document.getElementById('sidebar');
+  if (!indicator || !sb) return;
 
-  document.addEventListener('touchstart', e => {
-    const sb = document.getElementById('sidebar');
-    if (sb && sb.scrollTop === 0) { startY = e.touches[0].clientY; active = true; }
+  sb.addEventListener('touchstart', e => {
+    if (sb.scrollTop === 0) { startY = e.touches[0].clientY; active = true; }
   }, { passive: true });
 
-  document.addEventListener('touchmove', e => {
+  sb.addEventListener('touchmove', e => {
     if (!active) return;
     const delta = e.touches[0].clientY - startY;
-    if (delta <= 0) return;
+    if (delta <= 0) { active = false; return; }
+    e.preventDefault(); // bloque le rubber-band iOS
     const h = Math.min(delta * 0.45, THRESHOLD);
     indicator.style.height = h + 'px';
     indicator.classList.toggle('pulling', h > 4);
     indicator.classList.toggle('ready', delta > THRESHOLD);
-  }, { passive: true });
+  }, { passive: false });
 
-  document.addEventListener('touchend', e => {
+  sb.addEventListener('touchend', () => {
     if (!active) return;
     active = false;
     const triggered = indicator.classList.contains('ready');
