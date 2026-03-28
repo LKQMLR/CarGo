@@ -172,6 +172,7 @@ function renderDeliveryList() {
   }).join('');
   initDragAndDrop();
   initTouchGestures();
+  initDoubleTapSector();
 }
 
 // ── DÉPLACEMENT (drag result) ──
@@ -355,4 +356,59 @@ function initTouchGestures() {
       swiping = false;
     });
   });
+}
+
+// ── DOUBLE-TAP CHANGEMENT DE SECTEUR (Premium) ──
+function initDoubleTapSector() {
+  const items = document.querySelectorAll('#delivery-list li');
+  items.forEach(li => {
+    let lastTap = 0;
+    li.addEventListener('touchend', e => {
+      if (e.target.closest('.drag-handle') || e.target.closest('.lock-badge') || e.target.closest('.delivery-delete') || e.target.closest('.delivery-note-input') || e.target.closest('.delivery-note')) return;
+      const now = Date.now();
+      if (now - lastTap < 350) {
+        e.preventDefault();
+        const id = parseInt(li.dataset.id);
+        cycleSectorForDelivery(id, li);
+      }
+      lastTap = now;
+    });
+    // Desktop : double-click
+    li.addEventListener('dblclick', e => {
+      if (e.target.closest('.drag-handle') || e.target.closest('.lock-badge') || e.target.closest('.delivery-delete') || e.target.closest('.delivery-note-input') || e.target.closest('.delivery-note')) return;
+      const id = parseInt(li.dataset.id);
+      cycleSectorForDelivery(id, li);
+    });
+  });
+}
+
+function cycleSectorForDelivery(id, li) {
+  if (!isPremium()) {
+    showLimitAlert('secteur', 'Changement de secteur à la volée réservé aux Premium.');
+    return;
+  }
+  const d = state.deliveries.find(d => d.id === id);
+  if (!d) return;
+
+  // Cycle : secteur actuel → +1, revient à 0 après 5
+  const oldSec = d.sector || 0;
+  d.sector = (oldSec + 1) % 6;
+  const sec = d.sector;
+
+  // Mise à jour visuelle in-place — bordure gauche
+  li.classList.remove('sector-1', 'sector-2', 'sector-3', 'sector-4', 'sector-5');
+  if (sec && !d.locked) li.classList.add(`sector-${sec}`);
+
+  // Mise à jour visuelle — pastille numéro
+  const numEl = li.querySelector('.delivery-num');
+  if (numEl) {
+    numEl.classList.remove('sec-1', 'sec-2', 'sec-3', 'sec-4', 'sec-5');
+    if (sec) numEl.classList.add(`sec-${sec}`);
+    // Animation flash pour feedback
+    numEl.style.transition = 'transform .15s ease';
+    numEl.style.transform = 'scale(1.3)';
+    setTimeout(() => { numEl.style.transform = ''; }, 150);
+  }
+
+  saveSession();
 }
