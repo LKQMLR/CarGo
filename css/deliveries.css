@@ -46,28 +46,25 @@
 #delivery-list li.swiping { transition: transform .2s ease-out, opacity .2s; }
 #delivery-list li.swipe-out { transform: translateX(-100%); opacity: 0; }
 
-/* ── BOUTON SUPPRIMER (révélé au swipe) ── */
+/* ── OVERLAY SUPPRIMER (blur + texte) ── */
 .delivery-delete {
-  position: absolute; right: -56px; top: 0; bottom: 0;
-  width: 56px; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  color: #fff; border: none; cursor: pointer;
-  border-radius: 0 10px 10px 0; font-size: .7rem; font-weight: 600;
-  letter-spacing: .3px; text-transform: uppercase;
-  opacity: 0; transition: opacity .2s, right .2s;
-  z-index: 2; gap: 2px; flex-direction: column;
-  box-shadow: inset -2px 0 8px rgba(0,0,0,.2);
-}
-.delivery-delete svg {
-  width: 18px; height: 18px; stroke: #fff; stroke-width: 2;
-  fill: none; flex-shrink: 0;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(220, 38, 38, .15);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  color: #ff4d4d; border: none; cursor: pointer;
+  border-radius: 10px; font-size: .88rem; font-weight: 700;
+  letter-spacing: .5px; text-transform: uppercase;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s ease;
+  z-index: 4;
 }
 #delivery-list li.swipe-reveal .delivery-delete {
-  right: 0; opacity: 1;
+  opacity: 1; pointer-events: auto;
 }
 #delivery-list li.swipe-reveal {
-  transform: translateX(-56px);
-  transition: transform .2s ease-out;
+  transform: none;
+  transition: none;
 }
 
 /* ── LISTE VIDE ── */

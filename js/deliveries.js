@@ -164,7 +164,7 @@ function renderDeliveryList() {
           onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
       </div>
       <div class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</div>
-      <button class="delivery-delete" onclick="removeDelivery(${d.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      <button class="delivery-delete" onclick="removeDelivery(${d.id})">Supprimer</button>
     </li>`;
   }).join('');
   initDragAndDrop();
@@ -305,29 +305,23 @@ function initTouchGestures() {
       if (_dragActive || locked) return;
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
-      // Verrouiller le scroll si mouvement vertical détecté en premier
       if (!swiping && Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { locked = true; return; }
-      // Seuil de 24px horizontal + direction clairement horizontale
       if (!swiping && Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy) * 2) swiping = true;
       if (!swiping) return;
       e.preventDefault();
-      const raw = Math.min(0, dx);
-      const absDx = Math.abs(raw);
-      // Résistance logarithmique (sensation de poids)
-      const tx = Math.round(absDx < 12 ? absDx : 12 + Math.log(1 + (absDx - 12) * 0.06) * 35);
-      li.style.transform = `translate3d(${-tx}px,0,0)`;
-      li.style.opacity = String(Math.max(0.4, 1 - absDx / 500));
     }, { passive: false });
 
     li.addEventListener('touchend', e => {
       if (!swiping) return;
-      const dx = Math.abs(Math.min(0, e.changedTouches[0].clientX - startX));
-      if (dx > 60) {
-        // Révéler le bouton supprimer
-        li.style.transform = '';
-        li.style.opacity = '';
+      const dx = e.changedTouches[0].clientX - startX;
+      if (li.classList.contains('swipe-reveal')) {
+        // Swipe inverse (vers la droite) → refermer
+        if (dx > 40) {
+          li.classList.remove('swipe-reveal');
+        }
+      } else if (dx < -60) {
+        // Swipe gauche → révéler supprimer
         li.classList.add('swipe-reveal');
-        // Fermer si on clique ailleurs
         const closeSwipe = (ev) => {
           if (!ev.target.closest('.delivery-delete') && !ev.target.closest(`[data-id="${li.dataset.id}"]`)) {
             li.classList.remove('swipe-reveal');
@@ -335,11 +329,6 @@ function initTouchGestures() {
           }
         };
         setTimeout(() => document.addEventListener('touchstart', closeSwipe), 100);
-      } else {
-        // Retour à la position initiale
-        li.classList.add('swiping');
-        li.style.transform = ''; li.style.opacity = '';
-        setTimeout(() => li.classList.remove('swiping'), 200);
       }
       swiping = false;
     });
