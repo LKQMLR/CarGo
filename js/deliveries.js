@@ -47,6 +47,7 @@ async function handleSetStart() {
     d.textContent = geo.formatted; d.classList.add('visible');
     saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted });
     updateAutocompleteBias(); showStatus('success', 'Départ défini.'); saveSession();
+    updateFavStar();
     localStorage.setItem('cargo_startPoint', JSON.stringify({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted }));
   } catch (e) { showStatus('error', e.message); }
   finally { setUIBusy(false); }

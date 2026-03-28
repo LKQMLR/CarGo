@@ -33,6 +33,9 @@ function setupAutocomplete(inputId) {
     }, 300);
   });
   input.addEventListener('input', () => { input.dataset.resolved = ''; });
+  if (inputId === 'start-input') {
+    ac.addListener('place_changed', () => { setTimeout(() => updateFavStar(), 50); });
+  }
 }
 
 // ── BIAIS AUTOCOMPLETE (~30km autour du départ) ──
@@ -68,6 +71,57 @@ async function resolveInput(el) {
   return geocodeAddress(el.value.trim());
 }
 
+// ── FAVORIS ──
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('cargo_favorites') || '[]'); }
+  catch { return []; }
+}
+function saveFavorites(list) {
+  localStorage.setItem('cargo_favorites', JSON.stringify(list));
+}
+function isFavorite(formatted) {
+  return getFavorites().some(f => f.formatted === formatted);
+}
+function toggleFavorite() {
+  const input = document.getElementById('start-input');
+  const btn = document.getElementById('fav-star-btn');
+  const formatted = input.dataset.formatted || input.value.trim();
+  if (!formatted) return;
+  const favs = getFavorites();
+  const idx = favs.findIndex(f => f.formatted === formatted);
+  if (idx !== -1) {
+    favs.splice(idx, 1);
+    btn.innerHTML = '&#9734;'; btn.classList.remove('active');
+  } else {
+    const addr = {
+      address: input.value.trim(),
+      formatted: input.dataset.formatted || input.value.trim(),
+      lat: parseFloat(input.dataset.lat) || null,
+      lng: parseFloat(input.dataset.lng) || null,
+      placeName: input.dataset.placeName || ''
+    };
+    // Compléter depuis les fréquentes si manque lat/lng
+    if (!addr.lat) {
+      const freq = getFrequentAddresses().find(a => a.formatted === addr.formatted);
+      if (freq) { addr.lat = freq.lat; addr.lng = freq.lng; addr.placeName = freq.placeName || ''; }
+    }
+    if (!addr.lat) return; // pas de coordonnées, ne pas sauver
+    favs.unshift(addr);
+    btn.innerHTML = '&#9733;'; btn.classList.add('active');
+  }
+  saveFavorites(favs);
+}
+function updateFavStar() {
+  const input = document.getElementById('start-input');
+  const btn = document.getElementById('fav-star-btn');
+  const formatted = input.dataset.formatted || input.value.trim();
+  if (formatted && isFavorite(formatted)) {
+    btn.innerHTML = '&#9733;'; btn.classList.add('active');
+  } else {
+    btn.innerHTML = '&#9734;'; btn.classList.remove('active');
+  }
+}
+
 // ── ADRESSES FRÉQUENTES ──
 function getFrequentAddresses() {
   try { return JSON.parse(localStorage.getItem('cargo_freqAddr') || '[]'); }
@@ -85,19 +139,37 @@ function saveFrequentAddress(addr) {
 
 function showFreqDropdown(inputId, dropdownId) {
   const input = document.getElementById(inputId), dd = document.getElementById(dropdownId);
-  const q = input.value.trim().toLowerCase(), all = getFrequentAddresses();
-  if (!all.length) { dd.classList.remove('visible'); return; }
-  const matches = q.length === 0
-    ? all.slice(0, 8)
-    : all.filter(a => a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q) || (a.placeName && a.placeName.toLowerCase().includes(q))).slice(0, 8);
-  if (!matches.length) { dd.classList.remove('visible'); return; }
-  dd.innerHTML = matches.map(a => {
-    const esc = s => { const d = document.createElement('div'); d.appendChild(document.createTextNode(s || '')); return d.innerHTML; };
+  const q = input.value.trim().toLowerCase();
+  const all = getFrequentAddresses();
+  const favs = getFavorites();
+  const favFormatted = new Set(favs.map(f => f.formatted));
+
+  const filterFn = a => q.length === 0 || a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q) || (a.placeName && a.placeName.toLowerCase().includes(q));
+
+  const favMatches = favs.filter(filterFn).slice(0, 5);
+  const recentMatches = all.filter(a => !favFormatted.has(a.formatted) && filterFn(a)).slice(0, 5);
+
+  if (!favMatches.length && !recentMatches.length) { dd.classList.remove('visible'); return; }
+
+  const escFn = s => { const d = document.createElement('div'); d.appendChild(document.createTextNode(s || '')); return d.innerHTML; };
+  const renderItem = (a, isFav) => {
     const fmtShort = a.formatted.length > 50 ? a.formatted.substring(0,47)+'...' : a.formatted;
-    return `<div class="freq-item" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${esc(a.formatted)}" data-address="${esc(a.address)}" data-note="${esc(a.note||'')}" data-place-name="${esc(a.placeName||'')}">
-      <span class="freq-icon">&#9733;</span><span>${a.placeName ? '<b>'+esc(a.placeName)+'</b> · ' : ''}${esc(fmtShort)}${a.note ? ' <small style="color:var(--yellow)">'+esc(a.note)+'</small>' : ''}</span>
+    return `<div class="freq-item ${isFav ? 'is-fav' : 'is-recent'}" data-lat="${a.lat}" data-lng="${a.lng}" data-formatted="${escFn(a.formatted)}" data-address="${escFn(a.address)}" data-note="${escFn(a.note||'')}" data-place-name="${escFn(a.placeName||'')}">
+      <span class="freq-icon">${isFav ? '&#9733;' : '&#9734;'}</span><span>${a.placeName ? '<b>'+escFn(a.placeName)+'</b> · ' : ''}${escFn(fmtShort)}${a.note ? ' <small style="color:var(--yellow)">'+escFn(a.note)+'</small>' : ''}</span>
     </div>`;
-  }).join('');
+  };
+
+  let html = '';
+  if (favMatches.length) {
+    html += '<div class="freq-fav-sep">Favoris</div>';
+    html += favMatches.map(a => renderItem(a, true)).join('');
+  }
+  if (recentMatches.length) {
+    if (favMatches.length) html += '<div class="freq-fav-sep" style="color:var(--text2)">Récents</div>';
+    html += recentMatches.map(a => renderItem(a, false)).join('');
+  }
+
+  dd.innerHTML = html;
   dd.classList.add('visible');
   dd.querySelectorAll('.freq-item').forEach(item => {
     item.addEventListener('mousedown', e => {
@@ -108,6 +180,7 @@ function showFreqDropdown(inputId, dropdownId) {
       input.dataset.placeName = item.dataset.placeName || '';
       input.dataset.resolved = 'true';
       dd.classList.remove('visible');
+      if (inputId === 'start-input') updateFavStar();
     });
   });
 }
@@ -115,7 +188,7 @@ function showFreqDropdown(inputId, dropdownId) {
 function setupFreqDropdown(inputId, dropdownId) {
   const input = document.getElementById(inputId);
   input.addEventListener('focus', () => showFreqDropdown(inputId, dropdownId));
-  input.addEventListener('input', () => showFreqDropdown(inputId, dropdownId));
+  input.addEventListener('input', () => { showFreqDropdown(inputId, dropdownId); if (inputId === 'start-input') updateFavStar(); });
   input.addEventListener('blur', () => { setTimeout(() => document.getElementById(dropdownId).classList.remove('visible'), 150); });
 }
 

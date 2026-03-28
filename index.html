@@ -46,6 +46,7 @@
         <div class="section-title">Point de départ</div>
         <div class="input-wrapper">
           <input type="text" id="start-input" placeholder="Adresse de départ..." autocomplete="off" />
+          <button type="button" class="fav-star" id="fav-star-btn" onclick="toggleFavorite()" title="Ajouter aux favoris">&#9734;</button>
           <div class="freq-dropdown" id="freq-start"></div>
         </div>
         <button class="btn-success" id="btn-set-start" onclick="handleSetStart()" style="width:100%;margin-top:6px;display:flex;align-items:center;justify-content:center;padding:9px;">

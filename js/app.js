@@ -152,8 +152,9 @@ function restoreSession() {
         const marker = createClassicMarker({ lat: s.lat, lng: s.lng }, 'D', '#22c55e', 'Départ');
         state.startPoint = { ...s, marker };
         const d = document.getElementById('start-display'); d.textContent = s.formatted; d.classList.add('visible');
-        document.getElementById('start-input').value = s.address;
-        updateAutocompleteBias();
+        const si2 = document.getElementById('start-input'); si2.value = s.address;
+        si2.dataset.formatted = s.formatted; si2.dataset.lat = s.lat; si2.dataset.lng = s.lng;
+        updateAutocompleteBias(); updateFavStar();
       }
       return;
     }
@@ -165,8 +166,10 @@ function restoreSession() {
       const marker = createClassicMarker({ lat: s.lat, lng: s.lng }, 'D', '#22c55e', 'Départ');
       state.startPoint = { ...s, marker };
       const d = document.getElementById('start-display'); d.textContent = s.formatted; d.classList.add('visible');
-      document.getElementById('start-input').value = s.address;
+      const si = document.getElementById('start-input'); si.value = s.address;
+      si.dataset.formatted = s.formatted; si.dataset.lat = s.lat; si.dataset.lng = s.lng;
     }
+    updateFavStar();
 
     // Restaurer les livraisons
     if (data.deliveries.length) {

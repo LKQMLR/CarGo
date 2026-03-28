@@ -171,6 +171,37 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 .freq-item .freq-icon { color: var(--yellow); font-size: .72rem; flex-shrink: 0; }
 .freq-item .freq-count { color: var(--text2); font-size: .68rem; margin-left: auto; flex-shrink: 0; }
 
+/* ── ÉTOILE FAVORIS (dans input départ) ── */
+#start-input { padding-right: 32px; }
+.fav-star {
+  position: absolute; right: 6px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; padding: 4px;
+  font-size: 1.2rem; color: var(--text2);
+  cursor: pointer; z-index: 2; opacity: .4;
+  transition: color .2s, opacity .2s, transform .2s;
+  line-height: 1;
+}
+.fav-star:hover { opacity: .7; }
+.fav-star.active {
+  color: var(--yellow); opacity: 1;
+  animation: fav-pop .3s ease-out;
+}
+@keyframes fav-pop {
+  0%   { transform: translateY(-50%) scale(1); }
+  50%  { transform: translateY(-50%) scale(1.35); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+/* ── SÉPARATEUR FAVORIS DANS DROPDOWN ── */
+.freq-fav-sep {
+  padding: 4px 12px; font-size: .65rem; font-weight: 600;
+  color: var(--yellow); text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 1px solid var(--border); opacity: .7;
+}
+.freq-item.is-fav .freq-icon { color: var(--yellow); }
+.freq-item.is-recent .freq-icon { color: var(--text2); opacity: .5; }
+
 /* ── BOUTON ? (aide/info-bulle) ── */
 .help-btn {
   width: 22px; height: 22px; border-radius: 50%;
