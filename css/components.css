@@ -219,13 +219,12 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 .btn-route-action:not(:disabled):hover { color: var(--text); opacity: 1; transform: none; }
 .btn-route-save { color: var(--accent) !important; }
 .btn-route-action.blink {
-  animation: route-act-blink .55s linear;
-  color: #00d4ff !important;
-  text-shadow: 0 0 10px #00d4ff;
+  animation: route-act-blink .4s linear;
+  color: var(--accent) !important;
 }
 @keyframes route-act-blink {
-  0%,40%,80%,100% { opacity: 1; }
-  20%,60%         { opacity: 0; }
+  0%,100% { opacity: 1; }
+  40%     { opacity: 0; }
 }
 
 /* ── BOUTON HISTORIQUE ── */
