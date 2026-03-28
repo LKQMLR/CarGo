@@ -6,8 +6,8 @@
 /* ── LISTE ── */
 #delivery-list {
   list-style: none; display: flex; flex-direction: column; gap: 6px;
-  margin-bottom: 8px; max-height: 300px; overflow-y: auto; overflow-x: hidden;
-  padding: 4px 2px;
+  margin-bottom: 8px; max-height: 300px; overflow-y: auto; overflow-x: clip;
+  padding: 8px 6px;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
 
