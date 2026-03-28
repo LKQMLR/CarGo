@@ -330,3 +330,35 @@ window.addEventListener('beforeunload', () => {
 
 // Service Worker
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+// ── PULL-TO-REFRESH ──
+(function () {
+  const THRESHOLD = 72;
+  let startY = 0, active = false;
+  const indicator = document.getElementById('ptr-indicator');
+  if (!indicator) return;
+
+  document.addEventListener('touchstart', e => {
+    const sb = document.getElementById('sidebar');
+    if (sb && sb.scrollTop === 0) { startY = e.touches[0].clientY; active = true; }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!active) return;
+    const delta = e.touches[0].clientY - startY;
+    if (delta <= 0) return;
+    const h = Math.min(delta * 0.45, THRESHOLD);
+    indicator.style.height = h + 'px';
+    indicator.classList.toggle('pulling', h > 4);
+    indicator.classList.toggle('ready', delta > THRESHOLD);
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!active) return;
+    active = false;
+    const triggered = indicator.classList.contains('ready');
+    indicator.style.height = '0';
+    indicator.classList.remove('pulling', 'ready');
+    if (triggered) location.reload();
+  }, { passive: true });
+})();
