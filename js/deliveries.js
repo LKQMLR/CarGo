@@ -158,13 +158,15 @@ function renderDeliveryList() {
     const sec = d.sector || 0;
     const liClasses = [d.locked ? 'delivery-locked' : '', sec && !d.locked ? `sector-${sec}` : ''].filter(Boolean).join(' ');
     return `<li data-idx="${i}" data-id="${d.id}" class="${liClasses}">
-      <div class="drag-handle">&#8942;&#8942;</div>
-      <div class="delivery-num${d.customOrder ? ' custom' : ''}${sec ? ` sec-${sec}` : ''}">${i + 1}</div>
-      <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
-        <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value="" maxlength="44"
-          onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
+      <div class="delivery-content">
+        <div class="drag-handle">&#8942;&#8942;</div>
+        <div class="delivery-num${d.customOrder ? ' custom' : ''}${sec ? ` sec-${sec}` : ''}">${i + 1}</div>
+        <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
+          <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value="" maxlength="44"
+            onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
+        </div>
+        <div class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</div>
       </div>
-      <div class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</div>
       <button class="delivery-delete" onclick="removeDelivery(${d.id})">Supprimer</button>
     </li>`;
   }).join('');
@@ -293,13 +295,22 @@ function getInsertGap(ul, y, dragLi) {
 let _dragActive = false;
 
 function initTouchGestures() {
+  const BTN_W = 110;
   const items = document.querySelectorAll('#delivery-list li');
   items.forEach(li => {
-    let startX = 0, startY = 0, swiping = false, locked = false;
+    let startX = 0, startY = 0, swiping = false, locked = false, revealed = false;
+    const btn = li.querySelector('.delivery-delete');
+    const content = li.querySelector('.delivery-content');
+
     li.addEventListener('touchstart', e => {
       if (_dragActive) return;
-      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.lock-badge')) return;
-      startX = e.touches[0].clientX; startY = e.touches[0].clientY; swiping = false; locked = false;
+      if (e.target.closest('.drag-handle') || e.target.closest('.delivery-note-input') || e.target.closest('.lock-badge') || e.target.closest('.delivery-delete')) return;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      swiping = false; locked = false;
+      revealed = li.classList.contains('swipe-reveal');
+      // Désactiver les transitions pendant le drag
+      btn.style.transition = 'none';
+      content.style.transition = 'none';
     }, { passive: true });
 
     li.addEventListener('touchmove', e => {
@@ -307,29 +318,49 @@ function initTouchGestures() {
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
       if (!swiping && Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { locked = true; return; }
-      if (!swiping && Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy) * 2) swiping = true;
+      if (!swiping && Math.abs(dx) > 20 && Math.abs(dx) > Math.abs(dy) * 1.5) swiping = true;
       if (!swiping) return;
       e.preventDefault();
+      // Calcul de la progression (0 = fermé, BTN_W = ouvert)
+      let offset;
+      if (revealed) {
+        offset = Math.max(0, Math.min(BTN_W, BTN_W + dx));
+      } else {
+        offset = Math.max(0, Math.min(BTN_W, -dx));
+      }
+      const pct = offset / BTN_W;
+      btn.style.transform = `translateX(${100 - pct * 100}%)`;
+      content.style.filter = `blur(${pct * 3}px)`;
+      content.style.opacity = String(1 - pct * 0.5);
     }, { passive: false });
 
     li.addEventListener('touchend', e => {
+      // Réactiver les transitions
+      btn.style.transition = '';
+      content.style.transition = '';
       if (!swiping) return;
       const dx = e.changedTouches[0].clientX - startX;
-      if (li.classList.contains('swipe-reveal')) {
-        // Swipe inverse (vers la droite) → refermer
-        if (dx > 40) {
-          li.classList.remove('swipe-reveal');
-        }
-      } else if (dx < -60) {
-        // Swipe gauche → révéler supprimer
+      let offset;
+      if (revealed) {
+        offset = Math.max(0, Math.min(BTN_W, BTN_W + dx));
+      } else {
+        offset = Math.max(0, Math.min(BTN_W, -dx));
+      }
+      // Si plus de la moitié → ouvrir, sinon fermer
+      if (offset > BTN_W * 0.4) {
         li.classList.add('swipe-reveal');
+        btn.style.transform = ''; content.style.filter = ''; content.style.opacity = '';
         const closeSwipe = (ev) => {
           if (!ev.target.closest('.delivery-delete') && !ev.target.closest(`[data-id="${li.dataset.id}"]`)) {
             li.classList.remove('swipe-reveal');
+            btn.style.transform = ''; content.style.filter = ''; content.style.opacity = '';
             document.removeEventListener('touchstart', closeSwipe);
           }
         };
         setTimeout(() => document.addEventListener('touchstart', closeSwipe), 100);
+      } else {
+        li.classList.remove('swipe-reveal');
+        btn.style.transform = ''; content.style.filter = ''; content.style.opacity = '';
       }
       swiping = false;
     });
