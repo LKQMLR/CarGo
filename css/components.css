@@ -332,7 +332,7 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 /* ── MENU COMPTE ── */
 .account-menu {
   position: fixed; background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 6px; z-index: 10020; min-width: 200px;
+  border-radius: 6px; padding: 6px; z-index: 10020; min-width: 210px;
   box-shadow: 0 4px 20px rgba(0,0,0,.5);
 }
 .account-menu-email {
@@ -359,16 +359,15 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
   width: 100%; text-align: left; padding: 7px 10px;
   background: none; border: none; font-size: .75rem; cursor: pointer; border-radius: 6px;
 }
-.account-menu-logout { color: var(--red); }
-.account-menu-logout:hover { background: var(--red-bg); }
-.account-menu-cancel { color: var(--text2); }
-.account-menu-cancel:hover { background: var(--red-bg); color: var(--red); }
+.account-menu-logout { color: var(--text2); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 10px; }
+.account-menu-logout:hover { background: var(--surface2); color: var(--text); }
+.account-menu-cancel { color: var(--text2); font-size: .72rem; }
+.account-menu-cancel:hover { color: var(--red); }
 .account-menu-upgrade {
-  color: #fff; font-weight: 600;
-  background: linear-gradient(135deg, #E02947, #ED8294) !important;
-  margin-bottom: 2px; text-align: center;
+  color: var(--text2); font-size: .72rem; font-weight: 400;
+  background: none !important; text-align: left;
 }
-.account-menu-upgrade:hover { opacity: .9; }
+.account-menu-upgrade:hover { color: var(--text); }
 
 /* ── MODALE AUTH ── */
 .auth-box { gap: 10px; }

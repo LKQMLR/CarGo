@@ -98,7 +98,13 @@ function initPremium() {
 // ── Vérifier l'abonnement côté serveur ──
 async function checkPremiumStatus(email) {
   // Ne pas vérifier côté serveur si c'est un email propriétaire
-  if (await isOwnerEmail(email)) { _premiumVerified = true; applyPremium(true); return; }
+  if (await isOwnerEmail(email)) {
+    _premiumVerified = true;
+    window._subscriptionData = { active: true, currentPeriodEnd: null, cancelAtPeriodEnd: false };
+    applyPremium(true);
+    if (typeof updateAuthUI === 'function') updateAuthUI();
+    return;
+  }
   try {
     const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`);
     if (!res.ok) {
