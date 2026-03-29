@@ -26,6 +26,7 @@
 .nav-header-title {
   font-size: .68rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: .8px; color: var(--accent);
+  display: inline-flex; align-items: center; gap: 6px;
 }
 .nav-progress-text { font-size: .72rem; color: rgba(255,255,255,.6); }
 .nav-progress-bar {

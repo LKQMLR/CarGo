@@ -39,6 +39,13 @@
 }
 .section-title .help-btn { margin-left: auto; flex-shrink: 0; text-transform: none; letter-spacing: 0; }
 
+/* ── Icônes de section — 2× la taille du texte, centrées par flex ── */
+.section-title svg,
+.results-title svg,
+.nav-header-title svg {
+  width: 2em; height: 2em; flex-shrink: 0; vertical-align: unset;
+}
+
 /* Point de départ — discret, en retrait */
 .section-start {
   background: rgba(20,26,36,.6); border-color: rgba(46,62,82,.4);
