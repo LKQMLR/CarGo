@@ -313,6 +313,7 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 /* ── BOUTON COMPTE (barre API status) ── */
 #btn-account {
   margin-left: auto;
+  display: flex; align-items: center; gap: 5px;
   font-size: .62rem; padding: 3px 9px;
   background: var(--bg); border: 1px solid var(--border);
   border-radius: 20px; color: var(--text2); cursor: pointer;
@@ -321,6 +322,12 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 }
 #btn-account:hover { border-color: var(--accent); color: var(--text); }
 #btn-account.logged-in { border-color: var(--accent); color: var(--accent); }
+.account-dot {
+  display: inline-block; flex-shrink: 0;
+  width: .5em; height: .5em; border-radius: 50%;
+  background: var(--red);
+}
+.account-dot.connected { background: var(--green); }
 
 /* ── MENU COMPTE ── */
 .account-menu {

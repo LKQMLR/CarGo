@@ -78,11 +78,11 @@ function updateAuthUI() {
   if (_authUser) {
     const email = _authUser.email || '';
     const display = email.length > 22 ? email.slice(0, 19) + '…' : email;
-    btn.textContent = display;
+    btn.innerHTML = `<span class="account-dot connected"></span>${display}`;
     btn.title = email;
     btn.classList.add('logged-in');
   } else {
-    btn.textContent = 'Connexion';
+    btn.innerHTML = `<span class="account-dot"></span>Connexion`;
     btn.title = '';
     btn.classList.remove('logged-in');
   }
