@@ -405,18 +405,38 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 .auth-switch span:hover { opacity: .8; }
 
 /* ── MODALE DÉSABONNEMENT ── */
-.cancel-box { gap: 12px; text-align: center; }
+.cancel-box { gap: 8px; text-align: center; }
 .cancel-header {
   display: flex; align-items: center; justify-content: center; gap: 10px;
-  font-size: .92rem; font-weight: 700; color: var(--text);
+  font-size: .88rem; font-weight: 700; color: var(--text); opacity: .55;
 }
-.cancel-header svg { color: var(--text2); flex-shrink: 0; }
+.cancel-header svg { flex-shrink: 0; opacity: .7; }
 .cancel-end-date {
   font-size: .78rem; color: var(--text2); margin: 0; line-height: 1.6;
 }
 .cancel-end-date strong { color: var(--text); font-size: .85rem; }
 .cancel-legal {
-  font-size: .62rem; color: var(--text2); opacity: .6; margin: 0;
+  font-size: .62rem; color: var(--text2); opacity: .45; margin: 0;
   font-style: italic;
 }
+.cancel-actions {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.cancel-btn-keep {
+  background: none; border: none; cursor: pointer; padding: 4px 8px;
+  font-size: .82rem; font-weight: 700; letter-spacing: .2px;
+  background: linear-gradient(135deg, #f97316, #fbbf24);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.cancel-btn-keep:hover { opacity: .8; transform: none; }
+.cancel-btn-unsub {
+  background: none; border: none; cursor: pointer; padding: 2px 0;
+  font-size: .7rem; color: var(--text2); opacity: .45;
+  text-decoration: underline; text-underline-offset: 3px;
+  margin-bottom: 6px;
+}
+.cancel-btn-unsub:hover { opacity: .75; transform: none; }
+.cancel-btn-unsub:disabled { opacity: .25; cursor: not-allowed; }
 .prox-tooltip.show { display: block !important; }

@@ -178,11 +178,11 @@ function openCancelModal() {
         <span>Vous nous quittez&nbsp;?</span>
       </div>
       ${endLine}
-      <div class="modal-actions">
-        <button class="btn-modal-cancel" id="btn-confirm-cancel" onclick="confirmCancelSubscription()">Se désabonner</button>
-        <button class="btn-auth-submit" onclick="document.getElementById('cancel-sub-modal')?.remove()">Garder Premium</button>
+      <div class="cancel-actions">
+        <button class="cancel-btn-keep" onclick="document.getElementById('cancel-sub-modal')?.remove()">Garder Premium</button>
+        <button class="cancel-btn-unsub" id="btn-confirm-cancel" onclick="confirmCancelSubscription()">Se désabonner</button>
+        <p class="cancel-legal">*aucun remboursement ne peut être fait pour la période en cours</p>
       </div>
-      <p class="cancel-legal">*aucun remboursement ne peut être fait pour la période en cours</p>
     </div>
   `;
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
