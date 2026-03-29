@@ -75,9 +75,9 @@
   background: var(--surface, #1a1a2e);
   border: 1px solid rgba(251, 191, 36, .2);
   border-radius: 20px;
-  padding: 32px 28px;
-  max-width: 340px;
-  width: 90%;
+  padding: 28px 24px;
+  max-width: 480px;
+  width: 94%;
   text-align: center;
   transform: translateY(20px);
   transition: transform .3s;
@@ -184,7 +184,7 @@
   line-height: 1.4;
 }
 
-/* ── Comparaison Gratuit vs Premium ── */
+/* ── Comparaison 3 colonnes ── */
 .premium-compare {
   display: flex;
   gap: 8px;
@@ -193,25 +193,57 @@
 }
 .premium-col {
   flex: 1;
+  position: relative;
   background: rgba(255,255,255,.03);
   border: 1px solid var(--border, #2a2a4a);
   border-radius: 10px;
-  padding: 10px;
+  padding: 12px 10px 10px;
 }
-.premium-col-pro {
+.premium-col-standard {
   background: rgba(251, 191, 36, .06);
-  border-color: rgba(251, 191, 36, .25);
+  border-color: rgba(251, 191, 36, .35);
+}
+.premium-col-elite {
+  background: rgba(148, 163, 184, .04);
+  border-color: rgba(148, 163, 184, .15);
+  opacity: .7;
+}
+.premium-col-badge {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #f97316, #fbbf24);
+  color: #1a1a2e;
+  font-size: .58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
 }
 .premium-col-title {
-  font-size: .72rem;
+  font-size: .7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
   color: var(--text2, #94a3b8);
+  margin-bottom: 4px;
+}
+.premium-col-standard .premium-col-title {
+  color: #fbbf24;
+}
+.premium-col-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text, #e2e8f0);
   margin-bottom: 8px;
 }
-.premium-col-pro .premium-col-title {
-  color: #fbbf24;
+.premium-col-price span {
+  font-size: .65rem;
+  font-weight: 400;
+  color: var(--text2, #94a3b8);
 }
 .premium-col ul {
   list-style: none;
@@ -219,9 +251,9 @@
   padding: 0;
 }
 .premium-col li {
-  font-size: .72rem;
+  font-size: .68rem;
   color: var(--text, #e2e8f0);
-  padding: 3px 0;
+  padding: 2px 0;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -230,7 +262,8 @@
   content: "\2713";
   color: #22c55e;
   font-weight: 700;
-  font-size: .7rem;
+  font-size: .65rem;
+  flex-shrink: 0;
 }
 .premium-col li.premium-no {
   color: var(--text2, #94a3b8);
@@ -240,6 +273,28 @@
 .premium-col li.premium-no::before {
   content: "\2717";
   color: #ef4444;
+}
+.premium-col li.premium-soon {
+  color: var(--text2, #94a3b8);
+  font-style: italic;
+}
+.premium-col li.premium-soon::before {
+  content: "";
+}
+
+/* ── Bouton Bientôt disponible ── */
+.premium-coming-soon {
+  width: 100%;
+  padding: 11px;
+  margin-top: 8px;
+  border: 1px dashed rgba(148, 163, 184, .25);
+  border-radius: 12px;
+  background: none;
+  color: var(--text2, #94a3b8);
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: not-allowed;
+  opacity: .6;
 }
 
 /* ── Pulse animation pour le bouton premium ── */

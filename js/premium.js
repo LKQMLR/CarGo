@@ -196,34 +196,48 @@ function showPremiumModal() {
     <div class="premium-content">
       <button class="premium-close" onclick="closePremiumModal()">&times;</button>
       <div class="premium-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </div>
-      <h3>CarGo Standard</h3>
-      <p class="premium-price">12,99\u20ac<span>/mois</span></p>
+      <h3>Choisissez votre offre</h3>
       <div class="premium-compare">
         <div class="premium-col">
           <div class="premium-col-title">Gratuit</div>
+          <div class="premium-col-price">0\u20ac<span>/mois</span></div>
           <ul>
             <li>10 adresses max</li>
             <li>Secteurs 1 et 2</li>
             <li>1 verrouillage</li>
-            <li class="premium-no">Alertes de proximit\u00e9</li>
-            <li class="premium-no">Publicit\u00e9s</li>
+            <li class="premium-no">Alertes proximit\u00e9</li>
+            <li class="premium-no">Sans publicit\u00e9</li>
           </ul>
         </div>
-        <div class="premium-col premium-col-pro">
+        <div class="premium-col premium-col-standard">
+          <div class="premium-col-badge">Populaire</div>
           <div class="premium-col-title">Standard</div>
+          <div class="premium-col-price">12,99\u20ac<span>/mois</span></div>
           <ul>
             <li>Adresses illimit\u00e9es</li>
             <li>Tous les secteurs</li>
             <li>Verrouillages illimit\u00e9s</li>
             <li>Alertes de proximit\u00e9</li>
-            <li>Aucune publicit\u00e9</li>
+            <li>Sans publicit\u00e9</li>
+          </ul>
+        </div>
+        <div class="premium-col premium-col-elite">
+          <div class="premium-col-title">Pro</div>
+          <div class="premium-col-price">24,99\u20ac<span>/mois</span></div>
+          <ul>
+            <li>Tout du Standard</li>
+            <li>Multi-tourn\u00e9es</li>
+            <li>Statistiques</li>
+            <li>Support prioritaire</li>
+            <li class="premium-soon">\u2022 Plus encore</li>
           </ul>
         </div>
       </div>
       <input type="email" id="premium-email" placeholder="Votre adresse email" value="${savedEmail}" ${emailReadonly} />
-      <button class="premium-subscribe" onclick="subscribePremium()">S'abonner</button>
+      <button class="premium-subscribe" onclick="subscribePremium()">S\u2019abonner \u2014 Standard 12,99\u20ac/mois</button>
+      <button class="premium-coming-soon" disabled>Pro \u2014 Bient\u00f4t disponible</button>
       <p class="premium-legal">Paiement s\u00e9curis\u00e9 via Stripe. Annulable \u00e0 tout moment.</p>
     </div>
   `;
