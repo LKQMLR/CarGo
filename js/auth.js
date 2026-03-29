@@ -152,7 +152,7 @@ async function authSignIn(email, password) {
 
 // ── Inscription ──
 async function authSignUp(email, password, username) {
-  // Vérifier unicité du pseudo
+  // Vérifier unicité du pseudo avant création
   const { data: existing } = await _supabase
     .from('profiles')
     .select('id')
@@ -160,20 +160,13 @@ async function authSignUp(email, password, username) {
     .maybeSingle();
   if (existing) return { user: null, error: { message: 'username_taken' } };
 
-  const { data, error } = await _supabase.auth.signUp({ email, password });
-  if (error || !data.user) return { user: null, error };
-
-  // Insérer le profil
-  const { error: profileError } = await _supabase
-    .from('profiles')
-    .insert({ id: data.user.id, username });
-
-  if (profileError) {
-    if (profileError.code === '23505') return { user: null, error: { message: 'username_taken' } };
-    return { user: null, error: profileError };
-  }
-
-  return { user: data.user, error: null };
+  // Passer le username en metadata — le trigger Supabase crée le profil côté serveur
+  const { data, error } = await _supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { username } },
+  });
+  return { user: data?.user || null, error };
 }
 
 // ── Déconnexion ──
