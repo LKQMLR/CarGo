@@ -60,6 +60,88 @@ async function fetchProfile(userId) {
     .maybeSingle();
   _userProfile = data || null;
   updateAuthUI();
+  if (!_userProfile) promptSetUsername();
+}
+
+// ── Modale choix pseudo (comptes existants) ──
+function promptSetUsername() {
+  const old = document.getElementById('username-modal');
+  if (old) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'username-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box auth-box">
+      <div class="auth-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/>
+        </svg>
+        Choisissez votre pseudo
+      </div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:12px">
+        Ton pseudo est ton identifiant public sur CarGo.
+      </p>
+      <div id="username-error" class="auth-error" style="display:none;"></div>
+      <input type="text" id="username-input" placeholder="Pseudonyme (ex: jdupont_75)"
+        maxlength="20" autocomplete="username" />
+      <button class="btn-auth-submit" id="username-submit" onclick="saveUsername()">
+        Confirmer
+      </button>
+    </div>
+  `;
+  modal.addEventListener('keydown', e => { if (e.key === 'Enter') saveUsername(); });
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('visible'));
+  setTimeout(() => document.getElementById('username-input')?.focus(), 50);
+}
+
+async function saveUsername() {
+  const input  = document.getElementById('username-input');
+  const errEl  = document.getElementById('username-error');
+  const btn    = document.getElementById('username-submit');
+  const username = input?.value.trim() || '';
+
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    errEl.style.color = '';
+    errEl.textContent = 'Pseudo : 3–20 caractères, lettres, chiffres ou _.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  errEl.style.display = 'none';
+
+  // Vérifier unicité
+  const { data: existing } = await _supabase
+    .from('profiles').select('id').eq('username', username).maybeSingle();
+  if (existing) {
+    btn.disabled = false;
+    btn.textContent = 'Confirmer';
+    errEl.style.color = '';
+    errEl.textContent = 'Ce pseudo est déjà pris.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const { error } = await _supabase
+    .from('profiles').insert({ id: _authUser.id, username });
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Confirmer';
+    errEl.style.color = '';
+    errEl.textContent = error.code === '23505' ? 'Ce pseudo est déjà pris.' : 'Erreur, réessaie.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  _userProfile = { username };
+  const modal = document.getElementById('username-modal');
+  if (modal) { modal.classList.remove('visible'); setTimeout(() => modal.remove(), 300); }
+  updateAuthUI();
+  if (typeof showStatus === 'function') showStatus('success', `Pseudo "${username}" enregistré !`);
 }
 
 // ── Connexion ──
@@ -105,7 +187,7 @@ function updateAuthUI() {
   const btn = document.getElementById('btn-account');
   if (!btn) return;
   if (_authUser) {
-    const display = _userProfile?.username || _authUser.email.split('@')[0];
+    const display = _userProfile?.username || '…';
     const short   = display.length > 18 ? display.slice(0, 15) + '…' : display;
     btn.innerHTML = `${short}<span class="account-dot connected"></span>`;
     btn.title = _authUser.email;
@@ -154,8 +236,7 @@ function openAccountMenu() {
   menu.style.top  = (rect.bottom + 6) + 'px';
   menu.style.left = rect.left + 'px';
   menu.innerHTML = `
-    ${_userProfile?.username ? `<div class="account-menu-username">${_userProfile.username}</div>` : ''}
-    <div class="account-menu-email">${_authUser.email}</div>
+    <div class="account-menu-username">${_userProfile?.username || _authUser.email}</div>
     <div class="account-menu-sub">
       <span class="account-menu-sub-row">${statusDot}${statusLabel}</span>
       ${endLine}
