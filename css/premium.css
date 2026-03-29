@@ -184,117 +184,93 @@
   line-height: 1.4;
 }
 
-/* ── Comparaison 3 colonnes ── */
-.premium-compare {
+/* ── Sélection de plan (horizontal) ── */
+.premium-plans {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin: 16px 0;
   text-align: left;
 }
-.premium-col {
+.premium-plan {
   flex: 1;
   position: relative;
   background: rgba(255,255,255,.03);
-  border: 1px solid var(--border, #2a2a4a);
-  border-radius: 10px;
-  padding: 12px 10px 10px;
+  border: 2px solid var(--border, #2a2a4a);
+  border-radius: 12px;
+  padding: 14px 12px 12px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, box-shadow .2s;
 }
-.premium-col-standard {
-  background: rgba(251, 191, 36, .06);
-  border-color: rgba(251, 191, 36, .35);
+.premium-plan:not(.disabled):hover {
+  border-color: rgba(249, 115, 22, .4);
 }
-.premium-col-elite {
-  background: rgba(148, 163, 184, .04);
-  border-color: rgba(148, 163, 184, .15);
-  opacity: .7;
+.premium-plan.selected {
+  background: rgba(249, 115, 22, .07);
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, .12);
 }
-.premium-col-badge {
+.premium-plan.disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.premium-plan-badge {
   position: absolute;
   top: -9px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #f97316, #fbbf24);
-  color: #1a1a2e;
+  background: rgba(148, 163, 184, .2);
+  color: var(--text2, #94a3b8);
   font-size: .58rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
   padding: 2px 8px;
   border-radius: 20px;
   white-space: nowrap;
 }
-.premium-col-title {
-  font-size: .7rem;
+.premium-plan-name {
+  font-size: .75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .5px;
   color: var(--text2, #94a3b8);
   margin-bottom: 4px;
 }
-.premium-col-standard .premium-col-title {
-  color: #fbbf24;
+.premium-plan.selected .premium-plan-name {
+  background: linear-gradient(135deg, #f97316, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-.premium-col-price {
-  font-size: 1.1rem;
+.premium-plan-price {
+  font-size: 1.2rem;
   font-weight: 800;
   color: var(--text, #e2e8f0);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.premium-col-price span {
+.premium-plan-price span {
   font-size: .65rem;
   font-weight: 400;
   color: var(--text2, #94a3b8);
 }
-.premium-col ul {
+.premium-plan ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.premium-col li {
-  font-size: .68rem;
+.premium-plan li {
+  font-size: .7rem;
   color: var(--text, #e2e8f0);
   padding: 2px 0;
   display: flex;
   align-items: center;
   gap: 5px;
 }
-.premium-col li::before {
+.premium-plan li::before {
   content: "\2713";
   color: #22c55e;
   font-weight: 700;
   font-size: .65rem;
   flex-shrink: 0;
-}
-.premium-col li.premium-no {
-  color: var(--text2, #94a3b8);
-  text-decoration: line-through;
-  opacity: .6;
-}
-.premium-col li.premium-no::before {
-  content: "\2717";
-  color: #ef4444;
-}
-.premium-col li.premium-soon {
-  color: var(--text2, #94a3b8);
-  font-style: italic;
-}
-.premium-col li.premium-soon::before {
-  content: "";
-}
-
-/* ── Bouton Bientôt disponible ── */
-.premium-coming-soon {
-  width: 100%;
-  padding: 11px;
-  margin-top: 8px;
-  border: 1px dashed rgba(148, 163, 184, .25);
-  border-radius: 12px;
-  background: none;
-  color: var(--text2, #94a3b8);
-  font-size: .82rem;
-  font-weight: 500;
-  cursor: not-allowed;
-  opacity: .6;
 }
 
 /* ── Pulse animation pour le bouton premium ── */

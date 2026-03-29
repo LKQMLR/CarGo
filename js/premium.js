@@ -163,11 +163,11 @@ function updatePremiumUI(isPremium) {
   const premium = typeof isPremium === 'boolean' ? isPremium : _premiumVerified;
 
   if (premium) {
-    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Standard actif — G\u00e9rer';
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Standard actif \u2014 G\u00e9rer';
     btn.classList.add('premium-active');
     btn.onclick = managePremium;
   } else {
-    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Passer Standard';
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Formule d\u2019abonnement';
     btn.classList.remove('premium-active');
     btn.onclick = showPremiumModal;
   }
@@ -195,26 +195,11 @@ function showPremiumModal() {
     <div class="premium-overlay" onclick="closePremiumModal()"></div>
     <div class="premium-content">
       <button class="premium-close" onclick="closePremiumModal()">&times;</button>
-      <div class="premium-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      </div>
       <h3>Choisissez votre offre</h3>
-      <div class="premium-compare">
-        <div class="premium-col">
-          <div class="premium-col-title">Gratuit</div>
-          <div class="premium-col-price">0\u20ac<span>/mois</span></div>
-          <ul>
-            <li>10 adresses max</li>
-            <li>Secteurs 1 et 2</li>
-            <li>1 verrouillage</li>
-            <li class="premium-no">Alertes proximit\u00e9</li>
-            <li class="premium-no">Sans publicit\u00e9</li>
-          </ul>
-        </div>
-        <div class="premium-col premium-col-standard">
-          <div class="premium-col-badge">Populaire</div>
-          <div class="premium-col-title">Standard</div>
-          <div class="premium-col-price">12,99\u20ac<span>/mois</span></div>
+      <div class="premium-plans">
+        <div class="premium-plan selected" data-plan="standard" onclick="selectPlan('standard')">
+          <div class="premium-plan-name">Standard</div>
+          <div class="premium-plan-price">12,99\u20ac<span>/mois</span></div>
           <ul>
             <li>Adresses illimit\u00e9es</li>
             <li>Tous les secteurs</li>
@@ -223,22 +208,20 @@ function showPremiumModal() {
             <li>Sans publicit\u00e9</li>
           </ul>
         </div>
-        <div class="premium-col premium-col-elite">
-          <div class="premium-col-title">Pro</div>
-          <div class="premium-col-price">24,99\u20ac<span>/mois</span></div>
+        <div class="premium-plan disabled" data-plan="pro">
+          <div class="premium-plan-badge">Bient\u00f4t</div>
+          <div class="premium-plan-name">Pro</div>
+          <div class="premium-plan-price">24,99\u20ac<span>/mois</span></div>
           <ul>
             <li>Tout du Standard</li>
             <li>Multi-tourn\u00e9es</li>
             <li>Statistiques</li>
             <li>Support prioritaire</li>
-            <li class="premium-soon">\u2022 Plus encore</li>
           </ul>
         </div>
       </div>
       <input type="email" id="premium-email" placeholder="Votre adresse email" value="${savedEmail}" ${emailReadonly} />
-      <button class="premium-subscribe" onclick="subscribePremium()">S\u2019abonner \u2014 Standard 12,99\u20ac/mois</button>
-      <button class="premium-coming-soon" disabled>Pro 24,99\u20ac/mois \u2014 Bient\u00f4t disponible</button>
-      <button class="premium-coming-soon" disabled>Passe journ\u00e9e 1,99\u20ac \u2014 Bient\u00f4t disponible</button>
+      <button class="premium-subscribe" onclick="subscribePremium()">S\u2019abonner</button>
       <p class="premium-legal">Paiement s\u00e9curis\u00e9 via Stripe. Annulable \u00e0 tout moment.</p>
     </div>
   `;
@@ -252,6 +235,12 @@ function closePremiumModal() {
     modal.classList.remove('show');
     setTimeout(() => modal.remove(), 300);
   }
+}
+
+function selectPlan(plan) {
+  document.querySelectorAll('.premium-plan:not(.disabled)').forEach(el => {
+    el.classList.toggle('selected', el.dataset.plan === plan);
+  });
 }
 
 // ── Validation email ──
