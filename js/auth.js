@@ -66,9 +66,7 @@ async function authSignUp(email, password) {
 // ── Déconnexion ──
 async function authSignOut() {
   await _supabase.auth.signOut();
-  _authUser = null;
-  updateAuthUI();
-  if (typeof applyPremium === 'function') applyPremium(false);
+  window.location.reload();
 }
 
 // ── Mettre à jour le bouton compte dans le header ──
