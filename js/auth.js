@@ -210,9 +210,7 @@ function openAccountMenu() {
   const sub  = window._subscriptionData || {};
 
   const statusDot   = sub.active ? '<span class="sub-dot active"></span>' : '<span class="sub-dot"></span>';
-  const statusLabel = sub.active
-    ? (sub.cancelAtPeriodEnd ? 'Standard — annulation en cours' : 'Standard actif')
-    : 'Gratuit';
+  const statusLabel = sub.active ? 'Abonnement - Standard' : 'Gratuit';
 
   let endLine = '';
   if (sub.active && sub.currentPeriodEnd) {
