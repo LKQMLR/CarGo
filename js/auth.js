@@ -198,11 +198,7 @@ async function confirmCancelSubscription() {
   try {
     const CARGO_API = typeof window.CARGO_API !== 'undefined' ? window.CARGO_API
       : 'https://cargo-api-seven.vercel.app';
-    const res = await fetch(`${CARGO_API}/api/cancel-subscription`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
+    const res = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`);
     const data = await res.json().catch(() => ({}));
     console.log('[cancel-sub] status:', res.status, 'body:', data);
     if (res.status === 404) throw new Error('no_sub');
