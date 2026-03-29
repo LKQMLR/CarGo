@@ -310,19 +310,16 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 }
 .help-btn:active { background: var(--accent); }
 
-/* ── HEADER COMPTE ── */
-.header-bottom-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 3px;
-}
-.header-bottom-row p { margin: 0; }
+/* ── BOUTON COMPTE (barre API status) ── */
 #btn-account {
-  font-size: .62rem; padding: 4px 9px;
-  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.18);
-  border-radius: 20px; color: rgba(255,255,255,.65); cursor: pointer;
-  white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;
+  margin-left: auto;
+  font-size: .62rem; padding: 3px 9px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text2); cursor: pointer;
+  white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis;
   flex-shrink: 0; transition: border-color .2s, color .2s;
 }
-#btn-account:hover { border-color: rgba(255,255,255,.4); color: #fff; }
+#btn-account:hover { border-color: var(--accent); color: var(--text); }
 #btn-account.logged-in { border-color: var(--accent); color: var(--accent); }
 
 /* ── MENU COMPTE ── */

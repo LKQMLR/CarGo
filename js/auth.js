@@ -154,13 +154,13 @@ function openAuthModal(tab) {
   // Soumettre avec Entrée
   modal.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(tab); });
   document.body.appendChild(modal);
-  requestAnimationFrame(() => modal.classList.add('show'));
+  requestAnimationFrame(() => modal.classList.add('visible'));
   setTimeout(() => document.getElementById('auth-email')?.focus(), 50);
 }
 
 function closeAuthModal() {
   const modal = document.getElementById('auth-modal');
-  if (modal) { modal.classList.remove('show'); setTimeout(() => modal.remove(), 300); }
+  if (modal) { modal.classList.remove('visible'); setTimeout(() => modal.remove(), 300); }
 }
 
 async function submitAuth(tab) {
