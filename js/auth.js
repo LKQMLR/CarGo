@@ -78,11 +78,11 @@ function updateAuthUI() {
   if (_authUser) {
     const email = _authUser.email || '';
     const display = email.length > 22 ? email.slice(0, 19) + '…' : email;
-    btn.innerHTML = `<span class="account-dot connected"></span>${display}`;
+    btn.innerHTML = `${display}<span class="account-dot connected"></span>`;
     btn.title = email;
     btn.classList.add('logged-in');
   } else {
-    btn.innerHTML = `<span class="account-dot"></span>Connexion`;
+    btn.innerHTML = `Connexion<span class="account-dot"></span>`;
     btn.title = '';
     btn.classList.remove('logged-in');
   }
@@ -95,8 +95,33 @@ function openAccountMenu() {
   const old = document.getElementById('account-menu');
   if (old) { old.remove(); return; }
 
-  const btn = document.getElementById('btn-account');
+  const btn  = document.getElementById('btn-account');
   const rect = btn.getBoundingClientRect();
+  const sub  = window._subscriptionData || {};
+
+  // Ligne statut abonnement
+  const statusDot   = sub.active ? '<span class="sub-dot active"></span>' : '<span class="sub-dot"></span>';
+  const statusLabel = sub.active
+    ? (sub.cancelAtPeriodEnd ? 'Premium — annulation en cours' : 'Premium actif')
+    : 'Gratuit';
+
+  // Date de fin
+  let endLine = '';
+  if (sub.active && sub.currentPeriodEnd) {
+    const d = new Date(sub.currentPeriodEnd * 1000);
+    const fmt = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    endLine = `<div class="account-menu-end">${sub.cancelAtPeriodEnd ? 'Expire le' : 'Renouvellement le'} ${fmt}</div>`;
+  }
+
+  // Bouton désabonnement (visible si premium actif et pas encore en annulation)
+  const cancelBtn = (sub.active && !sub.cancelAtPeriodEnd)
+    ? `<button class="account-menu-btn account-menu-cancel" onclick="openCancelModal()">Se désabonner</button>`
+    : '';
+
+  // Bouton upgrade si gratuit
+  const upgradeBtn = !sub.active
+    ? `<button class="account-menu-btn account-menu-upgrade" onclick="document.getElementById('account-menu')?.remove();showPremiumModal()">Passer Premium</button>`
+    : '';
 
   const menu = document.createElement('div');
   menu.id = 'account-menu';
@@ -105,13 +130,18 @@ function openAccountMenu() {
   menu.style.left = rect.left + 'px';
   menu.innerHTML = `
     <div class="account-menu-email">${_authUser.email}</div>
+    <div class="account-menu-sub">
+      <span class="account-menu-sub-row">${statusDot}${statusLabel}</span>
+      ${endLine}
+    </div>
+    ${cancelBtn}
+    ${upgradeBtn}
     <button class="account-menu-btn account-menu-logout"
       onclick="authSignOut();document.getElementById('account-menu')?.remove()">
       Se déconnecter
     </button>
   `;
 
-  // Fermer si clic en dehors
   setTimeout(() => {
     document.addEventListener('click', function handler(e) {
       if (!menu.contains(e.target) && e.target !== btn) {
@@ -122,6 +152,67 @@ function openAccountMenu() {
   }, 0);
 
   document.body.appendChild(menu);
+}
+
+// ── Modale confirmation désabonnement ──
+function openCancelModal() {
+  document.getElementById('account-menu')?.remove();
+  const sub = window._subscriptionData || {};
+  let endStr = '30 jours';
+  if (sub.currentPeriodEnd) {
+    const d = new Date(sub.currentPeriodEnd * 1000);
+    endStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'cancel-sub-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box confirm-box">
+      <div class="confirm-icon">⚠️</div>
+      <div class="confirm-msg">
+        Votre accès Premium restera actif jusqu'au <strong>${endStr}</strong>.<br><br>
+        Aucun remboursement ne sera effectué pour la période en cours.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="document.getElementById('cancel-sub-modal')?.remove()">
+          Garder Premium
+        </button>
+        <button class="btn-warning" id="btn-confirm-cancel" onclick="confirmCancelSubscription()">
+          Se désabonner
+        </button>
+      </div>
+    </div>
+  `;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('visible'));
+}
+
+async function confirmCancelSubscription() {
+  const btn = document.getElementById('btn-confirm-cancel');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  const email = _authUser?.email;
+  if (!email) return;
+
+  try {
+    const CARGO_API = typeof window.CARGO_API !== 'undefined' ? window.CARGO_API
+      : 'https://cargo-api-seven.vercel.app';
+    const res = await fetch(`${CARGO_API}/api/cancel-subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error();
+    document.getElementById('cancel-sub-modal')?.remove();
+    window._subscriptionData.cancelAtPeriodEnd = true;
+    updateAuthUI();
+    if (typeof showStatus === 'function') showStatus('success', 'Désabonnement confirmé. Premium actif jusqu\'à la fin de la période.');
+  } catch {
+    if (btn) { btn.disabled = false; btn.textContent = 'Se désabonner'; }
+    if (typeof showStatus === 'function') showStatus('error', 'Erreur — réessaie ou contacte le support.');
+  }
 }
 
 // ── Modale auth (connexion / inscription) ──

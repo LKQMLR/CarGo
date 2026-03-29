@@ -13,6 +13,9 @@ const OWNER_HASHES = ['10780fdbd1fbc4d15ff792fa79466263f73f368bde5a3a3d0032d2ed6
 // État premium en mémoire — seul le serveur peut le mettre à true
 let _premiumVerified = false;
 
+// Données d'abonnement enrichies (date de fin, annulation en cours…)
+window._subscriptionData = { active: false, currentPeriodEnd: null, cancelAtPeriodEnd: false };
+
 // ── SHA-256 hash ──
 async function sha256(str) {
   const buf = new TextEncoder().encode(str);
@@ -104,11 +107,13 @@ async function checkPremiumStatus(email) {
     }
     const data = await res.json();
     _premiumVerified = !!data.premium;
+    window._subscriptionData = {
+      active:            !!data.premium,
+      currentPeriodEnd:  data.currentPeriodEnd  || null,
+      cancelAtPeriodEnd: !!data.cancelAtPeriodEnd,
+    };
     applyPremium(_premiumVerified);
-    // Si plus premium, nettoyer
-    if (!data.premium) {
-      localStorage.removeItem('cargo_premium_email');
-    }
+    if (typeof updateAuthUI === 'function') updateAuthUI();
   } catch {
     // Erreur réseau — rester sur non-premium par sécurité
     applyPremium(false);

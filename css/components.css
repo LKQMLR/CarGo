@@ -340,12 +340,35 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
   border-bottom: 1px solid var(--border); margin-bottom: 4px;
   word-break: break-all;
 }
+.account-menu-sub {
+  padding: 6px 10px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+.account-menu-sub-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .75rem; color: var(--text); font-weight: 600;
+}
+.account-menu-end {
+  font-size: .67rem; color: var(--text2); margin-top: 3px;
+}
+.sub-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text2); flex-shrink: 0;
+}
+.sub-dot.active { background: var(--green); box-shadow: 0 0 5px var(--green); }
 .account-menu-btn {
   width: 100%; text-align: left; padding: 7px 10px;
   background: none; border: none; font-size: .75rem; cursor: pointer; border-radius: 6px;
 }
 .account-menu-logout { color: var(--red); }
 .account-menu-logout:hover { background: var(--red-bg); }
+.account-menu-cancel { color: var(--text2); }
+.account-menu-cancel:hover { background: var(--red-bg); color: var(--red); }
+.account-menu-upgrade {
+  color: #fff; font-weight: 600;
+  background: linear-gradient(135deg, #E02947, #ED8294) !important;
+  margin-bottom: 2px; text-align: center;
+}
+.account-menu-upgrade:hover { opacity: .9; }
 
 /* ── MODALE AUTH ── */
 .auth-box { gap: 10px; }
