@@ -3,36 +3,38 @@
    Gestion session, connexion, inscription, UI
    ══════════════════════════════════════════ */
 
-const SUPABASE_URL     = 'https://wzhhxfrbmsmygozqvuvk.supabase.co';
+const SUPABASE_URL      = 'https://wzhhxfrbmsmygozqvuvk.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_1V209cHQnuROD-mAzqg74g_p-2-HbTy';
 
-let _supabase = null;
-let _authUser = null;
+let _supabase    = null;
+let _authUser    = null;
+let _userProfile = null;   // { username }
 
 // ── Initialisation ──
 function initAuth() {
   const { createClient } = window.supabase;
   _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Écouter les changements d'état auth
   _supabase.auth.onAuthStateChange((event, session) => {
     _authUser = session?.user || null;
-    updateAuthUI();
     if (_authUser) {
+      fetchProfile(_authUser.id);
       if (typeof checkPremiumStatus === 'function') checkPremiumStatus(_authUser.email);
     } else {
+      _userProfile = null;
+      updateAuthUI();
       if (typeof applyPremium === 'function') applyPremium(false);
     }
   });
 
-  // Récupérer la session existante au lancement
   _supabase.auth.getSession().then(({ data: { session } }) => {
     _authUser = session?.user || null;
-    updateAuthUI();
     if (_authUser) {
+      fetchProfile(_authUser.id);
       if (typeof checkPremiumStatus === 'function') checkPremiumStatus(_authUser.email);
+    } else {
+      updateAuthUI();
     }
-    // Gérer le retour depuis Stripe
     const params = new URLSearchParams(window.location.search);
     if (params.get('premium') === 'success') {
       window.history.replaceState({}, '', window.location.pathname);
@@ -47,8 +49,17 @@ function initAuth() {
 }
 
 // ── Accesseur utilisateur courant ──
-function getAuthUser() {
-  return _authUser;
+function getAuthUser() { return _authUser; }
+
+// ── Récupérer le profil (pseudo) ──
+async function fetchProfile(userId) {
+  const { data } = await _supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', userId)
+    .maybeSingle();
+  _userProfile = data || null;
+  updateAuthUI();
 }
 
 // ── Connexion ──
@@ -58,9 +69,29 @@ async function authSignIn(email, password) {
 }
 
 // ── Inscription ──
-async function authSignUp(email, password) {
+async function authSignUp(email, password, username) {
+  // Vérifier unicité du pseudo
+  const { data: existing } = await _supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .maybeSingle();
+  if (existing) return { user: null, error: { message: 'username_taken' } };
+
   const { data, error } = await _supabase.auth.signUp({ email, password });
-  return { user: data?.user || null, error };
+  if (error || !data.user) return { user: null, error };
+
+  // Insérer le profil
+  const { error: profileError } = await _supabase
+    .from('profiles')
+    .insert({ id: data.user.id, username });
+
+  if (profileError) {
+    if (profileError.code === '23505') return { user: null, error: { message: 'username_taken' } };
+    return { user: null, error: profileError };
+  }
+
+  return { user: data.user, error: null };
 }
 
 // ── Déconnexion ──
@@ -69,15 +100,15 @@ async function authSignOut() {
   window.location.reload();
 }
 
-// ── Mettre à jour le bouton compte dans le header ──
+// ── Mettre à jour le bouton compte ──
 function updateAuthUI() {
   const btn = document.getElementById('btn-account');
   if (!btn) return;
   if (_authUser) {
-    const email = _authUser.email || '';
-    const display = email.length > 22 ? email.slice(0, 19) + '…' : email;
-    btn.innerHTML = `${display}<span class="account-dot connected"></span>`;
-    btn.title = email;
+    const display = _userProfile?.username || _authUser.email.split('@')[0];
+    const short   = display.length > 18 ? display.slice(0, 15) + '…' : display;
+    btn.innerHTML = `${short}<span class="account-dot connected"></span>`;
+    btn.title = _authUser.email;
     btn.classList.add('logged-in');
   } else {
     btn.innerHTML = `Connexion<span class="account-dot"></span>`;
@@ -86,7 +117,7 @@ function updateAuthUI() {
   }
 }
 
-// ── Ouvrir/fermer le menu compte ──
+// ── Menu compte ──
 function openAccountMenu() {
   if (!_authUser) { openAuthModal('signin'); return; }
 
@@ -97,28 +128,24 @@ function openAccountMenu() {
   const rect = btn.getBoundingClientRect();
   const sub  = window._subscriptionData || {};
 
-  // Ligne statut abonnement
   const statusDot   = sub.active ? '<span class="sub-dot active"></span>' : '<span class="sub-dot"></span>';
   const statusLabel = sub.active
-    ? (sub.cancelAtPeriodEnd ? 'Premium — annulation en cours' : 'Premium actif')
+    ? (sub.cancelAtPeriodEnd ? 'Standard — annulation en cours' : 'Standard actif')
     : 'Gratuit';
 
-  // Date de fin
   let endLine = '';
   if (sub.active && sub.currentPeriodEnd) {
-    const d = new Date(sub.currentPeriodEnd * 1000);
+    const d   = new Date(sub.currentPeriodEnd * 1000);
     const fmt = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     endLine = `<div class="account-menu-end">${sub.cancelAtPeriodEnd ? 'Expire le' : 'Renouvellement le'} ${fmt}</div>`;
   }
 
-  // Bouton désabonnement (visible si premium actif et pas encore en annulation)
   const cancelBtn = (sub.active && !sub.cancelAtPeriodEnd && !sub.isOwner)
     ? `<button class="account-menu-btn account-menu-cancel" onclick="openCancelModal()">Se désabonner</button>`
     : '';
 
-  // Bouton upgrade si gratuit
   const upgradeBtn = !sub.active
-    ? `<button class="account-menu-btn account-menu-upgrade" onclick="document.getElementById('account-menu')?.remove();showPremiumModal()">Passer Premium</button>`
+    ? `<button class="account-menu-btn account-menu-upgrade" onclick="document.getElementById('account-menu')?.remove();showPremiumModal()">Formule d'abonnement</button>`
     : '';
 
   const menu = document.createElement('div');
@@ -127,6 +154,7 @@ function openAccountMenu() {
   menu.style.top  = (rect.bottom + 6) + 'px';
   menu.style.left = rect.left + 'px';
   menu.innerHTML = `
+    ${_userProfile?.username ? `<div class="account-menu-username">${_userProfile.username}</div>` : ''}
     <div class="account-menu-email">${_authUser.email}</div>
     <div class="account-menu-sub">
       <span class="account-menu-sub-row">${statusDot}${statusLabel}</span>
@@ -198,9 +226,8 @@ async function confirmCancelSubscription() {
   try {
     const CARGO_API = typeof window.CARGO_API !== 'undefined' ? window.CARGO_API
       : 'https://cargo-api-seven.vercel.app';
-    const res = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`);
+    const res  = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`);
     const data = await res.json().catch(() => ({}));
-    console.log('[cancel-sub] status:', res.status, 'body:', data);
     if (res.status === 404) throw new Error('no_sub');
     if (!res.ok) throw new Error(data.error || 'server_' + res.status);
     document.getElementById('cancel-sub-modal')?.remove();
@@ -208,7 +235,6 @@ async function confirmCancelSubscription() {
     updateAuthUI();
     if (typeof showStatus === 'function') showStatus('success', 'Désabonnement confirmé. Premium actif jusqu\'à la fin de la période.');
   } catch (err) {
-    console.error('[cancel-sub] erreur:', err.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Se désabonner'; }
     const msg = err.message === 'no_sub'
       ? 'Aucun abonnement Stripe trouvé pour ce compte.'
@@ -237,6 +263,7 @@ function openAuthModal(tab) {
         ${isSignin ? 'Connexion' : 'Créer un compte'}
       </div>
       <div id="auth-error" class="auth-error" style="display:none;"></div>
+      ${!isSignin ? `<input type="text" id="auth-username" placeholder="Pseudonyme (ex: jdupont_75)" autocomplete="username" maxlength="20" />` : ''}
       <input type="email"    id="auth-email"    placeholder="Adresse email"  autocomplete="email" />
       <input type="password" id="auth-password" placeholder="Mot de passe"
         autocomplete="${isSignin ? 'current-password' : 'new-password'}" />
@@ -255,7 +282,10 @@ function openAuthModal(tab) {
   modal.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(tab); });
   document.body.appendChild(modal);
   requestAnimationFrame(() => modal.classList.add('visible'));
-  setTimeout(() => document.getElementById('auth-email')?.focus(), 50);
+  setTimeout(() => {
+    const first = modal.querySelector('input');
+    first?.focus();
+  }, 50);
 }
 
 function closeAuthModal() {
@@ -269,16 +299,19 @@ async function submitAuth(tab) {
   const errEl      = document.getElementById('auth-error');
   const btn        = document.getElementById('auth-submit');
 
-  const email    = emailEl?.value.trim()  || '';
-  const password = passwordEl?.value      || '';
+  const email    = emailEl?.value.trim() || '';
+  const password = passwordEl?.value     || '';
+  const password2 = document.getElementById('auth-password2')?.value || '';
+  const username  = document.getElementById('auth-username')?.value.trim() || '';
 
-  const password2El = document.getElementById('auth-password2');
-  const password2   = password2El?.value || '';
-
-  if (!email || !password) {
-    _showAuthError(errEl, 'Remplis tous les champs.');
-    return;
+  if (tab === 'signup') {
+    if (!username) { _showAuthError(errEl, 'Choisis un pseudonyme.'); return; }
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      _showAuthError(errEl, 'Pseudo : 3–20 caractères, lettres, chiffres ou _.');
+      return;
+    }
   }
+  if (!email || !password) { _showAuthError(errEl, 'Remplis tous les champs.'); return; }
   if (tab === 'signup' && password !== password2) {
     _showAuthError(errEl, 'Les mots de passe ne correspondent pas.');
     return;
@@ -290,7 +323,7 @@ async function submitAuth(tab) {
 
   const { user, error } = tab === 'signin'
     ? await authSignIn(email, password)
-    : await authSignUp(email, password);
+    : await authSignUp(email, password, username);
 
   if (error) {
     btn.disabled = false;
@@ -299,7 +332,6 @@ async function submitAuth(tab) {
     return;
   }
 
-  // Inscription : email de confirmation requis
   if (tab === 'signup' && user && !user.email_confirmed_at) {
     errEl.style.color = 'var(--green)';
     errEl.textContent = 'Vérifie ton email pour confirmer ton compte.';
@@ -320,6 +352,7 @@ function _showAuthError(el, msg) {
 
 function _translateAuthError(msg) {
   if (!msg) return 'Erreur inconnue.';
+  if (msg === 'username_taken')                return 'Ce pseudo est déjà pris.';
   if (msg.includes('Invalid login credentials')) return 'Email ou mot de passe incorrect.';
   if (msg.includes('Email not confirmed'))       return 'Confirme ton email avant de te connecter.';
   if (msg.includes('already registered'))        return 'Cet email est déjà utilisé.';

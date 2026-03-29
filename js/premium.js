@@ -182,10 +182,15 @@ function escHtml(s) {
 
 // ── Afficher la modale d'abonnement ──
 function showPremiumModal() {
+  const authUser = typeof getAuthUser === 'function' ? getAuthUser() : null;
+  if (!authUser) {
+    if (typeof openAuthModal === 'function') openAuthModal('signin');
+    if (typeof showStatus === 'function') showStatus('error', 'Connecte-toi pour accéder aux formules d\'abonnement.');
+    return;
+  }
+
   const old = document.getElementById('premium-modal');
   if (old) old.remove();
-
-  const authUser = typeof getAuthUser === 'function' ? getAuthUser() : null;
   const savedEmail = escHtml(authUser?.email || '');
   const emailReadonly = authUser ? 'readonly style="opacity:.6;cursor:default"' : '';
 
