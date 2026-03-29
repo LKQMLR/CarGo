@@ -4,7 +4,7 @@
    limites freemium
    ══════════════════════════════════════════ */
 
-const CARGO_API = 'https://cargo-api-seven.vercel.app';
+const CARGO_API = 'https://cargo-api-fresh.vercel.app';
 const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRSiDOjAwsaG3vhTL0RLwn22qeDns7afLlPlh3z00JJMuTqFx';
 
 // Hash SHA-256 des emails propriétaire (premium gratuit, non lisible)
@@ -287,11 +287,7 @@ async function subscribePremium() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${CARGO_API}/api/create-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
+    const res = await fetch(`${CARGO_API}/api/create-checkout?email=${encodeURIComponent(email)}`);
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erreur serveur');
@@ -320,11 +316,7 @@ async function managePremium() {
     return;
   }
   try {
-    const res = await fetch(`${CARGO_API}/api/customer-portal`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
+    const res = await fetch(`${CARGO_API}/api/customer-portal?email=${encodeURIComponent(email)}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
     window.location.href = data.url;
