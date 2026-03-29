@@ -205,13 +205,16 @@ async function confirmCancelSubscription() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
+    const data = await res.json().catch(() => ({}));
+    console.log('[cancel-sub] status:', res.status, 'body:', data);
     if (res.status === 404) throw new Error('no_sub');
-    if (!res.ok) throw new Error('server');
+    if (!res.ok) throw new Error(data.error || 'server_' + res.status);
     document.getElementById('cancel-sub-modal')?.remove();
     window._subscriptionData.cancelAtPeriodEnd = true;
     updateAuthUI();
     if (typeof showStatus === 'function') showStatus('success', 'Désabonnement confirmé. Premium actif jusqu\'à la fin de la période.');
   } catch (err) {
+    console.error('[cancel-sub] erreur:', err.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Se désabonner'; }
     const msg = err.message === 'no_sub'
       ? 'Aucun abonnement Stripe trouvé pour ce compte.'
