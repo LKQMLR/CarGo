@@ -1,4 +1,4 @@
-const CACHE = 'cargo-v171';
+const CACHE = 'cargo-v172';
 const ASSETS = [
   './index.html', './manifest.json',
   './css/variables.css', './css/layout.css', './css/components.css',
@@ -23,8 +23,9 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Ne pas intercepter les requêtes externes
-  if (e.request.url.includes('googleapis.com') || e.request.url.includes('gstatic.com') || e.request.url.includes('googlesyndication.com') || e.request.url.includes('doubleclick.net') || e.request.url.includes('vercel.app')) return;
+  // Ne pas intercepter les POST ni les requêtes externes
+  if (e.request.method !== 'GET') return;
+  if (e.request.url.includes('googleapis.com') || e.request.url.includes('gstatic.com') || e.request.url.includes('googlesyndication.com') || e.request.url.includes('doubleclick.net') || e.request.url.includes('vercel.app') || e.request.url.includes('supabase.co') || e.request.url.includes('jsdelivr.net')) return;
 
   // Cache-first : réponse instantanée depuis le cache, mise à jour réseau en arrière-plan
   e.respondWith(
