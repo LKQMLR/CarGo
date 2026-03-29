@@ -309,8 +309,7 @@ async function confirmCancelSubscription() {
       : 'https://cargo-api-seven.vercel.app';
     const res  = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`);
     const data = await res.json().catch(() => ({}));
-    if (res.status === 404) throw new Error('no_sub');
-    if (!res.ok) throw new Error(data.error || 'server_' + res.status);
+    if (!res.ok) throw new Error(res.status === 404 ? 'no_sub' : data.error || 'server_' + res.status);
     document.getElementById('cancel-sub-modal')?.remove();
     window._subscriptionData.cancelAtPeriodEnd = true;
     updateAuthUI();
