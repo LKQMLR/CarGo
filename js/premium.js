@@ -237,7 +237,8 @@ function showPremiumModal() {
       </div>
       <input type="email" id="premium-email" placeholder="Votre adresse email" value="${savedEmail}" ${emailReadonly} />
       <button class="premium-subscribe" onclick="subscribePremium()">S\u2019abonner \u2014 Standard 12,99\u20ac/mois</button>
-      <button class="premium-coming-soon" disabled>Pro \u2014 Bient\u00f4t disponible</button>
+      <button class="premium-coming-soon" disabled>Pro 24,99\u20ac/mois \u2014 Bient\u00f4t disponible</button>
+      <button class="premium-coming-soon" disabled>Passe journ\u00e9e 1,99\u20ac \u2014 Bient\u00f4t disponible</button>
       <p class="premium-legal">Paiement s\u00e9curis\u00e9 via Stripe. Annulable \u00e0 tout moment.</p>
     </div>
   `;
