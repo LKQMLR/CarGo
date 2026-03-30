@@ -4,7 +4,7 @@
    limites freemium
    ══════════════════════════════════════════ */
 
-const CARGO_API = 'https://cargo-api-fresh.vercel.app';
+const CARGO_API = 'https://cargo-api-v2.vercel.app';
 const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRSiDOjAwsaG3vhTL0RLwn22qeDns7afLlPlh3z00JJMuTqFx';
 
 // État premium — valeur privée non accessible directement depuis la console

@@ -316,7 +316,7 @@ async function confirmCancelSubscription() {
 
   try {
     const CARGO_API = typeof window.CARGO_API !== 'undefined' ? window.CARGO_API
-      : 'https://cargo-api-fresh.vercel.app';
+      : 'https://cargo-api-v2.vercel.app';
     const token = await getAuthToken();
     const res  = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
