@@ -20,10 +20,16 @@ function initAuth() {
     if (_authUser) {
       fetchProfile(_authUser.id);
       if (typeof checkPremiumStatus === 'function') checkPremiumStatus(_authUser.email);
+      // Re-vérification premium périodique toutes les 10 minutes
+      if (window._premiumRecheck) clearInterval(window._premiumRecheck);
+      window._premiumRecheck = setInterval(() => {
+        if (_authUser && typeof checkPremiumStatus === 'function') checkPremiumStatus(_authUser.email);
+      }, 10 * 60 * 1000);
     } else {
       _userProfile = null;
       updateAuthUI();
       if (typeof applyPremium === 'function') applyPremium(false);
+      if (window._premiumRecheck) { clearInterval(window._premiumRecheck); window._premiumRecheck = null; }
     }
   });
 
@@ -50,6 +56,13 @@ function initAuth() {
 
 // ── Accesseur utilisateur courant ──
 function getAuthUser() { return _authUser; }
+
+// ── Accesseur token JWT courant ──
+async function getAuthToken() {
+  if (!_supabase) return null;
+  const { data: { session } } = await _supabase.auth.getSession();
+  return session?.access_token || null;
+}
 
 // ── Récupérer le profil (pseudo) ──
 async function fetchProfile(userId) {
@@ -304,7 +317,10 @@ async function confirmCancelSubscription() {
   try {
     const CARGO_API = typeof window.CARGO_API !== 'undefined' ? window.CARGO_API
       : 'https://cargo-api-fresh.vercel.app';
-    const res  = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`);
+    const token = await getAuthToken();
+    const res  = await fetch(`${CARGO_API}/api/cancel-subscription?email=${encodeURIComponent(email)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(res.status === 404 ? 'no_sub' : data.error || 'server_' + res.status);
     document.getElementById('cancel-sub-modal')?.remove();

@@ -7,30 +7,15 @@
 const CARGO_API = 'https://cargo-api-fresh.vercel.app';
 const STRIPE_PK = 'pk_live_51TEmxgRKxWKosInIe4Dbq4b13mbpMOrQabMsIy2B7pOYJKVw6FRSiDOjAwsaG3vhTL0RLwn22qeDns7afLlPlh3z00JJMuTqFx';
 
-// Hash SHA-256 des emails propriétaire (premium gratuit, non lisible)
-const OWNER_HASHES = ['10780fdbd1fbc4d15ff792fa79466263f73f368bde5a3a3d0032d2ed69afdf46'];
-
-// État premium en mémoire — seul le serveur peut le mettre à true
-let _premiumVerified = false;
+// État premium — valeur privée non accessible directement depuis la console
+const _premiumState = (() => { let _v = false; return { get: () => _v, set: (v) => { _v = (v === true); } }; })();
 
 // Données d'abonnement enrichies (date de fin, annulation en cours…)
 window._subscriptionData = { active: false, currentPeriodEnd: null, cancelAtPeriodEnd: false };
 
-// ── SHA-256 hash ──
-async function sha256(str) {
-  const buf = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function isOwnerEmail(email) {
-  const hash = await sha256(email.toLowerCase());
-  return OWNER_HASHES.includes(hash);
-}
-
 // ── Vérifier si l'utilisateur est premium ──
 function isPremium() {
-  return _premiumVerified;
+  return _premiumState.get();
 }
 
 // ── Limites par plan ──
@@ -91,20 +76,12 @@ function showLimitAlert(_, message) {
 // ── Vérifier le statut premium au lancement ──
 function initPremium() {
   // Par défaut : pas premium — l'auth listener déclenche checkPremiumStatus si l'utilisateur est connecté
-  _premiumVerified = false;
+  _premiumState.set(false);
   applyPremium(false);
 }
 
 // ── Vérifier l'abonnement côté serveur ──
 async function checkPremiumStatus(email) {
-  // Ne pas vérifier côté serveur si c'est un email propriétaire
-  if (await isOwnerEmail(email)) {
-    _premiumVerified = true;
-    window._subscriptionData = { active: true, currentPeriodEnd: null, cancelAtPeriodEnd: false, isOwner: true };
-    applyPremium(true);
-    if (typeof updateAuthUI === 'function') updateAuthUI();
-    return;
-  }
   try {
     const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`);
     if (!res.ok) {
@@ -112,13 +89,13 @@ async function checkPremiumStatus(email) {
       return;
     }
     const data = await res.json();
-    _premiumVerified = !!data.premium;
+    _premiumState.set(!!data.premium);
     window._subscriptionData = {
       active:            !!data.premium,
       currentPeriodEnd:  data.currentPeriodEnd  || null,
       cancelAtPeriodEnd: !!data.cancelAtPeriodEnd,
     };
-    applyPremium(_premiumVerified);
+    applyPremium(_premiumState.get());
     if (typeof updateAuthUI === 'function') updateAuthUI();
   } catch {
     // Erreur réseau — rester sur non-premium par sécurité
@@ -160,7 +137,7 @@ function updatePremiumUI(isPremium) {
   if (!btn) return;
 
   // Utiliser l'état mémoire, jamais localStorage
-  const premium = typeof isPremium === 'boolean' ? isPremium : _premiumVerified;
+  const premium = typeof isPremium === 'boolean' ? isPremium : _premiumState.get();
 
   if (premium) {
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Standard actif \u2014 G\u00e9rer';
@@ -273,24 +250,26 @@ async function subscribePremium() {
     return;
   }
 
-  // Bypass propriétaire : activer premium sans payer
-  if (await isOwnerEmail(email)) {
-    _premiumVerified = true;
-    applyPremium(true);
-    closePremiumModal();
-    showStatus('success', 'Premium activ\u00e9 !');
-    return;
-  }
-
   const btn = document.querySelector('.premium-subscribe');
   btn.textContent = 'Redirection...';
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${CARGO_API}/api/create-checkout?email=${encodeURIComponent(email)}`);
+    const token = typeof getAuthToken === 'function' ? await getAuthToken() : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${CARGO_API}/api/create-checkout?email=${encodeURIComponent(email)}`, { headers });
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    // Propriétaire reconnu côté serveur
+    if (data.owner) {
+      _premiumState.set(true);
+      applyPremium(true);
+      closePremiumModal();
+      if (typeof showStatus === 'function') showStatus('success', 'Premium activé !');
+      btn.textContent = "S'abonner"; btn.disabled = false;
+      return;
+    }
     if (!data.url) throw new Error('URL de paiement manquante');
     window.location.href = data.url;
   } catch (err) {
@@ -308,15 +287,10 @@ async function managePremium() {
     showStatus('error', 'Connectez-vous pour gérer votre abonnement.');
     return;
   }
-  // Les emails owner : toggle premium on/off
-  if (await isOwnerEmail(email)) {
-    _premiumVerified = false;
-    applyPremium(false);
-    showStatus('success', 'Premium d\u00e9sactiv\u00e9. Cliquez sur "Passer Premium" pour r\u00e9activer.');
-    return;
-  }
   try {
-    const res = await fetch(`${CARGO_API}/api/customer-portal?email=${encodeURIComponent(email)}`);
+    const token = typeof getAuthToken === 'function' ? await getAuthToken() : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${CARGO_API}/api/customer-portal?email=${encodeURIComponent(email)}`, { headers });
     if (!res.ok) throw new Error();
     const data = await res.json();
     window.location.href = data.url;
