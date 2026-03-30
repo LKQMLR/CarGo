@@ -83,7 +83,9 @@ function initPremium() {
 // ── Vérifier l'abonnement côté serveur ──
 async function checkPremiumStatus(email) {
   try {
-    const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`);
+    const token = typeof getAuthToken === 'function' ? await getAuthToken() : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`, { headers });
     if (!res.ok) {
       applyPremium(false);
       return;
