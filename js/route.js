@@ -75,11 +75,17 @@ function displayRoute(stops) {
         icons: [{ icon: arrowIcon, offset: '0', repeat: '80px' }], zIndex: 2
       });
       if (state.previewMap) {
+        // Trajet aperçu : uniquement du point 1 au dernier point (pas le leg départ→1)
+        const previewPath = [];
+        allLegs.slice(1).forEach(leg => {
+          leg.steps.forEach(step => step.path.forEach(p => previewPath.push(p)));
+        });
+        const previewSource = previewPath.length > 0 ? previewPath : path;
         state._routePolyPreview = new google.maps.Polyline({
-          path, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 4, strokeOpacity: 1
+          path: previewSource, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 4, strokeOpacity: 1
         });
         const bounds = new google.maps.LatLngBounds();
-        path.forEach(p => bounds.extend(p));
+        previewSource.forEach(p => bounds.extend(p));
         state._routeBounds = bounds;
         state.previewMap.fitBounds(bounds, 20);
         // Verrouiller l'aperçu sur le trajet — re-cadre si l'utilisateur déplace
