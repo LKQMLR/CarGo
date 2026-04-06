@@ -111,20 +111,22 @@ function displayRoute(stops) {
         // Labels noms de rues du trajet
         if (state._routeLabels) { state._routeLabels.forEach(l => l.setMap(null)); }
         state._routeLabels = [];
-        const seen = new Set();
-        allLegs.forEach(leg => {
-          leg.steps.forEach(step => {
-            if (step.distance.value < 80) return;
-            const match = step.instructions.match(/<b>(.*?)<\/b>/);
-            if (!match) return;
-            const name = match[1].replace(/<[^>]+>/g, '').trim();
-            if (!name || seen.has(name)) return;
-            seen.add(name);
-            const midIdx = Math.floor(step.path.length / 2);
-            const pos = step.path[midIdx] || step.start_location;
-            state._routeLabels.push(makeRouteStreetLabel(pos, name, state.previewMap));
+        try {
+          const seen = new Set();
+          allLegs.forEach(leg => {
+            leg.steps.forEach(step => {
+              if (!step.path || !step.distance || step.distance.value < 80) return;
+              const match = step.instructions ? step.instructions.match(/<b>(.*?)<\/b>/) : null;
+              if (!match) return;
+              const name = match[1].replace(/<[^>]+>/g, '').trim();
+              if (!name || seen.has(name)) return;
+              seen.add(name);
+              const midIdx = Math.floor(step.path.length / 2);
+              const pos = step.path[midIdx] || step.start_location;
+              if (pos) state._routeLabels.push(makeRouteStreetLabel(pos, name, state.previewMap));
+            });
           });
-        });
+        } catch (e) { /* labels non critiques */ }
       }
 
       // Placer les markers
