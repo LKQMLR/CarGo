@@ -75,19 +75,15 @@ function displayRoute(stops) {
         icons: [{ icon: arrowIcon, offset: '0', repeat: '80px' }], zIndex: 2
       });
       if (state.previewMap) {
-        // Trajet aperçu : uniquement du point 1 au dernier point (pas le leg départ→1)
-        const previewPath = [];
-        allLegs.slice(1).forEach(leg => {
-          leg.steps.forEach(step => step.path.forEach(p => previewPath.push(p)));
-        });
-        const previewSource = previewPath.length > 0 ? previewPath : path;
+        // Polyline aperçu : trajet complet (visuel)
         state._routePolyPreview = new google.maps.Polyline({
-          path: previewSource, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 4, strokeOpacity: 1
+          path, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 4, strokeOpacity: 1
         });
+        // Bounds : uniquement point 1 → dernier point (exclut le point de départ)
         const bounds = new google.maps.LatLngBounds();
-        previewSource.forEach(p => bounds.extend(p));
+        stops.slice(1).forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
         state._routeBounds = bounds;
-        state.previewMap.fitBounds(bounds, 20);
+        state.previewMap.fitBounds(bounds, 32);
         // Verrouiller l'aperçu sur le trajet — re-cadre si l'utilisateur déplace
         google.maps.event.clearListeners(state.previewMap, 'idle');
         state.previewMap.addListener('idle', () => {
