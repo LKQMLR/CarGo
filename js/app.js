@@ -106,10 +106,6 @@ function initApp() {
       map: state.previewMap, suppressMarkers: true,
       polylineOptions: { strokeColor: '#4f8cff', strokeWeight: 4, strokeOpacity: 1 },
     });
-    state.map.addListener('bounds_changed', () => {
-      state.previewMap.setCenter(state.map.getCenter());
-      state.previewMap.setZoom(state.map.getZoom());
-    });
   }
 
   // Autocomplete & adresses fréquentes

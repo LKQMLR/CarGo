@@ -73,6 +73,9 @@ function displayRoute(stops) {
         state._routePolyPreview = new google.maps.Polyline({
           path, map: state.previewMap, strokeColor: '#4f8cff', strokeWeight: 3, strokeOpacity: 0.9
         });
+        const bounds = new google.maps.LatLngBounds();
+        path.forEach(p => bounds.extend(p));
+        state.previewMap.fitBounds(bounds, 16);
       }
 
       // Placer les markers
