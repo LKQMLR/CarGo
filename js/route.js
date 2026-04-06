@@ -6,13 +6,13 @@
 // Couleurs par secteur pour les markers
 const SECTOR_COLS = { 0: '#8896a7', 1: '#3b82f6', 2: '#0d9488', 3: '#d97706', 4: '#db2777', 5: '#7c3aed' };
 
-// ── LABEL RUE SUR CARTE APERÇU ──
-function makeRouteStreetLabel(position, text, map) {
+// ── LABEL DESTINATION SUR CARTE APERÇU ──
+function makeDestLabel(position, text, map) {
   const overlay = new google.maps.OverlayView();
   let div;
   overlay.onAdd = function() {
     div = document.createElement('div');
-    div.style.cssText = 'position:absolute;background:rgba(255,255,255,0.88);padding:1px 5px;border-radius:3px;font-size:8px;font-weight:700;color:#333;white-space:nowrap;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.15)';
+    div.style.cssText = 'position:absolute;background:rgba(15,15,26,0.82);padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;color:#e2e8f0;white-space:nowrap;pointer-events:none;transform:translate(-50%,8px);max-width:90px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.3)';
     div.textContent = text;
     overlay.getPanes().overlayLayer.appendChild(div);
   };
@@ -108,25 +108,13 @@ function displayRoute(stops) {
         });
         state.previewMap.fitBounds(bounds, 20);
 
-        // Labels noms de rues du trajet
+        // Labels destination sous chaque marqueur de la preview
         if (state._routeLabels) { state._routeLabels.forEach(l => l.setMap(null)); }
         state._routeLabels = [];
-        try {
-          const seen = new Set();
-          allLegs.forEach(leg => {
-            leg.steps.forEach(step => {
-              if (!step.path || !step.distance || step.distance.value < 80) return;
-              const match = step.instructions ? step.instructions.match(/<b>(.*?)<\/b>/) : null;
-              if (!match) return;
-              const name = match[1].replace(/<[^>]+>/g, '').trim();
-              if (!name || seen.has(name)) return;
-              seen.add(name);
-              const midIdx = Math.floor(step.path.length / 2);
-              const pos = step.path[midIdx] || step.start_location;
-              if (pos) state._routeLabels.push(makeRouteStreetLabel(pos, name, state.previewMap));
-            });
-          });
-        } catch (e) { /* labels non critiques */ }
+        stops.slice(1).forEach(s => {
+          const short = (s.address || '').replace(/,.*$/, '').trim().substring(0, 22);
+          if (short) state._routeLabels.push(makeDestLabel({ lat: s.lat, lng: s.lng }, short, state.previewMap));
+        });
       }
 
       // Placer les markers
