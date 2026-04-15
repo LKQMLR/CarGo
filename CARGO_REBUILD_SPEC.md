@@ -958,12 +958,46 @@ function tickSimulation() {
 
 ---
 
+## APIs Google Maps à utiliser dans le nouveau projet
+
+Le projet actuel (`livreurGPS`) utilise des APIs Google Maps dépréciées. **Dans le nouveau projet, utiliser directement les nouvelles APIs** pour ne pas accumuler de dette technique.
+
+| Ancienne API (à ne pas utiliser) | Nouvelle API à utiliser |
+|---|---|
+| `google.maps.Marker` | `google.maps.marker.AdvancedMarkerElement` |
+| `google.maps.places.Autocomplete` | `google.maps.places.PlaceAutocompleteElement` |
+| `google.maps.DirectionsService` | `google.maps.routes.RoutesService` |
+| `google.maps.DirectionsRenderer` | Rendu manuel de la polyline avec `google.maps.Polyline` |
+
+**Note importante sur le chargement Maps** : utiliser le chargement async recommandé par Google :
+```html
+<!-- À la place du script src classique : -->
+<script>
+  (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("key",g.key??"");e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+  ({key: "VOTRE_CLE", v: "weekly"});
+</script>
+```
+
+Puis charger les bibliothèques à la demande :
+```javascript
+async function initApp() {
+  const { Map } = await google.maps.importLibrary('maps');
+  const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
+  const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
+  // ...
+}
+```
+
+**JWT Supabase** : Supabase émet désormais des tokens **ES256** (ECDSA, asymétrique) et non plus HS256. La vérification côté API doit récupérer la clé publique depuis le endpoint JWKS de Supabase (`/auth/v1/.well-known/jwks.json`). Voir la fonction `verifyJWT` complète dans le projet de référence `cargo-api`.
+
+---
+
 ## Règles de sécurité importantes
 
 | Point | Règle |
 |---|---|
 | Clé Google Maps | Restreindre aux referrers GitHub Pages + `com.cargo.app` pour Capacitor |
-| JWT Supabase | Utiliser la clé **Legacy HS256**, pas la clé ECC (Ed25519) |
+| JWT Supabase | Supabase émet des tokens **ES256** — vérifier via JWKS, pas HMAC |
 | Email owner | Uniquement en variable d'env Vercel, jamais dans le code frontend |
 | `_premiumState` | Toujours en closure, jamais `window.premiumState` |
 | `escHtml()` | Utiliser sur tout contenu utilisateur injecté dans le DOM |
