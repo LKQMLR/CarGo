@@ -82,25 +82,28 @@ function initPremium() {
 
 // ── Vérifier l'abonnement côté serveur ──
 async function checkPremiumStatus(email) {
+  // Sécurité : on ne vérifie que l'email de l'utilisateur connecté
+  const authUser = typeof getAuthUser === 'function' ? getAuthUser() : null;
+  if (!authUser || authUser.email !== email) return;
+
   try {
     const token = typeof getAuthToken === 'function' ? await getAuthToken() : null;
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`, { headers });
-    if (!res.ok) {
-      applyPremium(false);
-      return;
-    }
+    if (!token) { applyPremium(false); return; }
+    const res = await fetch(`${CARGO_API}/api/check-subscription?email=${encodeURIComponent(email)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) { applyPremium(false); return; }
     const data = await res.json();
     _premiumState.set(!!data.premium);
     window._subscriptionData = {
       active:            !!data.premium,
       currentPeriodEnd:  data.currentPeriodEnd  || null,
       cancelAtPeriodEnd: !!data.cancelAtPeriodEnd,
+      isOwner:           !!data.isOwner,
     };
     applyPremium(_premiumState.get());
     if (typeof updateAuthUI === 'function') updateAuthUI();
   } catch {
-    // Erreur réseau — rester sur non-premium par sécurité
     applyPremium(false);
   }
 }
