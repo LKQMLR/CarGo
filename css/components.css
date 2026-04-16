@@ -196,6 +196,31 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
   100% { transform: translateY(-50%) scale(1); }
 }
 
+/* ── BOUTON FAVORIS GAUCHE + CROIX DROITE (delivery-input) ── */
+.delivery-input-wrapper { position: relative; }
+.delivery-input-wrapper #delivery-input { padding-left: 36px; padding-right: 34px; }
+
+.input-fav-btn {
+  position: absolute; left: 7px; top: 50%; transform: translateY(-50%);
+  background: transparent !important; border: none !important;
+  box-shadow: none !important; padding: 3px; z-index: 2;
+  opacity: .4; cursor: pointer; line-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2); transition: opacity .2s; border-radius: 0 !important;
+}
+.input-fav-btn:hover { opacity: .85 !important; background: transparent !important; transform: translateY(-50%) !important; }
+
+.input-clear-btn {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  background: var(--surface3) !important; border: none !important;
+  border-radius: 50% !important; width: 18px; height: 18px;
+  padding: 0; z-index: 2; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2); opacity: .7; transition: opacity .2s;
+  box-shadow: none !important;
+}
+.input-clear-btn:hover { opacity: 1 !important; background: var(--surface2) !important; transform: translateY(-50%) !important; }
+
 /* ── SÉPARATEUR FAVORIS DANS DROPDOWN ── */
 .freq-fav-sep {
   padding: 4px 12px; font-size: .65rem; font-weight: 600;

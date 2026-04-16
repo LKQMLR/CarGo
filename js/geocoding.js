@@ -148,9 +148,8 @@ function showFreqDropdown(inputId, dropdownId) {
 
   const filterFn = a => q.length === 0 || a.formatted.toLowerCase().includes(q) || a.address.toLowerCase().includes(q) || (a.placeName && a.placeName.toLowerCase().includes(q));
 
-  const isStartInput = inputId === 'start-input';
-  const favMatches = isStartInput ? favs.filter(filterFn).slice(0, 5) : [];
-  const recentMatches = all.filter(a => (!isStartInput || !favFormatted.has(a.formatted)) && filterFn(a)).slice(0, 5);
+  const favMatches = favs.filter(filterFn).slice(0, 5);
+  const recentMatches = all.filter(a => !favFormatted.has(a.formatted) && filterFn(a)).slice(0, 5);
 
   if (!favMatches.length && !recentMatches.length) { dd.classList.remove('visible'); return; }
 
@@ -184,6 +183,7 @@ function showFreqDropdown(inputId, dropdownId) {
       input.dataset.resolved = 'true';
       dd.classList.remove('visible');
       if (inputId === 'start-input') updateFavStar();
+      if (inputId === 'delivery-input') _updateDeliveryClear();
     });
   });
 }
@@ -191,8 +191,27 @@ function showFreqDropdown(inputId, dropdownId) {
 function setupFreqDropdown(inputId, dropdownId) {
   const input = document.getElementById(inputId);
   input.addEventListener('focus', () => showFreqDropdown(inputId, dropdownId));
-  input.addEventListener('input', () => { showFreqDropdown(inputId, dropdownId); if (inputId === 'start-input') updateFavStar(); });
+  input.addEventListener('input', () => {
+    showFreqDropdown(inputId, dropdownId);
+    if (inputId === 'start-input') updateFavStar();
+    if (inputId === 'delivery-input') _updateDeliveryClear();
+  });
   input.addEventListener('blur', () => { setTimeout(() => document.getElementById(dropdownId).classList.remove('visible'), 150); });
+}
+
+function _updateDeliveryClear() {
+  const btn = document.getElementById('delivery-clear');
+  const input = document.getElementById('delivery-input');
+  if (btn) btn.style.display = input.value.trim() ? 'flex' : 'none';
+}
+
+function clearDeliveryInput() {
+  const input = document.getElementById('delivery-input');
+  input.value = '';
+  input.dataset.lat = ''; input.dataset.lng = '';
+  input.dataset.formatted = ''; input.dataset.resolved = '';
+  _updateDeliveryClear();
+  input.focus();
 }
 
 function saveNoteToFrequent(formatted, note) {
