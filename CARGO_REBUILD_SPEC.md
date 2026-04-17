@@ -311,6 +311,40 @@ function initAutocomplete(inputId) {
 
 Appeler `initAutocomplete()` depuis `initApp()` après initialisation Maps.
 
+**Structure du champ d'ajout d'adresse** (`delivery-input`) :
+
+Le champ a trois éléments dans un `input-wrapper` :
+- **Bouton étoile à gauche** : clic → ouvre le dropdown favoris/récents (`showFreqDropdown`)
+- **Input texte** : padding-left et padding-right ajustés pour les deux boutons
+- **Croix en cercle à droite** : visible uniquement quand le champ a du texte, vide le champ
+
+```html
+<div class="input-wrapper delivery-input-wrapper">
+  <button class="input-fav-btn" onclick="showFreqDropdown('delivery-input','freq-delivery')"><!-- étoile SVG --></button>
+  <input type="text" id="delivery-input" placeholder="Ajouter une adresse..." />
+  <button class="input-clear-btn" id="delivery-clear" onclick="clearDeliveryInput()" style="display:none"><!-- × SVG --></button>
+  <div class="freq-dropdown" id="freq-delivery"></div>
+</div>
+```
+
+```javascript
+function clearDeliveryInput() {
+  const input = document.getElementById('delivery-input');
+  input.value = '';
+  input.dataset.lat = ''; input.dataset.lng = '';
+  input.dataset.formatted = ''; input.dataset.resolved = '';
+  _updateDeliveryClear();
+  input.focus();
+}
+function _updateDeliveryClear() {
+  const btn = document.getElementById('delivery-clear');
+  const input = document.getElementById('delivery-input');
+  if (btn) btn.style.display = input.value.trim() ? 'flex' : 'none';
+}
+```
+
+**Favoris dans le dropdown** : `showFreqDropdown` affiche les favoris **pour tous les champs** (pas seulement le champ départ). Le dropdown trie : favoris en haut (étoile pleine), récents en dessous (étoile vide).
+
 **Modèle d'une livraison** :
 ```javascript
 {
