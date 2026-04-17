@@ -196,9 +196,21 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
   100% { transform: translateY(-50%) scale(1); }
 }
 
-/* ── CROIX CLEAR DROITE (delivery-input) ── */
+/* ── DELIVERY INPUT ── */
 .delivery-input-wrapper { position: relative; }
-.delivery-input-wrapper #delivery-input { padding-right: 34px; }
+#delivery-input {
+  padding: 11px 34px 11px 13px;
+  font-size: .9rem;
+  border: 1.5px solid rgba(255,255,255,0.13);
+  border-radius: 10px;
+  background: var(--surface2);
+  box-shadow: 0 1px 6px rgba(0,0,0,.18);
+  transition: border-color .2s, box-shadow .2s;
+}
+#delivery-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,140,255,.13);
+}
 
 .input-clear-btn {
   position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
