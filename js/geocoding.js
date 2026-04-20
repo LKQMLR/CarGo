@@ -7,7 +7,6 @@
 function setupAutocomplete(inputId) {
   const input = document.getElementById(inputId);
   const ac = new google.maps.places.Autocomplete(input, {
-    componentRestrictions: { country: 'fr' },
     fields: ['formatted_address', 'geometry', 'name', 'types']
   });
   input._autocomplete = ac;
