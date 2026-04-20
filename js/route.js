@@ -12,7 +12,7 @@ function makeDestLabel(position, text, map) {
   let div;
   overlay.onAdd = function() {
     div = document.createElement('div');
-    div.style.cssText = 'position:absolute;background:rgba(15,15,26,0.82);padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;color:#e2e8f0;white-space:nowrap;pointer-events:none;transform:translate(-50%,8px);max-width:90px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.3)';
+    div.style.cssText = 'position:absolute;background:rgba(15,15,26,0.82);padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;color:#e2e8f0;white-space:nowrap;pointer-events:none;transform:translate(-50%,8px);max-width:90px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.3);opacity:0;transition:opacity .25s';
     div.textContent = text;
     overlay.getPanes().overlayLayer.appendChild(div);
   };
