@@ -48,7 +48,8 @@ function twoOpt(tour, mx) {
 }
 
 // ── GOOGLE DIRECTIONS OPTIMIZE (avec timeout) ──
-function googleOptimize(origin, deliveries) {
+// target : point optionnel vers lequel orienter la fin du trajet (centroïde du secteur suivant)
+function googleOptimize(origin, deliveries, target) {
   return new Promise((resolve) => {
     let done = false;
     // Timeout 15s — fallback local si Google ne répond pas
@@ -59,14 +60,24 @@ function googleOptimize(origin, deliveries) {
       resolve(tour.slice(1).map(i => all[i]));
     }, 15000);
 
-    // Point le plus éloigné comme destination (route linéaire)
-    let farthestIdx = 0, farthestDist = 0;
-    deliveries.forEach((d, i) => {
-      const dist = haversine(origin, d);
-      if (dist > farthestDist) { farthestDist = dist; farthestIdx = i; }
-    });
-    const dest = deliveries[farthestIdx];
-    const others = deliveries.filter((_, i) => i !== farthestIdx);
+    // Destination : point le plus proche du secteur suivant (si connu),
+    // sinon le plus éloigné de l'origine (route linéaire classique)
+    let destIdx = 0;
+    if (target) {
+      let minDist = Infinity;
+      deliveries.forEach((d, i) => {
+        const dist = haversine(target, d);
+        if (dist < minDist) { minDist = dist; destIdx = i; }
+      });
+    } else {
+      let maxDist = 0;
+      deliveries.forEach((d, i) => {
+        const dist = haversine(origin, d);
+        if (dist > maxDist) { maxDist = dist; destIdx = i; }
+      });
+    }
+    const dest = deliveries[destIdx];
+    const others = deliveries.filter((_, i) => i !== destIdx);
     const wps = others.map(d => ({ location: { lat: d.lat, lng: d.lng }, stopover: true }));
     state.directionsService.route({
       origin: { lat: origin.lat, lng: origin.lng },
@@ -91,15 +102,17 @@ function googleOptimize(origin, deliveries) {
 }
 
 // ── OPTIMISATION PAR SEGMENT (batching >23 waypoints) ──
-async function optimizeSegment(origin, deliveries) {
+// target : point vers lequel orienter la fin (passé au dernier lot uniquement)
+async function optimizeSegment(origin, deliveries, target) {
   if (deliveries.length <= 1) return deliveries;
-  if (deliveries.length <= 23) return await googleOptimize(origin, deliveries);
-  // >23 : découpage en lots chaînés
+  if (deliveries.length <= 23) return await googleOptimize(origin, deliveries, target);
+  // >23 : découpage en lots chaînés — seul le dernier lot reçoit le target
   const batches = [];
   for (let i = 0; i < deliveries.length; i += 23) batches.push(deliveries.slice(i, i + 23));
   let result = [], prevEnd = origin;
-  for (const batch of batches) {
-    const opt = await googleOptimize(prevEnd, batch);
+  for (let bi = 0; bi < batches.length; bi++) {
+    const batchTarget = bi === batches.length - 1 ? target : null;
+    const opt = await googleOptimize(prevEnd, batches[bi], batchTarget);
     result.push(...opt);
     prevEnd = opt[opt.length - 1];
   }
@@ -121,7 +134,11 @@ async function optimizeRoute() {
   setUIBusy(true); showStatus('loading', 'Optimisation...');
   document.getElementById('results-panel').classList.remove('visible');
 
-  if (state.deliveries.length === 1) { displayRoute([state.startPoint, state.deliveries[0]]); return; }
+  if (state.deliveries.length === 1) {
+    displayRoute([state.startPoint, state.deliveries[0]]);
+    _optimizeLocked = false;
+    return;
+  }
 
   try {
 
@@ -170,8 +187,19 @@ async function optimizeRoute() {
 
       optimized = [];
       let segPrev = prevEnd;
-      for (const s of sectorOrder) {
-        const opt = await optimizeSegment(segPrev, groups[s]);
+      for (let si2 = 0; si2 < sectorOrder.length; si2++) {
+        const s = sectorOrder[si2];
+        const nextS = sectorOrder[si2 + 1];
+        // Centroïde du secteur suivant → orienter la fin du secteur courant vers lui
+        let nextCenter = null;
+        if (nextS !== undefined && groups[nextS]) {
+          const pts = groups[nextS];
+          nextCenter = {
+            lat: pts.reduce((sum, d) => sum + d.lat, 0) / pts.length,
+            lng: pts.reduce((sum, d) => sum + d.lng, 0) / pts.length,
+          };
+        }
+        const opt = await optimizeSegment(segPrev, groups[s], nextCenter);
         optimized.push(...opt);
         segPrev = opt[opt.length - 1];
       }
