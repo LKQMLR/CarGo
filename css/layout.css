@@ -121,5 +121,5 @@
 }
 
 /* ── AUTOCOMPLETE GOOGLE ── */
-.pac-container { z-index: 10001 !important; }
+.pac-container { z-index: 10025 !important; }
 .pac-container[style*="display: none"] { pointer-events: none !important; height: 0 !important; overflow: hidden !important; }

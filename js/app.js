@@ -111,12 +111,28 @@ function initApp() {
   // Autocomplete & adresses fréquentes
   setupAutocomplete('start-input');
   setupAutocomplete('delivery-input');
+  setupAutocomplete('delivery-overlay-input');
   setupFreqDropdown('start-input', 'freq-start');
   setupFreqDropdown('delivery-input', 'freq-delivery');
+  setupFreqDropdown('delivery-overlay-input', 'freq-delivery-overlay');
 
   // Raccourcis clavier
   document.getElementById('start-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleSetStart(); });
   document.getElementById('delivery-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleAddDelivery(); });
+  document.getElementById('delivery-overlay-input').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDeliveryOverlay(); return; }
+    if (e.key === 'Enter') {
+      const oi = document.getElementById('delivery-overlay-input');
+      _syncOverlayToMain(oi);
+      closeDeliveryOverlay();
+      setTimeout(() => handleAddDelivery(), 80);
+    }
+  });
+
+  // Ouvrir l'overlay au tap sur l'input livraison
+  const deliveryInput = document.getElementById('delivery-input');
+  deliveryInput.addEventListener('mousedown', e => { e.preventDefault(); openDeliveryOverlay(); });
+  deliveryInput.addEventListener('touchstart', e => { e.preventDefault(); openDeliveryOverlay(); }, { passive: false });
   document.getElementById('save-history-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveToHistory(); if (e.key === 'Escape') closeSaveHistoryModal(); });
 
   // Préférences carte

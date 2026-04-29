@@ -232,6 +232,38 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 .freq-item.is-fav .freq-icon { color: var(--yellow); }
 .freq-item.is-recent .freq-icon { color: var(--text2); opacity: .5; }
 
+/* ── OVERLAY SAISIE ADRESSE (Google Maps style) ── */
+#delivery-overlay {
+  display: none; position: fixed; inset: 0; z-index: 10020;
+  background: var(--surface); flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+#delivery-overlay.visible { display: flex; }
+#delivery-overlay-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+#delivery-overlay-back {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  flex-shrink: 0; display: flex; align-items: center; line-height: 0;
+  box-shadow: none !important;
+}
+.delivery-overlay-input-wrapper input {
+  padding: 10px 34px 10px 13px; font-size: .9rem;
+  border: 1.5px solid rgba(255,255,255,0.13); border-radius: 10px;
+  background: var(--surface); box-shadow: 0 1px 6px rgba(0,0,0,.18);
+  transition: border-color .2s, box-shadow .2s;
+}
+.delivery-overlay-input-wrapper input:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,140,255,.13); outline: none;
+}
+#delivery-overlay .freq-dropdown {
+  position: static !important; flex: 1; overflow-y: auto;
+  border-radius: 0; border-left: none; border-right: none; border-top: none;
+  max-height: none; box-shadow: none;
+}
+
 /* ── ACTIONS ITINÉRAIRE (texte cliquable) ── */
 .route-actions {
   display: flex; gap: 18px; margin-top: 14px;

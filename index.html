@@ -134,7 +134,7 @@
 							cursor: pointer;
 						"
 						onclick="toggleSimMode()"
-						>v215</span
+						>v216</span
 					>
 				</h1>
 				<p>Planification intelligente de tournées</p>
@@ -897,6 +897,22 @@
 				</div>
 				<div id="history-list"></div>
 			</div>
+		</div>
+
+		<!-- ══════════════ OVERLAY SAISIE ADRESSE ══════════════ -->
+		<div id="delivery-overlay">
+			<div id="delivery-overlay-bar">
+				<button id="delivery-overlay-back" onclick="closeDeliveryOverlay()" aria-label="Retour">
+					<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 8-4 4 4 4"/><path d="M16 12H8"/></svg>
+				</button>
+				<div class="input-wrapper delivery-overlay-input-wrapper">
+					<input type="text" id="delivery-overlay-input" placeholder="Ajouter une adresse..." autocomplete="off" />
+					<button type="button" class="input-clear-btn" id="delivery-overlay-clear" onclick="clearDeliveryOverlayInput()" tabindex="-1" style="display:none" title="Effacer">
+						<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+					</button>
+				</div>
+			</div>
+			<div class="freq-dropdown" id="freq-delivery-overlay"></div>
 		</div>
 
 		<!-- ══════════════ SCRIPTS ══════════════ -->

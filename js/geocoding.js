@@ -35,16 +35,27 @@ function setupAutocomplete(inputId) {
   if (inputId === 'start-input') {
     ac.addListener('place_changed', () => { setTimeout(() => updateFavStar(), 50); });
   }
+  if (inputId === 'delivery-overlay-input') {
+    ac.addListener('place_changed', () => {
+      const overlayInput = document.getElementById('delivery-overlay-input');
+      if (!overlayInput.dataset.resolved) return;
+      _syncOverlayToMain(overlayInput);
+      closeDeliveryOverlay();
+      setTimeout(() => handleAddDelivery(), 80);
+    });
+  }
 }
 
 // ── BIAIS AUTOCOMPLETE (proximity soft-bias, toutes adresses FR accessibles) ──
 function updateAutocompleteBias() {
   if (!state.startPoint) return;
   const center = new google.maps.LatLng(state.startPoint.lat, state.startPoint.lng);
-  const el = document.getElementById('delivery-input');
-  if (el._autocomplete) {
-    el._autocomplete.setOptions({ location: center, radius: 30000, strictBounds: false });
-  }
+  ['delivery-input', 'delivery-overlay-input'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el._autocomplete) {
+      el._autocomplete.setOptions({ location: center, radius: 30000, strictBounds: false });
+    }
+  });
 }
 
 // ── GÉOCODAGE ──
@@ -180,6 +191,11 @@ function showFreqDropdown(inputId, dropdownId) {
       dd.classList.remove('visible');
       if (inputId === 'start-input') updateFavStar();
       if (inputId === 'delivery-input') _updateDeliveryClear();
+      if (inputId === 'delivery-overlay-input') {
+        _syncOverlayToMain(input);
+        closeDeliveryOverlay();
+        setTimeout(() => handleAddDelivery(), 80);
+      }
     });
   });
 }
@@ -191,6 +207,7 @@ function setupFreqDropdown(inputId, dropdownId) {
     showFreqDropdown(inputId, dropdownId);
     if (inputId === 'start-input') updateFavStar();
     if (inputId === 'delivery-input') _updateDeliveryClear();
+    if (inputId === 'delivery-overlay-input') _updateOverlayClear();
   });
   input.addEventListener('blur', () => { setTimeout(() => document.getElementById(dropdownId).classList.remove('visible'), 150); });
 }
@@ -214,4 +231,53 @@ function saveNoteToFrequent(formatted, note) {
   const list = getFrequentAddresses();
   const ex = list.find(a => a.formatted === formatted);
   if (ex) { ex.note = note; localStorage.setItem('cargo_freqAddr', JSON.stringify(list)); }
+}
+
+// ── OVERLAY SAISIE ADRESSE ──
+function _syncOverlayToMain(overlayInput) {
+  const main = document.getElementById('delivery-input');
+  main.value = overlayInput.value;
+  main.dataset.lat = overlayInput.dataset.lat || '';
+  main.dataset.lng = overlayInput.dataset.lng || '';
+  main.dataset.formatted = overlayInput.dataset.formatted || '';
+  main.dataset.placeName = overlayInput.dataset.placeName || '';
+  main.dataset.resolved = overlayInput.dataset.resolved || '';
+}
+
+function openDeliveryOverlay() {
+  const overlay = document.getElementById('delivery-overlay');
+  const input = document.getElementById('delivery-overlay-input');
+  overlay.classList.add('visible');
+  if (state.startPoint && input._autocomplete) {
+    const center = new google.maps.LatLng(state.startPoint.lat, state.startPoint.lng);
+    input._autocomplete.setOptions({ location: center, radius: 30000, strictBounds: false });
+  }
+  setTimeout(() => { input.focus(); showFreqDropdown('delivery-overlay-input', 'freq-delivery-overlay'); }, 50);
+}
+
+function closeDeliveryOverlay() {
+  const overlay = document.getElementById('delivery-overlay');
+  overlay.classList.remove('visible');
+  const input = document.getElementById('delivery-overlay-input');
+  input.value = '';
+  input.dataset.lat = ''; input.dataset.lng = '';
+  input.dataset.formatted = ''; input.dataset.resolved = ''; input.dataset.placeName = '';
+  document.getElementById('delivery-overlay-clear').style.display = 'none';
+  document.getElementById('freq-delivery-overlay').classList.remove('visible');
+}
+
+function clearDeliveryOverlayInput() {
+  const input = document.getElementById('delivery-overlay-input');
+  input.value = '';
+  input.dataset.lat = ''; input.dataset.lng = '';
+  input.dataset.formatted = ''; input.dataset.resolved = '';
+  _updateOverlayClear();
+  showFreqDropdown('delivery-overlay-input', 'freq-delivery-overlay');
+  input.focus();
+}
+
+function _updateOverlayClear() {
+  const btn = document.getElementById('delivery-overlay-clear');
+  const input = document.getElementById('delivery-overlay-input');
+  if (btn) btn.style.display = input.value.trim() ? 'flex' : 'none';
 }
