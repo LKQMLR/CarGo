@@ -261,18 +261,27 @@ function renderRouteSteps() {
 }
 
 // ── MARKER INFO (tap = scale 1.3× + InfoWindow, double-tap = cycle secteur) ──
+// Le délai 250ms est indispensable : l'InfoWindow ouverte couvre le marker label,
+// rendant le 2e tap invisible pour l'API Maps. Le délai laisse la fenêtre fermée
+// pendant la détection du double-tap.
 var _mic = { currentId: null, enlargedMarker: null, infoWindow: null, mapCloseListener: null };
-var _lastMarkerTap = { id: null, time: 0 };
+var _tapTimer = null;
+var _tapTargetId = null;
 
 function _onDeliveryMarkerClick(delivery, marker, rank) {
-  const now = Date.now();
-  if (_lastMarkerTap.id === delivery.id && now - _lastMarkerTap.time < 350) {
+  if (_tapTimer && _tapTargetId === delivery.id) {
+    // 2e tap sur le même marker dans les 250ms → double-tap
+    clearTimeout(_tapTimer); _tapTimer = null; _tapTargetId = null;
     cycleSectorFromMap(delivery.id);
-    _lastMarkerTap = { id: null, time: 0 };
     return;
   }
-  _lastMarkerTap = { id: delivery.id, time: now };
-  showMarkerInfo(delivery, marker, rank);
+  // Annuler tout timer en cours (changement de marker)
+  if (_tapTimer) { clearTimeout(_tapTimer); _tapTimer = null; }
+  _tapTargetId = delivery.id;
+  _tapTimer = setTimeout(() => {
+    _tapTimer = null; _tapTargetId = null;
+    showMarkerInfo(delivery, marker, rank);
+  }, 250);
 }
 
 function _restoreMarkerIcon(id) {
@@ -290,85 +299,106 @@ function _restoreMarkerIcon(id) {
 
 function _createMarkerInfoContent(delivery, rank) {
   const sec = delivery.sector || 0;
-  const secNames = ['Aucun', 'Secteur 1', 'Secteur 2', 'Secteur 3', 'Secteur 4', 'Secteur 5'];
-  const secBg = ['#475569', '#3b82f6', '#0d9488', '#d97706', '#db2877', '#7c3aed'];
+  const secCols = [null, '#3b82f6', '#0d9488', '#d97706', '#db2877', '#7c3aed'];
+  const secCol = secCols[sec];
 
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'width:248px;padding:12px 14px;box-sizing:border-box;';
+  wrap.style.cssText = 'width:240px;box-sizing:border-box;overflow:hidden;border-radius:12px;';
 
+  // Bande colorée en haut (secteur 1-5 uniquement)
+  if (secCol) {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'height:3px;background:' + secCol + ';';
+    wrap.appendChild(bar);
+  }
+
+  const inner = document.createElement('div');
+  inner.style.cssText = 'padding:11px 13px;';
+  wrap.appendChild(inner);
+
+  // Adresse
   const mainText = delivery.placeName || delivery.formatted || delivery.address || '';
   const subText = delivery.placeName
     ? (delivery.formatted || delivery.address || '').replace(/,\s*\d{5}.*$/, '').trim()
     : '';
-
   const addrEl = document.createElement('div');
-  addrEl.style.cssText = 'font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:' + (subText ? '2px' : '6px') + ';line-height:1.4;';
+  addrEl.style.cssText = 'font-size:12px;font-weight:700;color:#e2e8f0;line-height:1.4;margin-bottom:' + (subText ? '2px' : '5px') + ';';
   addrEl.textContent = mainText.length > 46 ? mainText.slice(0, 44) + '…' : mainText;
-  wrap.appendChild(addrEl);
-
+  inner.appendChild(addrEl);
   if (subText) {
     const subEl = document.createElement('div');
-    subEl.style.cssText = 'font-size:11px;color:#94a3b8;margin-bottom:6px;';
+    subEl.style.cssText = 'font-size:11px;color:#94a3b8;margin-bottom:5px;';
     subEl.textContent = subText.length > 46 ? subText.slice(0, 44) + '…' : subText;
-    wrap.appendChild(subEl);
+    inner.appendChild(subEl);
   }
 
-  const metaRow = document.createElement('div');
-  metaRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:' + (delivery.note ? '6px' : '10px') + ';flex-wrap:wrap;';
-  const secBadge = document.createElement('span');
-  secBadge.style.cssText = 'padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:' + secBg[sec] + ';color:#fff;';
-  secBadge.textContent = secNames[sec];
-  metaRow.appendChild(secBadge);
-  if (delivery.legDist && delivery.legDur) {
-    const distEl = document.createElement('span');
-    distEl.style.cssText = 'font-size:10px;color:#94a3b8;';
-    distEl.textContent = delivery.legDist + ' · ' + delivery.legDur;
-    metaRow.appendChild(distEl);
+  // Ligne meta : Sx + dist/temps
+  const hasMeta = sec > 0 || (delivery.legDist && delivery.legDur);
+  if (hasMeta) {
+    const meta = document.createElement('div');
+    meta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:' + (delivery.note ? '5px' : '9px') + ';';
+    if (sec > 0 && secCol) {
+      const sl = document.createElement('span');
+      sl.style.cssText = 'font-size:11px;font-weight:800;color:' + secCol + ';letter-spacing:.3px;';
+      sl.textContent = 'S' + sec;
+      meta.appendChild(sl);
+    }
+    if (delivery.legDist && delivery.legDur) {
+      const dt = document.createElement('span');
+      dt.style.cssText = 'font-size:10px;color:#64748b;';
+      dt.textContent = delivery.legDist + ' · ' + delivery.legDur;
+      meta.appendChild(dt);
+    }
+    inner.appendChild(meta);
+  } else if (!delivery.note) {
+    inner.style.paddingBottom = '9px';
   }
-  wrap.appendChild(metaRow);
 
   if (delivery.note) {
     const noteEl = document.createElement('div');
-    noteEl.style.cssText = 'font-size:11px;color:#fbbf24;font-style:italic;margin-bottom:10px;line-height:1.3;';
+    noteEl.style.cssText = 'font-size:11px;color:#fbbf24;font-style:italic;margin-bottom:9px;line-height:1.3;';
     noteEl.textContent = delivery.note;
-    wrap.appendChild(noteEl);
+    inner.appendChild(noteEl);
   }
 
+  // Séparateur
   const hr = document.createElement('div');
-  hr.style.cssText = 'height:1px;background:rgba(255,255,255,.1);margin:0 0 10px;';
-  wrap.appendChild(hr);
+  hr.style.cssText = 'height:1px;background:rgba(255,255,255,.08);margin:0 0 9px;';
+  inner.appendChild(hr);
 
+  // Boutons
   const btns = document.createElement('div');
-  btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+  btns.style.cssText = 'display:flex;gap:6px;align-items:center;';
 
-  const mkBtn = (iconSvg, label, active, onClick) => {
-    const b = document.createElement('button');
-    b.style.cssText = 'display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;' +
-      'border:1px solid ' + (active ? 'rgba(79,140,255,.5)' : 'rgba(255,255,255,.12)') + ';' +
-      'background:' + (active ? 'rgba(79,140,255,.18)' : 'rgba(255,255,255,.06)') + ';' +
-      'color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;line-height:1;';
-    const iconEl = document.createElement('span');
-    iconEl.innerHTML = iconSvg;
-    b.appendChild(iconEl);
-    const labelEl = document.createElement('span');
-    labelEl.textContent = label;
-    b.appendChild(labelEl);
-    b.addEventListener('click', onClick);
-    return b;
-  };
+  // Cadenas — icône seule, carré compact
+  const lockBtn = document.createElement('button');
+  const isLocked = delivery.locked;
+  lockBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex-shrink:0;border-radius:8px;' +
+    'border:1px solid ' + (isLocked ? 'rgba(251,191,36,.35)' : 'rgba(255,255,255,.12)') + ';' +
+    'background:' + (isLocked ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.06)') + ';' +
+    'color:' + (isLocked ? '#fbbf24' : '#64748b') + ';cursor:pointer;';
+  lockBtn.title = isLocked ? 'Libérer cette position' : 'Fixer cette position';
+  lockBtn.innerHTML = isLocked
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+  lockBtn.addEventListener('click', () => _toggleLockFromMap(delivery.id));
+  btns.appendChild(lockBtn);
 
-  const lockIcon = delivery.locked
-    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
-    : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
-  btns.appendChild(mkBtn(lockIcon, delivery.locked ? 'Libérer' : 'Fixer', delivery.locked, () => _toggleLockFromMap(delivery.id)));
+  // Voir dans la liste
+  const listBtn = document.createElement('button');
+  listBtn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:0 10px;height:30px;border-radius:8px;flex:1;' +
+    'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);' +
+    'color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;line-height:1;';
+  listBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">' +
+    '<line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/>' +
+    '<circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/>' +
+    '<circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/>' +
+    '<circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>' +
+    '<span>Voir dans la liste</span>';
+  listBtn.addEventListener('click', () => _scrollToDelivery(delivery.id));
+  btns.appendChild(listBtn);
 
-  const secIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 8 12 12 14 14"/></svg>';
-  btns.appendChild(mkBtn(secIcon, 'Secteur', false, () => cycleSectorFromMap(delivery.id)));
-
-  const listIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>';
-  btns.appendChild(mkBtn(listIcon, 'Dans la liste', false, () => _scrollToDelivery(delivery.id)));
-
-  wrap.appendChild(btns);
+  inner.appendChild(btns);
   return wrap;
 }
 
@@ -388,7 +418,14 @@ function showMarkerInfo(delivery, marker, rank) {
   marker.setZIndex(2000);
   _mic.enlargedMarker = marker;
 
+  const secCols = [null, '#3b82f6', '#0d9488', '#d97706', '#db2877', '#7c3aed'];
   _mic.infoWindow = new google.maps.InfoWindow({ content: _createMarkerInfoContent(delivery, rank) });
+  if (sec > 0 && secCols[sec]) {
+    google.maps.event.addListenerOnce(_mic.infoWindow, 'domready', () => {
+      const iw = document.querySelector('.gm-style-iw-c');
+      if (iw) iw.style.borderColor = secCols[sec];
+    });
+  }
   _mic.infoWindow.open(state.map, marker);
 
   state.map.panTo({ lat: delivery.lat, lng: delivery.lng });
@@ -398,11 +435,11 @@ function showMarkerInfo(delivery, marker, rank) {
 }
 
 function closeMarkerInfo() {
+  if (_tapTimer) { clearTimeout(_tapTimer); _tapTimer = null; _tapTargetId = null; }
   _restoreMarkerIcon(_mic.currentId);
   if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
   _mic.enlargedMarker = null;
   _mic.currentId = null;
-  // _lastMarkerTap intentionally NOT reset — preserves double-tap timing
   if (_mic.mapCloseListener) { google.maps.event.removeListener(_mic.mapCloseListener); _mic.mapCloseListener = null; }
 }
 
