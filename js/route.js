@@ -260,16 +260,13 @@ function renderRouteSteps() {
   document.getElementById('route-steps').innerHTML = html;
 }
 
-// ── MARKER INFO CARD (tap = agrandit bulle SVG inline, double-tap = cycle secteur) ──
-let _micCurrentId   = null;
-let _micEnlargedMarker = null;
-let _micMapCloseListener = null;
-let _lastMarkerTap  = { id: null, time: 0 };
+// ── MARKER INFO (tap = scale 1.3× + InfoWindow, double-tap = cycle secteur) ──
+var _mic = { currentId: null, enlargedMarker: null, infoWindow: null, mapCloseListener: null };
+var _lastMarkerTap = { id: null, time: 0 };
 
 function _onDeliveryMarkerClick(delivery, marker, rank) {
   const now = Date.now();
   if (_lastMarkerTap.id === delivery.id && now - _lastMarkerTap.time < 350) {
-    // Double-tap/clic → cycle secteur (quel que soit l'état d'agrandissement)
     cycleSectorFromMap(delivery.id);
     _lastMarkerTap = { id: null, time: 0 };
     return;
@@ -278,52 +275,160 @@ function _onDeliveryMarkerClick(delivery, marker, rank) {
   showMarkerInfo(delivery, marker, rank);
 }
 
-function showMarkerInfo(delivery, marker, rank) {
-  // Restaurer le marker précédemment élargi (si différent)
-  if (_micEnlargedMarker && _micCurrentId !== delivery.id) {
-    const prev = state.deliveries.find(d => d.id === _micCurrentId);
-    if (prev) {
-      const prevIdx = state.deliveries.findIndex(d => d.id === _micCurrentId);
-      const prevSec = prev.sector || 0;
-      const prevCol = SECTOR_COLS[prevSec];
-      const prevOpts = prevSec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-      _micEnlargedMarker.setIcon(_markerSvgIcon(String(prevIdx + 1), prevCol, 1, prevOpts));
-      _micEnlargedMarker.setZIndex(500);
-    }
+function _restoreMarkerIcon(id) {
+  if (!_mic.enlargedMarker || !id) return;
+  const d = state.deliveries.find(d => d.id === id);
+  const idx = state.deliveries.findIndex(d => d.id === id);
+  if (d && idx >= 0) {
+    const sec = d.sector || 0;
+    const col = SECTOR_COLS[sec];
+    const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
+    _mic.enlargedMarker.setIcon(_markerSvgIcon(String(idx + 1), col, 1, opts));
+    _mic.enlargedMarker.setZIndex(500);
+  }
+}
+
+function _createMarkerInfoContent(delivery, rank) {
+  const sec = delivery.sector || 0;
+  const secNames = ['Aucun', 'Secteur 1', 'Secteur 2', 'Secteur 3', 'Secteur 4', 'Secteur 5'];
+  const secBg = ['#475569', '#3b82f6', '#0d9488', '#d97706', '#db2877', '#7c3aed'];
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:248px;padding:12px 14px;box-sizing:border-box;';
+
+  const mainText = delivery.placeName || delivery.formatted || delivery.address || '';
+  const subText = delivery.placeName
+    ? (delivery.formatted || delivery.address || '').replace(/,\s*\d{5}.*$/, '').trim()
+    : '';
+
+  const addrEl = document.createElement('div');
+  addrEl.style.cssText = 'font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:' + (subText ? '2px' : '6px') + ';line-height:1.4;';
+  addrEl.textContent = mainText.length > 46 ? mainText.slice(0, 44) + '…' : mainText;
+  wrap.appendChild(addrEl);
+
+  if (subText) {
+    const subEl = document.createElement('div');
+    subEl.style.cssText = 'font-size:11px;color:#94a3b8;margin-bottom:6px;';
+    subEl.textContent = subText.length > 46 ? subText.slice(0, 44) + '…' : subText;
+    wrap.appendChild(subEl);
   }
 
-  _micCurrentId = delivery.id;
+  const metaRow = document.createElement('div');
+  metaRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:' + (delivery.note ? '6px' : '10px') + ';flex-wrap:wrap;';
+  const secBadge = document.createElement('span');
+  secBadge.style.cssText = 'padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:' + secBg[sec] + ';color:#fff;';
+  secBadge.textContent = secNames[sec];
+  metaRow.appendChild(secBadge);
+  if (delivery.legDist && delivery.legDur) {
+    const distEl = document.createElement('span');
+    distEl.style.cssText = 'font-size:10px;color:#94a3b8;';
+    distEl.textContent = delivery.legDist + ' · ' + delivery.legDur;
+    metaRow.appendChild(distEl);
+  }
+  wrap.appendChild(metaRow);
 
-  // Agrandir le marker en bulle SVG avec les infos
-  marker.setIcon(_expandedMarkerIcon(delivery, rank));
+  if (delivery.note) {
+    const noteEl = document.createElement('div');
+    noteEl.style.cssText = 'font-size:11px;color:#fbbf24;font-style:italic;margin-bottom:10px;line-height:1.3;';
+    noteEl.textContent = delivery.note;
+    wrap.appendChild(noteEl);
+  }
+
+  const hr = document.createElement('div');
+  hr.style.cssText = 'height:1px;background:rgba(255,255,255,.1);margin:0 0 10px;';
+  wrap.appendChild(hr);
+
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+
+  const mkBtn = (iconSvg, label, active, onClick) => {
+    const b = document.createElement('button');
+    b.style.cssText = 'display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;' +
+      'border:1px solid ' + (active ? 'rgba(79,140,255,.5)' : 'rgba(255,255,255,.12)') + ';' +
+      'background:' + (active ? 'rgba(79,140,255,.18)' : 'rgba(255,255,255,.06)') + ';' +
+      'color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;line-height:1;';
+    const iconEl = document.createElement('span');
+    iconEl.innerHTML = iconSvg;
+    b.appendChild(iconEl);
+    const labelEl = document.createElement('span');
+    labelEl.textContent = label;
+    b.appendChild(labelEl);
+    b.addEventListener('click', onClick);
+    return b;
+  };
+
+  const lockIcon = delivery.locked
+    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+    : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+  btns.appendChild(mkBtn(lockIcon, delivery.locked ? 'Libérer' : 'Fixer', delivery.locked, () => _toggleLockFromMap(delivery.id)));
+
+  const secIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 8 12 12 14 14"/></svg>';
+  btns.appendChild(mkBtn(secIcon, 'Secteur', false, () => cycleSectorFromMap(delivery.id)));
+
+  const listIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>';
+  btns.appendChild(mkBtn(listIcon, 'Dans la liste', false, () => _scrollToDelivery(delivery.id)));
+
+  wrap.appendChild(btns);
+  return wrap;
+}
+
+function showMarkerInfo(delivery, marker, rank) {
+  if (_mic.enlargedMarker && _mic.currentId !== delivery.id) {
+    _restoreMarkerIcon(_mic.currentId);
+    _mic.enlargedMarker = null;
+  }
+  if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
+
+  _mic.currentId = delivery.id;
+
+  const sec = delivery.sector || 0;
+  const col = SECTOR_COLS[sec];
+  const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
+  marker.setIcon(_markerSvgIcon(String(rank), col, 1.3, opts));
   marker.setZIndex(2000);
-  _micEnlargedMarker = marker;
+  _mic.enlargedMarker = marker;
+
+  _mic.infoWindow = new google.maps.InfoWindow({ content: _createMarkerInfoContent(delivery, rank) });
+  _mic.infoWindow.open(state.map, marker);
 
   state.map.panTo({ lat: delivery.lat, lng: delivery.lng });
 
-  // Fermer au clic sur fond de carte
-  if (_micMapCloseListener) google.maps.event.removeListener(_micMapCloseListener);
-  _micMapCloseListener = state.map.addListener('click', closeMarkerInfo);
+  if (_mic.mapCloseListener) google.maps.event.removeListener(_mic.mapCloseListener);
+  _mic.mapCloseListener = state.map.addListener('click', closeMarkerInfo);
 }
 
 function closeMarkerInfo() {
-  // Restaurer l'icône normale du marker élargi
-  if (_micEnlargedMarker && _micCurrentId) {
-    const d = state.deliveries.find(d => d.id === _micCurrentId);
-    if (d) {
-      const idx = state.deliveries.findIndex(d => d.id === _micCurrentId);
-      const sec = d.sector || 0;
-      const col = SECTOR_COLS[sec];
-      const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-      _micEnlargedMarker.setIcon(_markerSvgIcon(String(idx + 1), col, 1, opts));
-      _micEnlargedMarker.setZIndex(500);
+  _restoreMarkerIcon(_mic.currentId);
+  if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
+  _mic.enlargedMarker = null;
+  _mic.currentId = null;
+  // _lastMarkerTap intentionally NOT reset — preserves double-tap timing
+  if (_mic.mapCloseListener) { google.maps.event.removeListener(_mic.mapCloseListener); _mic.mapCloseListener = null; }
+}
+
+function _toggleLockFromMap(id) {
+  toggleLock(id);
+  const d = state.deliveries.find(d => d.id === id);
+  const marker = _mic.enlargedMarker;
+  const idx = state.deliveries.findIndex(d => d.id === id);
+  if (d && marker && idx >= 0) {
+    if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
+    _mic.infoWindow = new google.maps.InfoWindow({ content: _createMarkerInfoContent(d, idx + 1) });
+    _mic.infoWindow.open(state.map, marker);
+  }
+}
+
+function _scrollToDelivery(id) {
+  closeMarkerInfo();
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar && sidebar.classList.contains('hidden')) sidebar.classList.remove('hidden');
+  setTimeout(() => {
+    const el = document.querySelector('[data-id="' + id + '"]');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.style.transition = 'box-shadow .3s';
+      el.style.boxShadow = '0 0 0 2px #4f8cff';
+      setTimeout(() => { el.style.boxShadow = ''; }, 1500);
     }
-  }
-  _micEnlargedMarker = null;
-  _micCurrentId = null;
-  _lastMarkerTap = { id: null, time: 0 };
-  if (_micMapCloseListener) {
-    google.maps.event.removeListener(_micMapCloseListener);
-    _micMapCloseListener = null;
-  }
+  }, 300);
 }
