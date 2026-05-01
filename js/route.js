@@ -260,17 +260,16 @@ function renderRouteSteps() {
   document.getElementById('route-steps').innerHTML = html;
 }
 
-// ── MARKER INFO CARD (tap simple = info, double-tap = cycle secteur) ──
-let _micCurrentId = null;
+// ── MARKER INFO CARD (tap = agrandit bulle SVG inline, double-tap = cycle secteur) ──
+let _micCurrentId   = null;
 let _micEnlargedMarker = null;
 let _micMapCloseListener = null;
-let _lastMarkerTap = { id: null, time: 0 };
+let _lastMarkerTap  = { id: null, time: 0 };
 
 function _onDeliveryMarkerClick(delivery, marker, rank) {
   const now = Date.now();
   if (_lastMarkerTap.id === delivery.id && now - _lastMarkerTap.time < 350) {
-    // Double-tap → cycle secteur
-    closeMarkerInfo();
+    // Double-tap/clic → cycle secteur (quel que soit l'état d'agrandissement)
     cycleSectorFromMap(delivery.id);
     _lastMarkerTap = { id: null, time: 0 };
     return;
@@ -280,11 +279,8 @@ function _onDeliveryMarkerClick(delivery, marker, rank) {
 }
 
 function showMarkerInfo(delivery, marker, rank) {
-  const card = document.getElementById('marker-info-card');
-  if (!card) return;
-
-  // Restaurer l’ancien marker élargi
-  if (_micEnlargedMarker && _micCurrentId) {
+  // Restaurer le marker précédemment élargi (si différent)
+  if (_micEnlargedMarker && _micCurrentId !== delivery.id) {
     const prev = state.deliveries.find(d => d.id === _micCurrentId);
     if (prev) {
       const prevIdx = state.deliveries.findIndex(d => d.id === _micCurrentId);
@@ -298,58 +294,20 @@ function showMarkerInfo(delivery, marker, rank) {
 
   _micCurrentId = delivery.id;
 
-  const sec = delivery.sector || 0;
-  const secNames = ['Aucun secteur', 'Secteur 1', 'Secteur 2', 'Secteur 3', 'Secteur 4', 'Secteur 5'];
-  const secName = secNames[sec];
-  const secCol = SECTOR_COLS[sec];
-  const isNoSec = sec === 0;
-
-  // Agrandir le marker
-  const mOpts = isNoSec ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-  marker.setIcon(_markerSvgIcon(String(rank), secCol, 1.3, mOpts));
+  // Agrandir le marker en bulle SVG avec les infos
+  marker.setIcon(_expandedMarkerIcon(delivery, rank));
   marker.setZIndex(2000);
   _micEnlargedMarker = marker;
 
-  // Remplir la card
-  const rankBadge = document.getElementById('mic-rank-badge');
-  rankBadge.textContent = rank;
-  rankBadge.style.background = isNoSec ? '#fff' : secCol;
-  rankBadge.style.color = isNoSec ? '#1a1a2e' : '#fff';
-  rankBadge.style.border = isNoSec ? '2px solid #1a1a2e' : 'none';
-
-  const addrEl = document.getElementById('mic-addr-text');
-  const placePart = delivery.placeName ? '<strong>' + esc(delivery.placeName) + '</strong> · ' : '';
-  addrEl.innerHTML = placePart + esc(delivery.formatted || delivery.address);
-
-  const secLabel = document.getElementById('mic-sector-label');
-  secLabel.textContent = secName;
-  secLabel.style.color = isNoSec ? '' : secCol;
-
-  const distEl = document.getElementById('mic-dist-label');
-  if (delivery.legDist && delivery.legDur) {
-    distEl.textContent = delivery.legDist + ' · ' + delivery.legDur;
-    distEl.style.display = '';
-  } else {
-    distEl.style.display = 'none';
-  }
-
-  const noteEl = document.getElementById('mic-note-label');
-  noteEl.textContent = delivery.note || '';
-  noteEl.style.display = delivery.note ? '' : 'none';
-
-  card.classList.add('visible');
   state.map.panTo({ lat: delivery.lat, lng: delivery.lng });
 
-  // Fermer au clic sur la carte
+  // Fermer au clic sur fond de carte
   if (_micMapCloseListener) google.maps.event.removeListener(_micMapCloseListener);
   _micMapCloseListener = state.map.addListener('click', closeMarkerInfo);
 }
 
 function closeMarkerInfo() {
-  const card = document.getElementById('marker-info-card');
-  if (card) card.classList.remove('visible');
-
-  // Restaurer le marker
+  // Restaurer l'icône normale du marker élargi
   if (_micEnlargedMarker && _micCurrentId) {
     const d = state.deliveries.find(d => d.id === _micCurrentId);
     if (d) {
@@ -364,7 +322,6 @@ function closeMarkerInfo() {
   _micEnlargedMarker = null;
   _micCurrentId = null;
   _lastMarkerTap = { id: null, time: 0 };
-
   if (_micMapCloseListener) {
     google.maps.event.removeListener(_micMapCloseListener);
     _micMapCloseListener = null;

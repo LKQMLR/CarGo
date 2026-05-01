@@ -427,6 +427,7 @@ function cycleSectorFromMap(id) {
     showLimitAlert('secteur', 'Changement de secteur à la volée réservé aux Premium.');
     return;
   }
+  closeMarkerInfo(); // reset avant la ré-optimisation
   const d = state.deliveries.find(d => d.id === id);
   if (!d) return;
   d.sector = ((d.sector || 0) + 1) % 6;
