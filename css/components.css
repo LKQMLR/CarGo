@@ -135,11 +135,11 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 
 /* ── NUMÉRO DE LIVRAISON (pastilles) ── */
 .delivery-num {
-  background: #fff;
-  color: #1a1a2e; border: 1.5px solid rgba(30,42,58,.5); border-radius: 50%;
+  background: linear-gradient(135deg, #8896a7, #6b7a8d);
+  color: #fff; border-radius: 50%;
   min-width: 22px; height: 22px; font-size: .65rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  box-shadow: 0 1px 4px rgba(136,150,167,.3);
 }
 .delivery-num.custom {
   background: linear-gradient(135deg, #a78bfa, #7c3aed);
@@ -504,4 +504,3 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
 .cancel-btn-unsub:hover { opacity: .75; transform: none; }
 .cancel-btn-unsub:disabled { opacity: .25; cursor: not-allowed; }
 .prox-tooltip.show { display: block !important; }
-

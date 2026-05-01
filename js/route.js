@@ -4,7 +4,7 @@
    ══════════════════════════════════════════ */
 
 // Couleurs par secteur pour les markers
-const SECTOR_COLS = { 0: '#ffffff', 1: '#3b82f6', 2: '#0d9488', 3: '#d97706', 4: '#db2777', 5: '#7c3aed' };
+const SECTOR_COLS = { 0: '#8896a7', 1: '#3b82f6', 2: '#0d9488', 3: '#d97706', 4: '#db2777', 5: '#7c3aed' };
 
 // ── LABEL DESTINATION SUR CARTE APERÇU ──
 function makeDestLabel(position, text, map) {
@@ -137,13 +137,7 @@ function displayRoute(stops) {
         const col = r === 0 ? '#22c55e' : (SECTOR_COLS[s.sector || 0] || '#4f8cff');
         const ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
         const pos = { lat: s.lat, lng: s.lng };
-        const mOpts = (r !== 0 && !(s.sector)) ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-        const m = createClassicMarker(pos, lbl, col, ttl, undefined, undefined, mOpts);
-        state.markers.push(m);
-        if (r > 0) {
-          const delivery = s, rank = r;
-          m.addListener('click', () => _onDeliveryMarkerClick(delivery, m, rank));
-        }
+        state.markers.push(createClassicMarker(pos, lbl, col, ttl));
         if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65));
       });
 
@@ -258,72 +252,4 @@ function renderRouteSteps() {
     </div></li>`;
   }
   document.getElementById('route-steps').innerHTML = html;
-}
-
-// ── MARKER INFO CARD (tap = agrandit bulle SVG inline, double-tap = cycle secteur) ──
-let _micCurrentId   = null;
-let _micEnlargedMarker = null;
-let _micMapCloseListener = null;
-let _lastMarkerTap  = { id: null, time: 0 };
-
-function _onDeliveryMarkerClick(delivery, marker, rank) {
-  const now = Date.now();
-  if (_lastMarkerTap.id === delivery.id && now - _lastMarkerTap.time < 350) {
-    // Double-tap/clic → cycle secteur (quel que soit l'état d'agrandissement)
-    cycleSectorFromMap(delivery.id);
-    _lastMarkerTap = { id: null, time: 0 };
-    return;
-  }
-  _lastMarkerTap = { id: delivery.id, time: now };
-  showMarkerInfo(delivery, marker, rank);
-}
-
-function showMarkerInfo(delivery, marker, rank) {
-  // Restaurer le marker précédemment élargi (si différent)
-  if (_micEnlargedMarker && _micCurrentId !== delivery.id) {
-    const prev = state.deliveries.find(d => d.id === _micCurrentId);
-    if (prev) {
-      const prevIdx = state.deliveries.findIndex(d => d.id === _micCurrentId);
-      const prevSec = prev.sector || 0;
-      const prevCol = SECTOR_COLS[prevSec];
-      const prevOpts = prevSec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-      _micEnlargedMarker.setIcon(_markerSvgIcon(String(prevIdx + 1), prevCol, 1, prevOpts));
-      _micEnlargedMarker.setZIndex(500);
-    }
-  }
-
-  _micCurrentId = delivery.id;
-
-  // Agrandir le marker en bulle SVG avec les infos
-  marker.setIcon(_expandedMarkerIcon(delivery, rank));
-  marker.setZIndex(2000);
-  _micEnlargedMarker = marker;
-
-  state.map.panTo({ lat: delivery.lat, lng: delivery.lng });
-
-  // Fermer au clic sur fond de carte
-  if (_micMapCloseListener) google.maps.event.removeListener(_micMapCloseListener);
-  _micMapCloseListener = state.map.addListener('click', closeMarkerInfo);
-}
-
-function closeMarkerInfo() {
-  // Restaurer l'icône normale du marker élargi
-  if (_micEnlargedMarker && _micCurrentId) {
-    const d = state.deliveries.find(d => d.id === _micCurrentId);
-    if (d) {
-      const idx = state.deliveries.findIndex(d => d.id === _micCurrentId);
-      const sec = d.sector || 0;
-      const col = SECTOR_COLS[sec];
-      const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-      _micEnlargedMarker.setIcon(_markerSvgIcon(String(idx + 1), col, 1, opts));
-      _micEnlargedMarker.setZIndex(500);
-    }
-  }
-  _micEnlargedMarker = null;
-  _micCurrentId = null;
-  _lastMarkerTap = { id: null, time: 0 };
-  if (_micMapCloseListener) {
-    google.maps.event.removeListener(_micMapCloseListener);
-    _micMapCloseListener = null;
-  }
 }
