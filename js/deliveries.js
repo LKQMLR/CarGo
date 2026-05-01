@@ -419,3 +419,19 @@ function cycleSectorForDelivery(id, li) {
 
   saveSession();
 }
+
+
+// ── CYCLE SECTEUR DEPUIS LA CARTE (tap double sur marker) ──
+function cycleSectorFromMap(id) {
+  if (!isPremium()) {
+    showLimitAlert('secteur', 'Changement de secteur à la volée réservé aux Premium.');
+    return;
+  }
+  const d = state.deliveries.find(d => d.id === id);
+  if (!d) return;
+  d.sector = ((d.sector || 0) + 1) % 6;
+  saveSession();
+  renderDeliveryList();
+  if (state.startPoint && state.deliveries.length > 1) optimizeRoute();
+  else if (state.startPoint && state.deliveries.length) displayRoute([state.startPoint, ...state.deliveries]);
+}
