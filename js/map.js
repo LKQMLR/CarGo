@@ -21,7 +21,7 @@ function _markerSvgIcon(label, color, scale, opts) {
   const tagR = Math.round(6 * s);
   const lineW = Math.round(2 * s);
   const sw = Math.round(2.5 * s);
-  const outerSw = textFill === '#fff' ? sw + Math.round(4 * s) : Math.round(2 * s);
+  const outerSw = sw + Math.round(4 * s);
   const pad = Math.ceil(outerSw / 2) + 1;
   const totalW = tagW + Math.round(10 * s) + pad * 2;
   const totalH = tagH + lineH + Math.round(4 * s) + pad;

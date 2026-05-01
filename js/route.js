@@ -260,212 +260,70 @@ function renderRouteSteps() {
   document.getElementById('route-steps').innerHTML = html;
 }
 
-// ── MARKER INFO (tap = scale 1.3× + InfoWindow, double-tap = cycle secteur) ──
-// Le délai 250ms est indispensable : l'InfoWindow ouverte couvre le marker label,
-// rendant le 2e tap invisible pour l'API Maps. Le délai laisse la fenêtre fermée
-// pendant la détection du double-tap.
-var _mic = { currentId: null, enlargedMarker: null, infoWindow: null, mapCloseListener: null };
-var _tapTimer = null;
-var _tapTargetId = null;
+// ── MARKER INFO CARD (tap = agrandit bulle SVG inline, double-tap = cycle secteur) ──
+let _micCurrentId   = null;
+let _micEnlargedMarker = null;
+let _micMapCloseListener = null;
+let _lastMarkerTap  = { id: null, time: 0 };
 
 function _onDeliveryMarkerClick(delivery, marker, rank) {
-  if (_tapTimer && _tapTargetId === delivery.id) {
-    // 2e tap sur le même marker dans les 250ms → double-tap
-    clearTimeout(_tapTimer); _tapTimer = null; _tapTargetId = null;
+  const now = Date.now();
+  if (_lastMarkerTap.id === delivery.id && now - _lastMarkerTap.time < 350) {
+    // Double-tap/clic → cycle secteur (quel que soit l'état d'agrandissement)
     cycleSectorFromMap(delivery.id);
+    _lastMarkerTap = { id: null, time: 0 };
     return;
   }
-  // Annuler tout timer en cours (changement de marker)
-  if (_tapTimer) { clearTimeout(_tapTimer); _tapTimer = null; }
-  _tapTargetId = delivery.id;
-  _tapTimer = setTimeout(() => {
-    _tapTimer = null; _tapTargetId = null;
-    showMarkerInfo(delivery, marker, rank);
-  }, 250);
-}
-
-function _restoreMarkerIcon(id) {
-  if (!_mic.enlargedMarker || !id) return;
-  const d = state.deliveries.find(d => d.id === id);
-  const idx = state.deliveries.findIndex(d => d.id === id);
-  if (d && idx >= 0) {
-    const sec = d.sector || 0;
-    const col = SECTOR_COLS[sec];
-    const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-    _mic.enlargedMarker.setIcon(_markerSvgIcon(String(idx + 1), col, 1, opts));
-    _mic.enlargedMarker.setZIndex(500);
-  }
-}
-
-function _createMarkerInfoContent(delivery, rank) {
-  const sec = delivery.sector || 0;
-  const secCols = [null, '#3b82f6', '#0d9488', '#d97706', '#db2877', '#7c3aed'];
-  const secCol = secCols[sec];
-
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'width:240px;box-sizing:border-box;overflow:hidden;border-radius:12px;';
-
-  // Bande colorée en haut (secteur 1-5 uniquement)
-  if (secCol) {
-    const bar = document.createElement('div');
-    bar.style.cssText = 'height:3px;background:' + secCol + ';';
-    wrap.appendChild(bar);
-  }
-
-  const inner = document.createElement('div');
-  inner.style.cssText = 'padding:11px 13px;';
-  wrap.appendChild(inner);
-
-  // Adresse
-  const mainText = delivery.placeName || delivery.formatted || delivery.address || '';
-  const subText = delivery.placeName
-    ? (delivery.formatted || delivery.address || '').replace(/,\s*\d{5}.*$/, '').trim()
-    : '';
-  const addrEl = document.createElement('div');
-  addrEl.style.cssText = 'font-size:12px;font-weight:700;color:#e2e8f0;line-height:1.4;margin-bottom:' + (subText ? '2px' : '5px') + ';';
-  addrEl.textContent = mainText.length > 46 ? mainText.slice(0, 44) + '…' : mainText;
-  inner.appendChild(addrEl);
-  if (subText) {
-    const subEl = document.createElement('div');
-    subEl.style.cssText = 'font-size:11px;color:#94a3b8;margin-bottom:5px;';
-    subEl.textContent = subText.length > 46 ? subText.slice(0, 44) + '…' : subText;
-    inner.appendChild(subEl);
-  }
-
-  // Ligne meta : Sx + dist/temps
-  const hasMeta = sec > 0 || (delivery.legDist && delivery.legDur);
-  if (hasMeta) {
-    const meta = document.createElement('div');
-    meta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:' + (delivery.note ? '5px' : '9px') + ';';
-    if (sec > 0 && secCol) {
-      const sl = document.createElement('span');
-      sl.style.cssText = 'font-size:11px;font-weight:800;color:' + secCol + ';letter-spacing:.3px;';
-      sl.textContent = 'S' + sec;
-      meta.appendChild(sl);
-    }
-    if (delivery.legDist && delivery.legDur) {
-      const dt = document.createElement('span');
-      dt.style.cssText = 'font-size:10px;color:#64748b;';
-      dt.textContent = delivery.legDist + ' · ' + delivery.legDur;
-      meta.appendChild(dt);
-    }
-    inner.appendChild(meta);
-  } else if (!delivery.note) {
-    inner.style.paddingBottom = '9px';
-  }
-
-  if (delivery.note) {
-    const noteEl = document.createElement('div');
-    noteEl.style.cssText = 'font-size:11px;color:#fbbf24;font-style:italic;margin-bottom:9px;line-height:1.3;';
-    noteEl.textContent = delivery.note;
-    inner.appendChild(noteEl);
-  }
-
-  // Séparateur
-  const hr = document.createElement('div');
-  hr.style.cssText = 'height:1px;background:rgba(255,255,255,.08);margin:0 0 9px;';
-  inner.appendChild(hr);
-
-  // Boutons
-  const btns = document.createElement('div');
-  btns.style.cssText = 'display:flex;gap:6px;align-items:center;';
-
-  // Cadenas — icône seule, carré compact
-  const lockBtn = document.createElement('button');
-  const isLocked = delivery.locked;
-  lockBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex-shrink:0;border-radius:8px;' +
-    'border:1px solid ' + (isLocked ? 'rgba(251,191,36,.35)' : 'rgba(255,255,255,.12)') + ';' +
-    'background:' + (isLocked ? 'rgba(251,191,36,.12)' : 'rgba(255,255,255,.06)') + ';' +
-    'color:' + (isLocked ? '#fbbf24' : '#64748b') + ';cursor:pointer;';
-  lockBtn.title = isLocked ? 'Libérer cette position' : 'Fixer cette position';
-  lockBtn.innerHTML = isLocked
-    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
-    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
-  lockBtn.addEventListener('click', () => _toggleLockFromMap(delivery.id));
-  btns.appendChild(lockBtn);
-
-  // Voir dans la liste
-  const listBtn = document.createElement('button');
-  listBtn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:0 10px;height:30px;border-radius:8px;flex:1;' +
-    'border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);' +
-    'color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;line-height:1;';
-  listBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">' +
-    '<line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/>' +
-    '<circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/>' +
-    '<circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/>' +
-    '<circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>' +
-    '<span>Voir dans la liste</span>';
-  listBtn.addEventListener('click', () => _scrollToDelivery(delivery.id));
-  btns.appendChild(listBtn);
-
-  inner.appendChild(btns);
-  return wrap;
+  _lastMarkerTap = { id: delivery.id, time: now };
+  showMarkerInfo(delivery, marker, rank);
 }
 
 function showMarkerInfo(delivery, marker, rank) {
-  if (_mic.enlargedMarker && _mic.currentId !== delivery.id) {
-    _restoreMarkerIcon(_mic.currentId);
-    _mic.enlargedMarker = null;
+  // Restaurer le marker précédemment élargi (si différent)
+  if (_micEnlargedMarker && _micCurrentId !== delivery.id) {
+    const prev = state.deliveries.find(d => d.id === _micCurrentId);
+    if (prev) {
+      const prevIdx = state.deliveries.findIndex(d => d.id === _micCurrentId);
+      const prevSec = prev.sector || 0;
+      const prevCol = SECTOR_COLS[prevSec];
+      const prevOpts = prevSec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
+      _micEnlargedMarker.setIcon(_markerSvgIcon(String(prevIdx + 1), prevCol, 1, prevOpts));
+      _micEnlargedMarker.setZIndex(500);
+    }
   }
-  if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
 
-  _mic.currentId = delivery.id;
+  _micCurrentId = delivery.id;
 
-  const sec = delivery.sector || 0;
-  const col = SECTOR_COLS[sec];
-  const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
-  marker.setIcon(_markerSvgIcon(String(rank), col, 1.3, opts));
+  // Agrandir le marker en bulle SVG avec les infos
+  marker.setIcon(_expandedMarkerIcon(delivery, rank));
   marker.setZIndex(2000);
-  _mic.enlargedMarker = marker;
-
-  const secCols = [null, '#3b82f6', '#0d9488', '#d97706', '#db2877', '#7c3aed'];
-  _mic.infoWindow = new google.maps.InfoWindow({ content: _createMarkerInfoContent(delivery, rank) });
-  if (sec > 0 && secCols[sec]) {
-    google.maps.event.addListenerOnce(_mic.infoWindow, 'domready', () => {
-      const iw = document.querySelector('.gm-style-iw-c');
-      if (iw) iw.style.borderColor = secCols[sec];
-    });
-  }
-  _mic.infoWindow.open(state.map, marker);
+  _micEnlargedMarker = marker;
 
   state.map.panTo({ lat: delivery.lat, lng: delivery.lng });
 
-  if (_mic.mapCloseListener) google.maps.event.removeListener(_mic.mapCloseListener);
-  _mic.mapCloseListener = state.map.addListener('click', closeMarkerInfo);
+  // Fermer au clic sur fond de carte
+  if (_micMapCloseListener) google.maps.event.removeListener(_micMapCloseListener);
+  _micMapCloseListener = state.map.addListener('click', closeMarkerInfo);
 }
 
 function closeMarkerInfo() {
-  if (_tapTimer) { clearTimeout(_tapTimer); _tapTimer = null; _tapTargetId = null; }
-  _restoreMarkerIcon(_mic.currentId);
-  if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
-  _mic.enlargedMarker = null;
-  _mic.currentId = null;
-  if (_mic.mapCloseListener) { google.maps.event.removeListener(_mic.mapCloseListener); _mic.mapCloseListener = null; }
-}
-
-function _toggleLockFromMap(id) {
-  toggleLock(id);
-  const d = state.deliveries.find(d => d.id === id);
-  const marker = _mic.enlargedMarker;
-  const idx = state.deliveries.findIndex(d => d.id === id);
-  if (d && marker && idx >= 0) {
-    if (_mic.infoWindow) { _mic.infoWindow.close(); _mic.infoWindow = null; }
-    _mic.infoWindow = new google.maps.InfoWindow({ content: _createMarkerInfoContent(d, idx + 1) });
-    _mic.infoWindow.open(state.map, marker);
-  }
-}
-
-function _scrollToDelivery(id) {
-  closeMarkerInfo();
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar && sidebar.classList.contains('hidden')) sidebar.classList.remove('hidden');
-  setTimeout(() => {
-    const el = document.querySelector('[data-id="' + id + '"]');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.style.transition = 'box-shadow .3s';
-      el.style.boxShadow = '0 0 0 2px #4f8cff';
-      setTimeout(() => { el.style.boxShadow = ''; }, 1500);
+  // Restaurer l'icône normale du marker élargi
+  if (_micEnlargedMarker && _micCurrentId) {
+    const d = state.deliveries.find(d => d.id === _micCurrentId);
+    if (d) {
+      const idx = state.deliveries.findIndex(d => d.id === _micCurrentId);
+      const sec = d.sector || 0;
+      const col = SECTOR_COLS[sec];
+      const opts = sec === 0 ? { textColor: '#1a1a2e', accentColor: '#1a1a2e' } : {};
+      _micEnlargedMarker.setIcon(_markerSvgIcon(String(idx + 1), col, 1, opts));
+      _micEnlargedMarker.setZIndex(500);
     }
-  }, 300);
+  }
+  _micEnlargedMarker = null;
+  _micCurrentId = null;
+  _lastMarkerTap = { id: null, time: 0 };
+  if (_micMapCloseListener) {
+    google.maps.event.removeListener(_micMapCloseListener);
+    _micMapCloseListener = null;
+  }
 }

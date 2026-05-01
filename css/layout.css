@@ -120,18 +120,6 @@
   .sidebar-body { padding: 10px; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* ── GOOGLE MAPS INFOWINDOW (dark theme) ── */
-.gm-style .gm-style-iw-c {
-  background: #0c1526 !important;
-  border: 1px solid rgba(79,140,255,.22) !important;
-  border-radius: 12px !important;
-  padding: 0 !important;
-  box-shadow: 0 6px 28px rgba(0,0,0,.65) !important;
-}
-.gm-style .gm-style-iw-d { overflow: hidden !important; padding: 0 !important; }
-.gm-style .gm-style-iw-t::after { background: #0c1526 !important; box-shadow: none !important; }
-.gm-style .gm-style-iw-chr { display: none !important; }
-
 /* ── AUTOCOMPLETE GOOGLE ── */
 .pac-container { z-index: 10025 !important; }
 .pac-container[style*="display: none"] { pointer-events: none !important; height: 0 !important; overflow: hidden !important; }
