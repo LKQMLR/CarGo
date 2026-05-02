@@ -194,7 +194,25 @@ function nextNavStop() {
 function openInGoogleMaps() {
   if (!state.navStops || state.navIndex + 1 >= state.navStops.length) return;
   const dest = state.navStops[state.navIndex + 1];
+  showNavLaunchToast();
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}&travelmode=driving`, '_blank');
+}
+
+function showNavLaunchToast() {
+  const existing = document.getElementById('nav-launch-toast');
+  if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'nav-launch-toast';
+  div.innerHTML = `
+    <span class="nlt-icon">🗺️</span>
+    <div class="nlt-body">
+      <div class="nlt-title">Navigation lancée dans Google Maps</div>
+      <div class="nlt-sub">Revenez sur CarGo pour valider la livraison</div>
+    </div>
+    <button class="nlt-close" onclick="document.getElementById('nav-launch-toast').remove()">✕</button>
+    <div class="nlt-bar"></div>`;
+  document.body.appendChild(div);
+  setTimeout(() => { if (div.parentNode) div.remove(); }, 7000);
 }
 
 // ── WAKE LOCK (écran toujours allumé) ──
