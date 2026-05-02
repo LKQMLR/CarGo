@@ -33,10 +33,10 @@
 /* ── BADGE NUMÉROTÉ ── */
 .step-badge {
   flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
-  background: #fff; color: #1a1a2e; border: 1.5px solid rgba(30,42,58,.5);
+  background: linear-gradient(135deg, #8896a7, #6b7a8d); color: #fff;
   font-weight: 700; font-size: .65rem;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,.2); margin-top: 1px;
+  box-shadow: 0 1px 4px rgba(136,150,167,.3); margin-top: 1px;
 }
 .step-badge.depot {
   background: linear-gradient(135deg, var(--green), #1a9a4a);
