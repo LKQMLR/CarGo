@@ -1,4 +1,4 @@
-const CACHE = 'cargo-v226';
+const CACHE = 'cargo-v227';
 const ASSETS = [
   './index.html', './manifest.json',
   './css/variables.css', './css/layout.css', './css/components.css',
@@ -20,6 +20,49 @@ self.addEventListener('activate', e => {
     Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
   ));
   self.clients.claim();
+});
+
+// ── NOTIFICATIONS DE NAVIGATION ──
+let _navNotifTimer = null;
+
+self.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === 'SCHEDULE_NAV_NOTIFICATION') {
+    if (_navNotifTimer) clearTimeout(_navNotifTimer);
+    const { delay, address, num } = e.data;
+    _navNotifTimer = setTimeout(() => {
+      self.registration.showNotification('CarGo · Livraison ' + num, {
+        body: 'Êtes-vous arrivé à ' + address + ' ?',
+        icon: './icon.svg',
+        badge: './icon.svg',
+        tag: 'cargo-nav',
+        renotify: true,
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+        actions: [
+          { action: 'return', title: '✓ Retour CarGo' },
+          { action: 'dismiss', title: 'Pas encore' }
+        ]
+      });
+    }, delay);
+  }
+  if (e.data.type === 'CANCEL_NAV_NOTIFICATION') {
+    if (_navNotifTimer) { clearTimeout(_navNotifTimer); _navNotifTimer = null; }
+    self.registration.getNotifications({ tag: 'cargo-nav' }).then(ns => ns.forEach(n => n.close()));
+  }
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  if (e.action === 'dismiss') return;
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url.includes(self.location.origin)) return c.focus();
+      }
+      return clients.openWindow('./');
+    })
+  );
 });
 
 self.addEventListener('fetch', e => {

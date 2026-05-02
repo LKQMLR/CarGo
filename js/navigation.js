@@ -8,6 +8,7 @@
 function startNavigation() {
   if (!state.navStops || !state.navLegs) return;
   if (!navigator.geolocation) { showStatus('error', 'Géolocalisation non disponible sur ce navigateur.'); return; }
+  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   state.navIndex = 0; state.followMode = true;
   _proximityAlertShown = {}; _proximityAlertOpen = false;
   document.getElementById('btn-nav-start').classList.remove('visible');
@@ -179,6 +180,7 @@ function updateNavPanel() {
 }
 
 function nextNavStop() {
+  cancelArrivalNotification();
   if (state.navIndex >= state.deliveries.length - 1) {
     state.navIndex = state.deliveries.length;
     state._tourComplete = true;
@@ -194,24 +196,27 @@ function nextNavStop() {
 function openInGoogleMaps() {
   if (!state.navStops || state.navIndex + 1 >= state.navStops.length) return;
   const dest = state.navStops[state.navIndex + 1];
+  scheduleArrivalNotification();
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}&travelmode=driving`, '_blank');
 }
 
-function showNavLaunchToast() {
-  const existing = document.getElementById('nav-launch-toast');
-  if (existing) existing.remove();
-  const div = document.createElement('div');
-  div.id = 'nav-launch-toast';
-  div.innerHTML = `
-    <span class="nlt-icon">🗺️</span>
-    <div class="nlt-body">
-      <div class="nlt-title">Navigation lancée dans Google Maps</div>
-      <div class="nlt-sub">Revenez sur CarGo pour valider la livraison</div>
-    </div>
-    <button class="nlt-close" onclick="document.getElementById('nav-launch-toast').remove()">✕</button>
-    <div class="nlt-bar"></div>`;
-  document.body.appendChild(div);
-  setTimeout(() => { if (div.parentNode) div.remove(); }, 7000);
+function scheduleArrivalNotification() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!navigator.serviceWorker.controller) return;
+  const leg = state.navLegs && state.navLegs[state.navIndex];
+  if (!leg) return;
+  const delay = (leg.duration.value + 60) * 1000; // ETA + 1min de marge
+  const stop = state.navStops[state.navIndex + 1];
+  const address = (stop.formatted || stop.address || '').split(',')[0].trim();
+  navigator.serviceWorker.controller.postMessage({
+    type: 'SCHEDULE_NAV_NOTIFICATION',
+    delay, address, num: state.navIndex + 1
+  });
+}
+
+function cancelArrivalNotification() {
+  if (!navigator.serviceWorker.controller) return;
+  navigator.serviceWorker.controller.postMessage({ type: 'CANCEL_NAV_NOTIFICATION' });
 }
 
 // ── WAKE LOCK (écran toujours allumé) ──
@@ -223,8 +228,6 @@ function requestWakeLock() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && state.watchId !== null) {
     requestWakeLock();
-    // Toast de retour — rappel de valider la livraison
-    if (state.navStops && state.navIndex < state.deliveries.length) showNavLaunchToast();
     // Détection automatique de retour depuis Google Maps
     const arCheck = document.getElementById('autoreturn-check');
     if (arCheck && arCheck.checked && state.navStops && state.navIndex < state.deliveries.length) {
@@ -282,6 +285,7 @@ function updateRouteProgress() {
 }
 
 function exitNavigation() {
+  cancelArrivalNotification();
   stopSim();
   clearTimeout(state._recenterTimer);
   if (state.wakeLock) { state.wakeLock.release(); state.wakeLock = null; }
