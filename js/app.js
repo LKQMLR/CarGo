@@ -21,7 +21,7 @@ function loadGoogleMaps(apiKey) {
   return new Promise((resolve, reject) => {
     if (window.google && window.google.maps) { resolve(); return; }
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=fr&region=FR&loading=async`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=fr&region=FR`;
     s.async = true; s.defer = true; s.onload = resolve;
     s.onerror = () => reject(new Error('Impossible de charger Google Maps.'));
     document.head.appendChild(s);
