@@ -194,7 +194,6 @@ function nextNavStop() {
 function openInGoogleMaps() {
   if (!state.navStops || state.navIndex + 1 >= state.navStops.length) return;
   const dest = state.navStops[state.navIndex + 1];
-  showNavLaunchToast();
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}&travelmode=driving`, '_blank');
 }
 
@@ -224,6 +223,8 @@ function requestWakeLock() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && state.watchId !== null) {
     requestWakeLock();
+    // Toast de retour — rappel de valider la livraison
+    if (state.navStops && state.navIndex < state.deliveries.length) showNavLaunchToast();
     // Détection automatique de retour depuis Google Maps
     const arCheck = document.getElementById('autoreturn-check');
     if (arCheck && arCheck.checked && state.navStops && state.navIndex < state.deliveries.length) {
