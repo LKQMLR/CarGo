@@ -414,7 +414,18 @@ window.addEventListener('beforeunload', () => {
 });
 
 // Service Worker
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'activated') location.reload();
+      });
+    });
+    // Vérifier une mise à jour immédiatement à chaque chargement
+    reg.update();
+  });
+}
 
 // ── PULL-TO-REFRESH ──
 (function () {
