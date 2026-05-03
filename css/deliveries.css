@@ -146,8 +146,6 @@
 #delivery-list li.sector-4 { border-color: rgba(219,39,119,.45); }
 #delivery-list li.sector-5 { border-color: rgba(124,58,237,.45); }
 
-/* Verrouillé : bordure rouge */
-#delivery-list li.delivery-locked {
-  border-color: rgba(239,68,68,.5);
-  background: linear-gradient(135deg, rgba(239,68,68,.06), transparent);
-}
+/* Verrouillé : icône cadenas rouge */
+.lock-badge.locked { color: #f87171; }
+.lock-badge.unlocked { color: var(--text2); opacity: .5; }

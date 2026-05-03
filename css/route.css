@@ -111,23 +111,21 @@
   padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08);
 }
 .mp-tb-lock {
-  flex-shrink: 0; width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; border: 1px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.07); color: rgba(255,255,255,.55); cursor: pointer;
+  flex-shrink: 0; background: none; border: none;
+  color: rgba(255,255,255,.45); cursor: pointer; padding: 4px 6px;
+  display: flex; align-items: center;
 }
-.mp-tb-lock-on { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); color: #f87171; }
+.mp-tb-lock-on { color: #f87171; }
 .mp-tb-secs { display: flex; gap: 4px; flex: 1; }
 .mp-tb-sec {
   flex: 1; padding: 6px 2px; border-radius: 6px;
-  border: 1px solid transparent; background: transparent;
+  border: 1px solid rgba(255,255,255,.28); background: transparent;
   font-size: .68rem; font-weight: 700; cursor: pointer; text-align: center;
   transition: color .1s, border-color .1s;
 }
 .mp-tb-sec:active { transform: scale(.9); }
 .mp-tb-list {
-  flex-shrink: 0; width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; background: var(--accent); color: #fff;
-  border: none; cursor: pointer;
+  flex-shrink: 0; background: none; border: none;
+  color: var(--accent); cursor: pointer; padding: 4px 6px;
+  display: flex; align-items: center;
 }

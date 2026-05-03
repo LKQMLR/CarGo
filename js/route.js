@@ -299,7 +299,7 @@ function showMarkerPanel(idx) {
   ];
   const sBtns = secDefs.map(function(b) {
     const active = curSector === b.s;
-    const style  = active ? 'color:' + b.col + ';border-color:' + b.col : 'color:rgba(255,255,255,.28);border-color:transparent';
+    const style  = active ? 'color:' + b.col + ';border-color:' + b.col : 'color:rgba(255,255,255,.28);border-color:rgba(255,255,255,.28)';
     return '<button class="mp-tb-sec' + (active ? ' mp-tb-sec-on' : '') + '" style="' + style + '" onclick="setMarkerPanelSector(' + b.s + ')">' + b.label + '</button>';
   }).join('');
 
@@ -365,6 +365,9 @@ function toggleMarkerPanelLock() {
 
 function scrollToMarkerInList() {
   const idx = _mpIdx;
+  const d = state.deliveries[idx];
+  const secCols = { 1:'#3b82f6', 2:'#0d9488', 3:'#d97706', 4:'#db2777', 5:'#7c3aed' };
+  const hlCol = (d && d.sector) ? secCols[d.sector] : '#8896a7';
   closeMarkerPanel();
   const sidebar = document.getElementById('sidebar');
   if (sidebar && sidebar.classList.contains('hidden')) sidebar.classList.remove('hidden');
@@ -373,7 +376,7 @@ function scrollToMarkerInList() {
     const item = items[idx];
     if (!item) return;
     item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    item.style.outline = '2px solid var(--accent)';
+    item.style.outline = '2px solid ' + hlCol;
     item.style.borderRadius = '10px';
     item.style.transition = 'outline .2s';
     setTimeout(function() { item.style.outline = ''; }, 1500);
