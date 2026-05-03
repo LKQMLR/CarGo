@@ -137,7 +137,11 @@ function displayRoute(stops) {
         const col = r === 0 ? '#22c55e' : (SECTOR_COLS[s.sector || 0] || '#4f8cff');
         const ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
         const pos = { lat: s.lat, lng: s.lng };
-        state.markers.push(createClassicMarker(pos, lbl, col, ttl));
+        const mk = createClassicMarker(pos, lbl, col, ttl);
+        state.markers.push(mk);
+        if (r > 0) {
+          (function(idx) { mk.addListener('click', function() { showMarkerPanel(idx); }); })(r - 1);
+        }
         if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65));
       });
 
@@ -252,4 +256,116 @@ function renderRouteSteps() {
     </div></li>`;
   }
   document.getElementById('route-steps').innerHTML = html;
+}
+
+// ── PANNEAU MARQUEUR ──
+var _mpIdx = -1;
+var _mpMapClickListener = null;
+
+function showMarkerPanel(idx) {
+  _mpIdx = idx;
+  const d = state.deliveries[idx];
+  if (!d) return;
+
+  // Fermer le panneau sur clic carte (une seule fois)
+  if (!_mpMapClickListener) {
+    _mpMapClickListener = state.map.addListener('click', closeMarkerPanel);
+  }
+
+  let panel = document.getElementById('marker-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'marker-panel';
+    document.body.appendChild(panel);
+  }
+
+  const secDefs = [
+    { s: 0, label: '—',  bg: '#8896a7' },
+    { s: 1, label: 'S1', bg: '#3b82f6' },
+    { s: 2, label: 'S2', bg: '#0d9488' },
+    { s: 3, label: 'S3', bg: '#d97706' },
+    { s: 4, label: 'S4', bg: '#db2777' },
+    { s: 5, label: 'S5', bg: '#7c3aed' },
+  ];
+  const badgeCol = SECTOR_COLS[d.sector || 0] || '#8896a7';
+  const addrLine = (d.formatted || d.address || '').split(',').slice(0, 2).join(',').trim();
+  const placeLine = d.placeName ? `<div class="mp-place">${esc(d.placeName)}</div>` : '';
+  const lockLabel = d.locked
+    ? '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Verrouillé'
+    : '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Libre';
+
+  const sectorBtns = secDefs.map(b => {
+    const active = (d.sector || 0) === b.s ? ' mp-sec-active' : '';
+    return `<button class="mp-sec${active}" style="background:${b.bg}" onclick="setMarkerPanelSector(${b.s})">${b.label}</button>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="mp-header">
+      <div class="mp-badge" style="background:${badgeCol}">${idx + 1}</div>
+      <div class="mp-info">
+        <div class="mp-addr">${esc(addrLine)}</div>
+        ${placeLine}
+      </div>
+      <button class="mp-close" onclick="closeMarkerPanel()">✕</button>
+    </div>
+    <div class="mp-sectors">${sectorBtns}</div>
+    <div class="mp-actions">
+      <button class="mp-lock${d.locked ? ' mp-lock-on' : ''}" onclick="toggleMarkerPanelLock()">${lockLabel}</button>
+      <button class="mp-list-btn" onclick="scrollToMarkerInList()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+        Voir dans la liste
+      </button>
+    </div>`;
+}
+
+function closeMarkerPanel() {
+  const panel = document.getElementById('marker-panel');
+  if (panel) panel.remove();
+  if (_mpMapClickListener) {
+    google.maps.event.removeListener(_mpMapClickListener);
+    _mpMapClickListener = null;
+  }
+  _mpIdx = -1;
+}
+
+function setMarkerPanelSector(sector) {
+  if (_mpIdx < 0) return;
+  const d = state.deliveries[_mpIdx];
+  if (!d) return;
+  if (sector > 0 && typeof checkSectorLimit === 'function' && !checkSectorLimit(sector)) return;
+  d.sector = sector;
+  d.customOrder = false;
+  closeMarkerPanel();
+  renderDeliveryList();
+  saveSession();
+  optimizeRoute();
+}
+
+function toggleMarkerPanelLock() {
+  if (_mpIdx < 0) return;
+  const d = state.deliveries[_mpIdx];
+  if (!d) return;
+  d.locked = !d.locked;
+  closeMarkerPanel();
+  renderDeliveryList();
+  saveSession();
+  optimizeRoute();
+}
+
+function scrollToMarkerInList() {
+  const idx = _mpIdx;
+  closeMarkerPanel();
+  // Ouvrir la sidebar sur mobile
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar && !sidebar.classList.contains('open')) sidebar.classList.add('open');
+  setTimeout(() => {
+    const items = document.querySelectorAll('#delivery-list li');
+    const item = items[idx];
+    if (!item) return;
+    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    item.style.outline = '2px solid var(--accent)';
+    item.style.borderRadius = '10px';
+    item.style.transition = 'outline .2s';
+    setTimeout(() => { item.style.outline = ''; }, 1500);
+  }, 300);
 }

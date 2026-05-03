@@ -72,3 +72,69 @@
 #route-steps li.sector-3 { border-color: rgba(217,119,6,.35); background: rgba(217,119,6,.08); }
 #route-steps li.sector-4 { border-color: rgba(219,39,119,.35); background: rgba(219,39,119,.08); }
 #route-steps li.sector-5 { border-color: rgba(124,58,237,.35); background: rgba(124,58,237,.08); }
+
+/* ── PANNEAU MARQUEUR (carte) ── */
+#marker-panel {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 9100;
+  background: linear-gradient(160deg, #0d2847 0%, #112240 100%);
+  border-top: 1px solid var(--accent); border-radius: 18px 18px 0 0;
+  padding: 16px 16px 24px; box-shadow: 0 -8px 40px rgba(0,0,0,.6);
+  animation: mp-up .22s cubic-bezier(.22,1,.36,1);
+  max-width: 480px; margin: 0 auto;
+}
+@keyframes mp-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.mp-header {
+  display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px;
+}
+.mp-badge {
+  min-width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .88rem; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.mp-info { flex: 1; min-width: 0; }
+.mp-addr {
+  font-size: .8rem; font-weight: 700; color: #fff;
+  line-height: 1.35; word-break: break-word;
+}
+.mp-place { font-size: .68rem; color: rgba(255,255,255,.45); margin-top: 3px; }
+.mp-close {
+  background: none; border: none; color: rgba(255,255,255,.35);
+  font-size: 1rem; cursor: pointer; padding: 2px 4px; flex-shrink: 0; line-height: 1;
+}
+.mp-close:hover { color: #fff; }
+
+/* Boutons secteur */
+.mp-sectors {
+  display: flex; gap: 7px; margin-bottom: 12px;
+}
+.mp-sec {
+  flex: 1; padding: 8px 2px; border-radius: 8px;
+  border: 2px solid transparent; font-size: .72rem; font-weight: 700;
+  color: #fff; cursor: pointer; text-align: center;
+  transition: border-color .12s, transform .08s;
+  opacity: .7;
+}
+.mp-sec:active { transform: scale(.93); }
+.mp-sec-active { border-color: #fff !important; opacity: 1; }
+
+/* Boutons actions */
+.mp-actions { display: flex; gap: 8px; }
+.mp-lock {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 8px; border-radius: 10px; font-size: .75rem; font-weight: 600;
+  border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.75); cursor: pointer;
+}
+.mp-lock-on {
+  background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4);
+  color: #f87171;
+}
+.mp-list-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 8px; border-radius: 10px; font-size: .75rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; cursor: pointer;
+}
