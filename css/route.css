@@ -108,26 +108,30 @@
 .mp-close:hover { color: #fff; }
 
 /* Boutons secteur */
-.mp-sectors {
-  display: flex; gap: 7px; margin-bottom: 12px;
+.mp-sectors { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+.mp-sec-none {
+  width: 100%; padding: 7px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); background: transparent;
+  font-size: .72rem; font-weight: 700; cursor: pointer; text-align: center;
+  transition: color .12s, border-color .12s;
 }
+.mp-sec-row { display: flex; gap: 7px; }
 .mp-sec {
-  flex: 1; padding: 8px 2px; border-radius: 8px;
-  border: 2px solid transparent; font-size: .72rem; font-weight: 700;
-  color: #fff; cursor: pointer; text-align: center;
-  transition: border-color .12s, transform .08s;
-  opacity: .7;
+  flex: 1; padding: 8px 4px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); background: transparent;
+  font-size: .72rem; font-weight: 700; cursor: pointer; text-align: center;
+  transition: color .12s, border-color .12s, transform .08s;
 }
-.mp-sec:active { transform: scale(.93); }
-.mp-sec-active { border-color: #fff !important; opacity: 1; }
+.mp-sec:active, .mp-sec-none:active { transform: scale(.95); }
 
 /* Boutons actions */
 .mp-actions { display: flex; gap: 8px; }
 .mp-lock {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 10px 8px; border-radius: 10px; font-size: .75rem; font-weight: 600;
+  width: 48px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px; border-radius: 10px;
   border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07);
-  color: rgba(255,255,255,.75); cursor: pointer;
+  color: rgba(255,255,255,.6); cursor: pointer;
 }
 .mp-lock-on {
   background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4);
