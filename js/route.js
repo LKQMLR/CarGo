@@ -137,12 +137,13 @@ function displayRoute(stops) {
         const col = r === 0 ? '#22c55e' : (SECTOR_COLS[s.sector || 0] || '#4f8cff');
         const ttl = r === 0 ? 'Départ' : `Livraison ${r}`;
         const pos = { lat: s.lat, lng: s.lng };
-        const mk = createClassicMarker(pos, lbl, col, ttl);
+        const inv = r > 0 && !(s.sector);
+        const mk = createClassicMarker(pos, lbl, col, ttl, null, 1, inv);
         state.markers.push(mk);
         if (r > 0) {
           (function(idx) { mk.addListener('click', function() { showMarkerPanel(idx); }); })(r - 1);
         }
-        if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65));
+        if (state.previewMap) state.previewMarkers.push(createClassicMarker(pos, lbl, col, ttl, state.previewMap, 0.65, inv));
       });
 
       state.navStops = stops; state.navLegs = allLegs;
@@ -335,6 +336,9 @@ function setMarkerPanelSector(sector) {
   if (sector > 0 && typeof checkSectorLimit === 'function' && !checkSectorLimit(sector)) return;
   d.sector = sector;
   d.customOrder = false;
+  // Mettre à jour l'icône du marqueur immédiatement
+  const m = state.markers[_mpIdx + 1];
+  if (m) m.setIcon(makeMarkerIcon(String(_mpIdx + 1), SECTOR_COLS[sector] || '#8896a7', 1, sector === 0));
   closeMarkerPanel();
   renderDeliveryList();
   saveSession();
