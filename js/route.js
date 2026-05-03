@@ -281,47 +281,49 @@ function showMarkerPanel(idx) {
 
   const curSector = d.sector || 0;
   const badgeCol  = SECTOR_COLS[curSector] || '#8896a7';
-  const addrLine  = (d.formatted || d.address || '').split(',').slice(0, 2).join(',').trim();
+  const addrLine  = (d.formatted || d.address || '');
   const placeLine = d.placeName ? '<div class="mp-place">' + esc(d.placeName) + '</div>' : '';
+  const noteLine  = d.note ? '<div class="mp-note">' + esc(d.note) + '</div>' : '';
+  const legLine   = (d.legDist || d.legDur)
+    ? '<div class="mp-leg">' + (d.legDist ? d.legDist : '') + (d.legDist && d.legDur ? ' · ' : '') + (d.legDur ? d.legDur : '') + '</div>'
+    : '';
 
-  const noneActive = curSector === 0;
-  const noneStyle  = noneActive ? 'color:#8896a7;border-color:#8896a7' : 'color:rgba(255,255,255,.28)';
-  const noneBtn = '<button class="mp-sec mp-sec-none' + (noneActive ? ' mp-sec-active' : '') + '" style="' + noneStyle + '" onclick="setMarkerPanelSector(0)">Aucun secteur</button>';
-
+  // Secteur boutons compacts
   const secDefs = [
-    { s:1, label:'S1', col:'#3b82f6' }, { s:2, label:'S2', col:'#0d9488' },
-    { s:3, label:'S3', col:'#d97706' }, { s:4, label:'S4', col:'#db2777' },
-    { s:5, label:'S5', col:'#7c3aed' },
+    { s:0, label:'Aucun', col:'#8896a7' },
+    { s:1, label:'S1',    col:'#3b82f6' },
+    { s:2, label:'S2',    col:'#0d9488' },
+    { s:3, label:'S3',    col:'#d97706' },
+    { s:4, label:'S4',    col:'#db2777' },
+    { s:5, label:'S5',    col:'#7c3aed' },
   ];
   const sBtns = secDefs.map(function(b) {
     const active = curSector === b.s;
-    const style  = active ? 'color:' + b.col + ';border-color:' + b.col : 'color:rgba(255,255,255,.28)';
-    return '<button class="mp-sec' + (active ? ' mp-sec-active' : '') + '" style="' + style + '" onclick="setMarkerPanelSector(' + b.s + ')">' + b.label + '</button>';
+    const style  = active ? 'color:' + b.col + ';border-color:' + b.col : 'color:rgba(255,255,255,.28);border-color:transparent';
+    return '<button class="mp-tb-sec' + (active ? ' mp-tb-sec-on' : '') + '" style="' + style + '" onclick="setMarkerPanelSector(' + b.s + ')">' + b.label + '</button>';
   }).join('');
 
   const lockIcon = d.locked
-    ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
-    : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+    ? '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+    : '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+
+  const listIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>';
 
   panel.innerHTML =
     '<div class="mp-header">' +
       '<div class="mp-badge" style="background:' + badgeCol + '">' + (idx + 1) + '</div>' +
       '<div class="mp-info">' +
-        '<div class="mp-addr">' + esc(addrLine) + '</div>' +
         placeLine +
+        '<div class="mp-addr">' + esc(addrLine) + '</div>' +
+        noteLine +
+        legLine +
       '</div>' +
       '<button class="mp-close" onclick="closeMarkerPanel()">&#x2715;</button>' +
     '</div>' +
-    '<div class="mp-sectors">' +
-      noneBtn +
-      '<div class="mp-sec-row">' + sBtns + '</div>' +
-    '</div>' +
-    '<div class="mp-actions">' +
-      '<button class="mp-lock' + (d.locked ? ' mp-lock-on' : '') + '" onclick="toggleMarkerPanelLock()" title="' + (d.locked ? 'Déverrouiller' : 'Verrouiller') + '">' + lockIcon + '</button>' +
-      '<button class="mp-list-btn" onclick="scrollToMarkerInList()">' +
-        '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>' +
-        ' Voir dans la liste' +
-      '</button>' +
+    '<div class="mp-toolbar">' +
+      '<button class="mp-tb-lock' + (d.locked ? ' mp-tb-lock-on' : '') + '" onclick="toggleMarkerPanelLock()" title="' + (d.locked ? 'Déverrouiller' : 'Verrouiller') + '">' + lockIcon + '</button>' +
+      '<div class="mp-tb-secs">' + sBtns + '</div>' +
+      '<button class="mp-tb-list" onclick="scrollToMarkerInList()" title="Voir dans la liste">' + listIcon + '</button>' +
     '</div>';
 }
 function closeMarkerPanel() {

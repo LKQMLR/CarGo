@@ -78,17 +78,16 @@
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 9100;
   background: linear-gradient(160deg, #0d2847 0%, #112240 100%);
   border-top: 1px solid var(--accent); border-radius: 18px 18px 0 0;
-  padding: 16px 16px 24px; box-shadow: 0 -8px 40px rgba(0,0,0,.6);
+  padding: 14px 14px 20px; box-shadow: 0 -8px 40px rgba(0,0,0,.6);
   animation: mp-up .22s cubic-bezier(.22,1,.36,1);
-  max-width: 480px; margin: 0 auto;
 }
 @keyframes mp-up {
   from { transform: translateY(100%); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
-.mp-header {
-  display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px;
-}
+
+/* ── Contenu principal ── */
+.mp-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
 .mp-badge {
   min-width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -96,49 +95,39 @@
   box-shadow: 0 2px 8px rgba(0,0,0,.3);
 }
 .mp-info { flex: 1; min-width: 0; }
-.mp-addr {
-  font-size: .8rem; font-weight: 700; color: #fff;
-  line-height: 1.35; word-break: break-word;
-}
-.mp-place { font-size: .68rem; color: rgba(255,255,255,.45); margin-top: 3px; }
+.mp-place { font-size: .68rem; font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+.mp-addr { font-size: .8rem; font-weight: 700; color: #fff; line-height: 1.35; word-break: break-word; }
+.mp-note { font-size: .68rem; color: var(--yellow); margin-top: 4px; font-style: italic; }
+.mp-leg  { font-size: .62rem; color: rgba(255,255,255,.4); margin-top: 3px; }
 .mp-close {
-  background: none; border: none; color: rgba(255,255,255,.35);
+  background: none; border: none; color: rgba(255,255,255,.3);
   font-size: 1rem; cursor: pointer; padding: 2px 4px; flex-shrink: 0; line-height: 1;
 }
 .mp-close:hover { color: #fff; }
 
-/* Boutons secteur */
-.mp-sectors { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
-.mp-sec-none {
-  width: 100%; padding: 7px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1); background: transparent;
-  font-size: .72rem; font-weight: 700; cursor: pointer; text-align: center;
-  transition: color .12s, border-color .12s;
+/* ── Toolbar compacte ── */
+.mp-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08);
 }
-.mp-sec-row { display: flex; gap: 7px; }
-.mp-sec {
-  flex: 1; padding: 8px 4px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1); background: transparent;
-  font-size: .72rem; font-weight: 700; cursor: pointer; text-align: center;
-  transition: color .12s, border-color .12s, transform .08s;
-}
-.mp-sec:active, .mp-sec-none:active { transform: scale(.95); }
-
-/* Boutons actions */
-.mp-actions { display: flex; gap: 8px; }
-.mp-lock {
-  width: 48px; flex-shrink: 0;
+.mp-tb-lock {
+  flex-shrink: 0; width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
-  padding: 10px; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07);
-  color: rgba(255,255,255,.6); cursor: pointer;
+  border-radius: 8px; border: 1px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.55); cursor: pointer;
 }
-.mp-lock-on {
-  background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4);
-  color: #f87171;
+.mp-tb-lock-on { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); color: #f87171; }
+.mp-tb-secs { display: flex; gap: 4px; flex: 1; }
+.mp-tb-sec {
+  flex: 1; padding: 6px 2px; border-radius: 6px;
+  border: 1px solid transparent; background: transparent;
+  font-size: .68rem; font-weight: 700; cursor: pointer; text-align: center;
+  transition: color .1s, border-color .1s;
 }
-.mp-list-btn {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 10px 8px; border-radius: 10px; font-size: .75rem; font-weight: 600;
-  background: var(--accent); color: #fff; border: none; cursor: pointer;
+.mp-tb-sec:active { transform: scale(.9); }
+.mp-tb-list {
+  flex-shrink: 0; width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; background: var(--accent); color: #fff;
+  border: none; cursor: pointer;
 }
