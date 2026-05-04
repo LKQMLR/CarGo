@@ -377,6 +377,7 @@ function openAuthModal(tab) {
           ? 'Pas de compte ? <span onclick="openAuthModal(\'signup\')">Créer un compte</span>'
           : 'Déjà un compte ? <span onclick="openAuthModal(\'signin\')">Se connecter</span>'}
       </p>
+      ${isSignin ? '<p class="auth-switch" style="margin-top:4px"><span onclick="openForgotPasswordModal()">Mot de passe oublié ?</span></p>' : ''}
     </div>
   `;
   modal.addEventListener('click', e => { if (e.target === modal) closeAuthModal(); });
@@ -528,4 +529,69 @@ async function submitResetPassword() {
   if (modal) { modal.classList.remove('visible'); setTimeout(() => modal.remove(), 300); }
   if (typeof showStatus === 'function') showStatus('success', 'Mot de passe mis à jour !');
   window.history.replaceState({}, '', window.location.pathname);
+}
+
+
+// ── Modale mot de passe oublié ──
+function openForgotPasswordModal() {
+  const old = document.getElementById('forgot-pw-modal');
+  if (old) old.remove();
+  document.getElementById('auth-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'forgot-pw-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box auth-box">
+      <div class="auth-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Mot de passe oublié
+      </div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:12px">
+        Saisis ton email et on t'envoie un lien de réinitialisation.
+      </p>
+      <div id="forgot-pw-error" class="auth-error" style="display:none;"></div>
+      <input type="email" id="forgot-pw-email" placeholder="Adresse email" autocomplete="email" />
+      <button class="btn-auth-submit" id="forgot-pw-submit" onclick="submitForgotPassword()">
+        Envoyer le lien
+      </button>
+      <p class="auth-switch"><span onclick="document.getElementById('forgot-pw-modal')?.remove();openAuthModal('signin')">Retour à la connexion</span></p>
+    </div>
+  `;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  modal.addEventListener('keydown', e => { if (e.key === 'Enter') submitForgotPassword(); });
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('visible'));
+  setTimeout(() => document.getElementById('forgot-pw-email')?.focus(), 50);
+}
+
+async function submitForgotPassword() {
+  const emailEl = document.getElementById('forgot-pw-email');
+  const errEl   = document.getElementById('forgot-pw-error');
+  const btn     = document.getElementById('forgot-pw-submit');
+  const email   = emailEl?.value.trim() || '';
+
+  if (!email) { _showAuthError(errEl, 'Saisis ton adresse email.'); return; }
+
+  btn.disabled = true; btn.textContent = '…';
+  errEl.style.display = 'none';
+
+  const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+
+  if (error) {
+    btn.disabled = false; btn.textContent = 'Envoyer le lien';
+    _showAuthError(errEl, 'Erreur : ' + error.message);
+    return;
+  }
+
+  errEl.style.color = 'var(--green)';
+  errEl.textContent = 'Email envoyé ! Vérifie ta boîte mail.';
+  errEl.style.display = 'block';
+  btn.textContent = 'Email envoyé !';
 }
