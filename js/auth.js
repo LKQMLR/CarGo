@@ -377,7 +377,7 @@ function openAuthModal(tab) {
           ? 'Pas de compte ? <span onclick="openAuthModal(\'signup\')">Créer un compte</span>'
           : 'Déjà un compte ? <span onclick="openAuthModal(\'signin\')">Se connecter</span>'}
       </p>
-      ${isSignin ? '<p class="auth-switch" style="margin-top:4px"><span onclick="openForgotPasswordModal()">Mot de passe oublié ?</span></p>' : ''}
+      ${isSignin ? '<p class="auth-switch"><span onclick="openForgotPasswordModal()">Mot de passe oublié ?</span></p>' : ''}
     </div>
   `;
   modal.addEventListener('click', e => { if (e.target === modal) closeAuthModal(); });
@@ -555,11 +555,15 @@ function openForgotPasswordModal() {
         Saisis ton email et on t'envoie un lien de réinitialisation.
       </p>
       <div id="forgot-pw-error" class="auth-error" style="display:none;"></div>
-      <input type="email" id="forgot-pw-email" placeholder="Adresse email" autocomplete="email" />
-      <button class="btn-auth-submit" id="forgot-pw-submit" onclick="submitForgotPassword()">
-        Envoyer le lien
-      </button>
-      <p class="auth-switch"><span onclick="document.getElementById('forgot-pw-modal')?.remove();openAuthModal('signin')">Retour à la connexion</span></p>
+      <input type="email" id="forgot-pw-email" placeholder="Adresse email" autocomplete="email"
+        style="padding:13px 14px;font-size:.9rem;" />
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+        <p class="auth-switch" style="margin:0"><span onclick="document.getElementById('forgot-pw-modal')?.remove();openAuthModal('signin')">Retour à la connexion</span></p>
+        <button id="forgot-pw-submit" onclick="submitForgotPassword()"
+          style="background:none;border:none;color:#fbbf24;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:.78rem;font-weight:600;padding:0;">
+          Envoyer le lien →
+        </button>
+      </div>
     </div>
   `;
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
