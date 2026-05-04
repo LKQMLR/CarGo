@@ -16,6 +16,10 @@ function initAuth() {
   _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   _supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      openResetPasswordModal();
+      return;
+    }
     _authUser = session?.user || null;
     if (_authUser) {
       fetchProfile(_authUser.id);
@@ -466,4 +470,62 @@ function _translateAuthError(msg) {
   if (msg.includes('Password should be'))        return 'Mot de passe trop court (6 caractères min.).';
   if (msg.includes('rate limit'))                return 'Trop de tentatives, réessaie dans quelques minutes.';
   return msg;
+}
+
+
+// ── Modale réinitialisation mot de passe ──
+function openResetPasswordModal() {
+  const old = document.getElementById('reset-pw-modal');
+  if (old) old.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'reset-pw-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-box auth-box">
+      <div class="auth-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Nouveau mot de passe
+      </div>
+      <div id="reset-pw-error" class="auth-error" style="display:none;"></div>
+      <input type="password" id="reset-pw-input" placeholder="Nouveau mot de passe (6 car. min.)" autocomplete="new-password" />
+      <input type="password" id="reset-pw-input2" placeholder="Confirmer le mot de passe" autocomplete="new-password" />
+      <button class="btn-auth-submit" id="reset-pw-submit" onclick="submitResetPassword()">
+        Enregistrer
+      </button>
+    </div>
+  `;
+  modal.addEventListener('keydown', e => { if (e.key === 'Enter') submitResetPassword(); });
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('visible'));
+  setTimeout(() => document.getElementById('reset-pw-input')?.focus(), 50);
+}
+
+async function submitResetPassword() {
+  const pw1   = document.getElementById('reset-pw-input')?.value || '';
+  const pw2   = document.getElementById('reset-pw-input2')?.value || '';
+  const errEl = document.getElementById('reset-pw-error');
+  const btn   = document.getElementById('reset-pw-submit');
+
+  if (pw1.length < 6) { _showAuthError(errEl, 'Mot de passe trop court (6 caractères min.).'); return; }
+  if (pw1 !== pw2)    { _showAuthError(errEl, 'Les mots de passe ne correspondent pas.'); return; }
+
+  btn.disabled = true; btn.textContent = '…';
+  errEl.style.display = 'none';
+
+  const { error } = await _supabase.auth.updateUser({ password: pw1 });
+  if (error) {
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+    _showAuthError(errEl, 'Erreur : ' + error.message);
+    return;
+  }
+
+  const modal = document.getElementById('reset-pw-modal');
+  if (modal) { modal.classList.remove('visible'); setTimeout(() => modal.remove(), 300); }
+  if (typeof showStatus === 'function') showStatus('success', 'Mot de passe mis à jour !');
+  window.history.replaceState({}, '', window.location.pathname);
 }
