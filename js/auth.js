@@ -551,19 +551,14 @@ function openForgotPasswordModal() {
         </svg>
         Mot de passe oublié
       </div>
-      <p style="font-size:.78rem;color:var(--text2);margin-bottom:12px">
-        Saisis ton email et on t'envoie un lien de réinitialisation.
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:4px">
+        Saisis ton email pour recevoir un lien de réinitialisation.
       </p>
       <div id="forgot-pw-error" class="auth-error" style="display:none;"></div>
-      <input type="email" id="forgot-pw-email" placeholder="Adresse email" autocomplete="email"
-        style="padding:13px 14px;font-size:.9rem;" />
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
-        <p class="auth-switch" style="margin:0"><span onclick="document.getElementById('forgot-pw-modal')?.remove();openAuthModal('signin')">Retour à la connexion</span></p>
-        <button id="forgot-pw-submit" onclick="submitForgotPassword()"
-          style="background:none;border:none;color:#fbbf24;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:.78rem;font-weight:600;padding:0;">
-          Envoyer le lien →
-        </button>
-      </div>
+      <input type="email" id="forgot-pw-email" placeholder="Adresse email" autocomplete="email" />
+      <button class="btn-auth-submit" id="forgot-pw-submit" onclick="submitForgotPassword()">
+        Réinitialiser le mot de passe
+      </button>
     </div>
   `;
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
@@ -594,8 +589,9 @@ async function submitForgotPassword() {
     return;
   }
 
+  btn.style.display = 'none';
   errEl.style.color = 'var(--green)';
-  errEl.textContent = 'Email envoyé ! Vérifie ta boîte mail.';
+  errEl.style.background = 'rgba(34,197,94,.08)';
+  errEl.textContent = 'Vous allez recevoir un email dans un instant.';
   errEl.style.display = 'block';
-  btn.textContent = 'Email envoyé !';
 }

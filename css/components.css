@@ -444,12 +444,12 @@ button:not(:disabled):hover { opacity: .85; transform: translateY(-1px); }
   font-size: .72rem; padding: 6px 10px; background: var(--red-bg);
   border-radius: 8px; color: var(--red); line-height: 1.4;
 }
-#auth-email, #auth-password, #auth-password2 {
+#auth-email, #auth-password, #auth-password2, #forgot-pw-email {
   width: 100%; padding: 10px 12px; background: var(--bg); border: 1.5px solid var(--border);
   border-radius: 8px; color: var(--text); font-size: .82rem; box-sizing: border-box;
   outline: none; transition: border-color .2s;
 }
-#auth-email:focus, #auth-password:focus, #auth-password2:focus { border-color: #f97316; }
+#auth-email:focus, #auth-password:focus, #auth-password2:focus, #forgot-pw-email:focus { border-color: #f97316; }
 .btn-auth-submit {
   width: 100%; padding: 12px; font-size: .85rem; font-weight: 700;
   background: linear-gradient(135deg, #f97316, #fbbf24);
