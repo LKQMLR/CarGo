@@ -53,6 +53,40 @@ async function handleSetStart() {
   finally { setUIBusy(false); }
 }
 
+async function handleLocateMe() {
+  if (!navigator.geolocation) { showStatus('error', 'Géolocalisation non disponible.'); return; }
+  setUIBusy(true); showStatus('loading', 'Localisation GPS...');
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      try {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        const geo = await new Promise((resolve, reject) => {
+          state.geocoder.geocode({ location: { lat, lng } }, (r, s) => {
+            if (s === 'OK' && r.length) resolve({ lat, lng, formatted: r[0].formatted_address });
+            else reject(new Error('Adresse introuvable'));
+          });
+        });
+        if (state.startPoint?.marker) state.startPoint.marker.setMap(null);
+        const marker = createClassicMarker({ lat, lng }, 'D', '#22c55e', 'Départ');
+        state.startPoint = { address: geo.formatted, ...geo, marker };
+        const input = document.getElementById('start-input');
+        input.value = geo.formatted;
+        input.dataset.lat = String(lat); input.dataset.lng = String(lng);
+        input.dataset.formatted = geo.formatted; input.dataset.resolved = 'true';
+        const d = document.getElementById('start-display');
+        d.textContent = geo.formatted; d.classList.add('visible');
+        state.map.panTo({ lat, lng }); state.map.setZoom(14);
+        updateAutocompleteBias(); showStatus('success', 'Départ défini.'); saveSession();
+        updateFavStar();
+        localStorage.setItem('cargo_startPoint', JSON.stringify({ address: geo.formatted, lat, lng, formatted: geo.formatted }));
+      } catch (e) { showStatus('error', e.message); }
+      finally { setUIBusy(false); }
+    },
+    () => { showStatus('error', 'Impossible de vous localiser.'); setUIBusy(false); },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
 async function handleAddDelivery() {
   const input = document.getElementById('delivery-input'), addr = input.value.trim();
   if (!addr) return;

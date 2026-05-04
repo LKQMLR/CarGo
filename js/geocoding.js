@@ -46,14 +46,19 @@ function setupAutocomplete(inputId) {
   }
 }
 
-// ── BIAIS AUTOCOMPLETE (proximity soft-bias, toutes adresses FR accessibles) ──
+// ── BIAIS AUTOCOMPLETE (bounds dynamiques autour du point de départ) ──
 function updateAutocompleteBias() {
   if (!state.startPoint) return;
-  const center = new google.maps.LatLng(state.startPoint.lat, state.startPoint.lng);
-  ['delivery-input', 'delivery-overlay-input'].forEach(id => {
+  const lat = state.startPoint.lat, lng = state.startPoint.lng;
+  const delta = 0.09; // ~10 km
+  const bounds = new google.maps.LatLngBounds(
+    { lat: lat - delta, lng: lng - delta },
+    { lat: lat + delta, lng: lng + delta }
+  );
+  ['start-input', 'delivery-input', 'delivery-overlay-input'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el._autocomplete) {
-      el._autocomplete.setOptions({ location: center, radius: 30000, strictBounds: false });
+      el._autocomplete.setBounds(bounds);
     }
   });
 }
@@ -249,10 +254,7 @@ function openDeliveryOverlay() {
   const input = document.getElementById('delivery-overlay-input');
   overlay.classList.add('visible');
   document.body.classList.add('overlay-open');
-  if (state.startPoint && input._autocomplete) {
-    const center = new google.maps.LatLng(state.startPoint.lat, state.startPoint.lng);
-    input._autocomplete.setOptions({ location: center, radius: 30000, strictBounds: false });
-  }
+  if (state.startPoint) updateAutocompleteBias();
   input.focus();
 }
 
