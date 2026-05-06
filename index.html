@@ -81,7 +81,7 @@
 		<!-- Pull-to-refresh indicator -->
 		<div id="ptr-indicator"><span id="ptr-label">Actualiser ?</span></div>
 
-		<!-- Tooltip partagÃ© (position:fixed, hors sidebar pour Ã©viter le clipping) -->
+		<!-- Tooltip partagé (position:fixed, hors sidebar pour éviter le clipping) -->
 		<div
 			id="panel-tooltip"
 			style="
@@ -153,7 +153,7 @@
 				</div>
 
 				<div id="app-sections">
-					<!-- â”€â”€ Point de dÃ©part â”€â”€ -->
+					<!-- â”€â”€ Point de départ â”€â”€ -->
 					<div class="section section-start">
 						<div class="section-title">
 							<svg
@@ -185,7 +185,7 @@
 							<input
 								type="text"
 								id="start-input"
-								placeholder="Adresse de dÃ©part..."
+								placeholder="Adresse de départ..."
 								autocomplete="off"
 							/>
 							<button
@@ -269,7 +269,7 @@
 								<path d="M3.29 7 12 12l8.71-5" />
 								<path d="m7.5 4.27 8.997 5.148" />
 							</svg>
-							Ajoute tes points d'arrÃªt <span id="delivery-count"></span>
+							Ajoute tes points d'arrêt <span id="delivery-count"></span>
 							<span
 								class="help-btn"
 								data-tip-key="deliveries"
@@ -333,7 +333,7 @@
 					</div>
 					<div id="status-bar"></div>
 
-					<!-- â”€â”€ ItinÃ©raire optimisÃ© â”€â”€ -->
+					<!-- â”€â”€ Itinéraire optimisé â”€â”€ -->
 					<div
 						id="results-panel"
 						class="section section-route"
@@ -354,7 +354,7 @@
 								<path
 									d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
 								/></svg
-							>ItinÃ©raire optimisÃ©
+							>Itinéraire optimisé
 						</div>
 						<div
 							class="summary-grid"
@@ -372,7 +372,7 @@
 								class="btn-route-action"
 								onclick="triggerShare(this)"
 							>
-								Partager la tournÃ©e
+								Partager la tournée
 							</button>
 							<button
 								class="btn-route-action"
@@ -388,7 +388,7 @@
 						id="btn-nav-start"
 						onclick="startNavigation()"
 					>
-						Commencer la tournÃ©e
+						Commencer la tournée
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="20"
@@ -449,7 +449,7 @@
 								style="accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer"
 								checked
 							/>
-							Alertes de proximitÃ©
+							Alertes de proximité
 						</label>
 						<span
 							class="help-btn"
@@ -480,7 +480,7 @@
 									box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 									z-index: 100;
 								"
-								>Si vous passez prÃ¨s d'une livraison prÃ©vue plus loin, une alerte propose de la faire
+								>Si vous passez près d'une livraison prévue plus loin, une alerte propose de la faire
 								maintenant.</span
 							></span
 						>
@@ -515,7 +515,7 @@
 								id="autoreturn-check"
 								style="accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer"
 							/>
-							DÃ©tection auto de retour
+							Détection auto de retour
 						</label>
 						<span
 							class="help-btn"
@@ -546,8 +546,8 @@
 									box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 									z-index: 100;
 								"
-								>Quand vous revenez dans l'app aprÃ¨s Google Maps, propose automatiquement de passer Ã 
-								l'Ã©tape suivante si vous Ãªtes arrivÃ©.</span
+								>Quand vous revenez dans l'app après Google Maps, propose automatiquement de passer à
+								l'étape suivante si vous êtes arrivé.</span
 							></span
 						>
 					</div>
@@ -660,7 +660,7 @@
 						onclick="toggleSidebar()"
 					></div>
 
-					<!-- BanniÃ¨re pub (masquÃ©e tant qu'AdSense non approuvÃ©) -->
+					<!-- Bannière pub (masquée tant qu'AdSense non approuvé) -->
 					<div
 						id="ad-banner"
 						style="margin: 8px 0; text-align: center; overflow: hidden; display: none"
@@ -720,7 +720,7 @@
 						id="btn-reset"
 						onclick="resetAll()"
 					>
-						RÃ©initialiser la tournÃ©e
+						Réinitialiser la tournée
 					</button>
 					<button
 						id="btn-clear-cache"
@@ -737,7 +737,7 @@
 						"
 						onclick="clearCacheAndData()"
 					>
-						Vider le cache &amp; donnÃ©es
+						Vider le cache &amp; données
 					</button>
 				</div>
 			</div>
@@ -790,7 +790,7 @@
 						class="btn-warning"
 						id="confirm-ok"
 					>
-						Ajouter quand mÃªme
+						Ajouter quand même
 					</button>
 				</div>
 			</div>
@@ -824,12 +824,12 @@
 						<path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
 						<path d="M7 3v4a1 1 0 0 0 1 1h7" />
 					</svg>
-					Sauvegarder la tournÃ©e
+					Sauvegarder la tournée
 				</div>
 				<input
 					type="text"
 					id="save-history-name"
-					placeholder="Nom de la tournÃ©e..."
+					placeholder="Nom de la tournée..."
 					autocomplete="off"
 				/>
 				<div class="modal-actions">

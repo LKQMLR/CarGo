@@ -31,8 +31,8 @@ self.addEventListener('message', e => {
     if (_navNotifTimer) clearTimeout(_navNotifTimer);
     const { delay, address, num } = e.data;
     _navNotifTimer = setTimeout(() => {
-      self.registration.showNotification('CarGo Â· Livraison ' + num, {
-        body: 'ÃŠtes-vous arrivÃ© Ã  ' + address + ' ?',
+      self.registration.showNotification('CarGo · Livraison ' + num, {
+        body: 'Êtes-vous arrivé à ' + address + ' ?',
         icon: './icon.svg',
         badge: './icon.svg',
         tag: 'cargo-nav',
@@ -66,14 +66,14 @@ self.addEventListener('notificationclick', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Ne pas intercepter les POST ni les requÃªtes externes
+  // Ne pas intercepter les POST ni les requêtes externes
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('googleapis.com') || e.request.url.includes('gstatic.com') || e.request.url.includes('googlesyndication.com') || e.request.url.includes('doubleclick.net') || e.request.url.includes('vercel.app') || e.request.url.includes('supabase.co') || e.request.url.includes('jsdelivr.net')) return;
 
-  // Cache-first : rÃ©ponse instantanÃ©e depuis le cache, mise Ã  jour rÃ©seau en arriÃ¨re-plan
+  // Cache-first : réponse instantanée depuis le cache, mise à jour réseau en arrière-plan
   e.respondWith(
     caches.match(e.request).then(cached => {
-      // Mettre Ã  jour le cache en arriÃ¨re-plan (stale-while-revalidate)
+      // Mettre à jour le cache en arrière-plan (stale-while-revalidate)
       const fetchPromise = fetch(e.request).then(r => {
         if (r.ok) {
           const clone = r.clone();
@@ -82,7 +82,7 @@ self.addEventListener('fetch', e => {
         return r;
       }).catch(() => cached);
 
-      // Si en cache â†’ rÃ©ponse instantanÃ©e ; sinon â†’ attendre le rÃ©seau
+      // Si en cache â†’ réponse instantanée ; sinon â†’ attendre le réseau
       return cached || fetchPromise;
     })
   );

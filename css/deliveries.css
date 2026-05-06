@@ -91,7 +91,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .delivery-note {
-  font-size: .68rem; color: var(--yellow); margin-top: 3px;
+  font-size: .68rem; color: var(--yellow); margin-top: 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-style: italic; cursor: pointer;
 }
