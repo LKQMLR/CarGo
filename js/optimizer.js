@@ -255,7 +255,7 @@ async function optimizeRoute() {
     state.deliveries = backupDeliveries;
     renderDeliveryList();
     saveSession();
-    showStatus('error', 'Erreur d'optimisation. Vos adresses ont été conservées.');
+    showStatus('error', "Erreur d'optimisation. Vos adresses ont été conservées.");
     setUIBusy(false);
     _optimizeLocked = false;
   }
