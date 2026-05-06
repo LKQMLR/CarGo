@@ -91,7 +91,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .delivery-note {
-  font-size: .68rem; color: var(--yellow); margin-top: 6px;
+  font-size: .68rem; color: var(--yellow); margin-top: 8px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-style: italic; cursor: pointer;
 }
@@ -100,11 +100,11 @@
 .delivery-note-input {
   width: 48ch; max-width: 100%; background: var(--surface2); border: 1px solid var(--border);
   border-radius: 4px; color: var(--text); font-size: .7rem; padding: 4px 8px;
-  margin-top: 3px; outline: none; font-style: italic; box-sizing: border-box;
+  margin-top: 6px; outline: none; font-style: italic; box-sizing: border-box;
 }
 .delivery-note-input:focus { border-color: var(--accent); }
 .delivery-leg-info {
-  font-size: .62rem; color: var(--text2); margin-top: 3px;
+  font-size: .62rem; color: var(--text2); margin-top: 8px;
   display: flex; gap: 8px; opacity: .75;
 }
 
@@ -163,18 +163,17 @@
 
 /* ── ACTIONS BAS DE LISTE (lock + locate) ── */
 .delivery-actions {
-  display: flex; gap: 6px; margin-top: 8px;
+  display: flex; justify-content: space-between; margin-top: 12px;
 }
 .delivery-actions .lock-badge,
 .delivery-locate-btn {
   position: static; top: auto; right: auto;
-  flex: 1;
   background: var(--surface); border: 1px solid var(--border);
-  cursor: pointer; padding: 7px 0;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; padding: 5px 14px;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
   border-radius: 8px; color: var(--text2);
   transition: opacity .15s, color .15s, border-color .15s;
-  min-width: 0; z-index: auto;
+  z-index: auto;
 }
 .delivery-actions .lock-badge svg { width: 18px; height: 18px; }
 .delivery-actions .lock-badge:hover,
