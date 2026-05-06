@@ -142,3 +142,30 @@ body.overlay-open .pac-item-selected { background: var(--surface2) !important; }
 body.overlay-open .pac-item-query { color: var(--text) !important; font-size: .88rem !important; }
 body.overlay-open .pac-matched { color: var(--accent) !important; font-weight: 600 !important; }
 body.overlay-open .pac-icon { display: none !important; }
+
+/* ── MAP ADD BAR (mobile) ── */
+#map-add-bar {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 16;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
+  align-items: center; gap: 10px;
+  box-shadow: 0 2px 14px rgba(0,0,0,.5);
+}
+#map-add-bar.visible { display: flex; }
+#map-add-input {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; cursor: pointer;
+  font-size: .82rem; color: var(--text2); user-select: none;
+}
+#map-add-input svg { flex-shrink: 0; color: var(--text2); }
+#map-add-input:active { opacity: .75; }
+#map-list-btn {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}

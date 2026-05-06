@@ -149,3 +149,14 @@
 /* Verrouillé : icône cadenas rouge */
 .lock-badge.locked { color: #f87171; }
 .lock-badge.unlocked { color: var(--text2); opacity: .5; }
+
+/* ── FLASH NOUVELLE ADRESSE ── */
+@keyframes delivery-flash {
+  0%   { box-shadow: 0 0 0 2px var(--accent), 0 2px 12px rgba(79,140,255,.35); }
+  60%  { box-shadow: 0 0 0 2px var(--accent), 0 2px 12px rgba(79,140,255,.35); }
+  100% { box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.15); }
+}
+#delivery-list li.delivery-highlight {
+  animation: delivery-flash 1.6s ease forwards;
+  border-color: var(--accent) !important;
+}

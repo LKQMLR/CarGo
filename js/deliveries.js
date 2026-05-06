@@ -32,6 +32,20 @@ function cycleSector() {
   btn.className = activeSector ? `s${activeSector}` : '';
 }
 
+// ── FOCUS DERNIÈRE ADRESSE AJOUTÉE ──
+var _lastAddedId = null;
+
+function _focusLastAdded() {
+  if (!_lastAddedId) return;
+  const el = document.querySelector('#delivery-list [data-id="' + _lastAddedId + '"]');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('delivery-highlight');
+    setTimeout(() => el.classList.remove('delivery-highlight'), 2000);
+  }
+  _lastAddedId = null;
+}
+
 // ── HANDLERS DE SAISIE ──
 async function handleSetStart() {
   const input = document.getElementById('start-input'), addr = input.value.trim();
@@ -106,7 +120,16 @@ async function handleAddDelivery() {
     const freq = getFrequentAddresses().find(a => a.formatted === geo.formatted) || {};
     const freqNote = freq.note || '';
     const placeName = geo.placeName || freq.placeName || '';
-    state.deliveries.push({ id: idCounter++, address: addr, ...geo, placeName, marker, note: freqNote, sector: activeSector });
+    // Insertion intelligente : avant le premier lock du même secteur
+    const newDelivery = { id: idCounter++, address: addr, ...geo, placeName, marker, note: freqNote, sector: activeSector };
+    if (activeSector > 0) {
+      const lockedIdx = state.deliveries.findIndex(d => d.locked && d.sector === activeSector);
+      if (lockedIdx !== -1) state.deliveries.splice(lockedIdx, 0, newDelivery);
+      else state.deliveries.push(newDelivery);
+    } else {
+      state.deliveries.push(newDelivery);
+    }
+    _lastAddedId = newDelivery.id;
     state.map.panTo({ lat: geo.lat, lng: geo.lng }); state.map.setZoom(14);
     renderDeliveryList();
     saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted, placeName });
@@ -114,9 +137,17 @@ async function handleAddDelivery() {
     input.value = ''; input.dataset.resolved = ''; input.dataset.placeName = '';
     showStatus('success', `${state.deliveries.length} adresse(s) ajoutée(s).`);
     saveSession();
-    // Scroll vers la dernière adresse ajoutée
-    const ul = document.getElementById('delivery-list');
-    ul.scrollTop = ul.scrollHeight;
+    // Mobile : passer sur la carte ; Desktop : focus dans la liste
+    if (window.innerWidth <= 768) {
+      const sb = document.getElementById('sidebar');
+      const mapBar = document.getElementById('map-add-bar');
+      const toggle = document.getElementById('mobile-toggle');
+      sb.classList.add('hidden');
+      if (mapBar) mapBar.classList.add('visible');
+      if (toggle) toggle.style.display = 'none';
+    } else {
+      setTimeout(() => _focusLastAdded(), 150);
+    }
   } catch (e) { showStatus('error', e.message); }
   finally { setUIBusy(false); }
 }
