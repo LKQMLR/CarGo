@@ -83,15 +83,15 @@
 
 /* ── CONTENU DE LA CARD ── */
 .delivery-addr {
-  flex: 1; line-height: 1.35; word-break: break-word;
-  min-width: 0; font-size: .78rem;
+  flex: 1; min-width: 0; font-size: .78rem;
+  display: flex; flex-direction: column; gap: 6px;
 }
 .delivery-place-name {
-  font-size: .72rem; font-weight: 600; color: var(--accent); margin-bottom: 1px;
+  font-size: .72rem; font-weight: 600; color: var(--accent);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .delivery-note {
-  font-size: .68rem; color: var(--yellow); margin-top: 8px;
+  font-size: .68rem; color: var(--yellow);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-style: italic; cursor: pointer;
 }
@@ -100,11 +100,11 @@
 .delivery-note-input {
   width: 48ch; max-width: 100%; background: var(--surface2); border: 1px solid var(--border);
   border-radius: 4px; color: var(--text); font-size: .7rem; padding: 4px 8px;
-  margin-top: 6px; outline: none; font-style: italic; box-sizing: border-box;
+  outline: none; font-style: italic; box-sizing: border-box;
 }
 .delivery-note-input:focus { border-color: var(--accent); }
 .delivery-leg-info {
-  font-size: .62rem; color: var(--text2); margin-top: 8px;
+  font-size: .62rem; color: var(--text2);
   display: flex; gap: 8px; opacity: .75;
 }
 
@@ -163,13 +163,14 @@
 
 /* ── ACTIONS BAS DE LISTE (lock + locate) ── */
 .delivery-actions {
-  display: flex; justify-content: space-between; margin-top: 12px;
+  display: flex; gap: 6px;
 }
 .delivery-actions .lock-badge,
 .delivery-locate-btn {
   position: static; top: auto; right: auto;
+  flex: 1;
   background: var(--surface); border: 1px solid var(--border);
-  cursor: pointer; padding: 5px 14px;
+  cursor: pointer; padding: 6px 0;
   display: flex; align-items: center; justify-content: center; gap: 5px;
   border-radius: 8px; color: var(--text2);
   transition: opacity .15s, color .15s, border-color .15s;
