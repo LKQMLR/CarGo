@@ -160,3 +160,21 @@
   animation: delivery-flash 1.6s ease forwards;
   border-color: var(--accent) !important;
 }
+
+/* ── ACTIONS BAS DE CARTE (lock + locate) ── */
+.delivery-actions {
+  display: flex; gap: 6px; margin-top: 6px; align-items: center;
+}
+.delivery-actions .lock-badge {
+  background: none; border: none; cursor: pointer; padding: 3px 6px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+}
+.delivery-actions .lock-badge:active { opacity: .7; }
+.delivery-locate-btn {
+  background: none; border: none; cursor: pointer; padding: 3px 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2); border-radius: 6px; opacity: .6;
+  transition: opacity .15s, color .15s;
+}
+.delivery-locate-btn:hover, .delivery-locate-btn:active { opacity: 1; color: var(--accent); }

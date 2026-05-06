@@ -132,6 +132,7 @@ async function handleAddDelivery() {
     _lastAddedId = newDelivery.id;
     state.map.panTo({ lat: geo.lat, lng: geo.lng }); state.map.setZoom(14);
     renderDeliveryList();
+    if (typeof refreshMarkerListeners === 'function') refreshMarkerListeners();
     saveFrequentAddress({ address: addr, lat: geo.lat, lng: geo.lng, formatted: geo.formatted, placeName });
     updateAutocompleteBias();
     input.value = ''; input.dataset.resolved = ''; input.dataset.placeName = '';
@@ -205,6 +206,35 @@ function toggleLock(id) {
   saveSession();
 }
 
+// ── LOCALISER SUR LA CARTE ──
+function locateDelivery(id) {
+  const d = state.deliveries.find(d => d.id === id);
+  if (!d || !state.map) return;
+  state.map.panTo({ lat: d.lat, lng: d.lng });
+  state.map.setZoom(16);
+  if (window.innerWidth <= 768) {
+    const sb = document.getElementById('sidebar');
+    const mapBar = document.getElementById('map-add-bar');
+    const toggle = document.getElementById('mobile-toggle');
+    if (sb && !sb.classList.contains('hidden')) {
+      sb.classList.add('hidden');
+      if (mapBar) mapBar.classList.add('visible');
+      if (toggle) toggle.style.display = 'none';
+    }
+  }
+}
+
+// ── REFRESH CLICK LISTENERS SUR MARKERS ──
+function refreshMarkerListeners() {
+  state.deliveries.forEach((d, i) => {
+    if (!d.marker) return;
+    google.maps.event.clearListeners(d.marker, 'click');
+    (function(idx) {
+      d.marker.addListener('click', function() { showMarkerPanel(idx); });
+    })(i);
+  });
+}
+
 // ── RENDU DE LA LISTE ──
 function renderDeliveryList() {
   const ul = document.getElementById('delivery-list');
@@ -231,8 +261,11 @@ function renderDeliveryList() {
         <div class="delivery-addr">${placeLabel}${addr}${noteDisplay}
           <input class="delivery-note-input" style="${inputStyle}" placeholder="Note (code, étage...)" value="" maxlength="44"
             onblur="saveNote(${d.id}, this.value)" data-id="${d.id}" />${legInfo}
+          <div class="delivery-actions">
+            <button class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</button>
+            <button class="delivery-locate-btn" onclick="locateDelivery(${d.id})" title="Voir sur la carte"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/></svg></button>
+          </div>
         </div>
-        <div class="${badgeClass}" onclick="toggleLock(${d.id})">${lockSvg}</div>
       </div>
       <button class="delivery-delete" onclick="removeDelivery(${d.id})">Supprimer</button>
     </li>`;
