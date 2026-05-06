@@ -167,13 +167,16 @@
 }
 .delivery-actions .lock-badge,
 .delivery-locate-btn {
+  position: static; top: auto; right: auto;
   flex: 1;
   background: var(--surface); border: 1px solid var(--border);
   cursor: pointer; padding: 7px 0;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   border-radius: 8px; color: var(--text2);
   transition: opacity .15s, color .15s, border-color .15s;
+  min-width: 0; z-index: auto;
 }
+.delivery-actions .lock-badge svg { width: 18px; height: 18px; }
 .delivery-actions .lock-badge:hover,
 .delivery-locate-btn:hover { border-color: var(--accent); color: var(--accent); }
 .delivery-actions .lock-badge:active,
